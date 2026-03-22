@@ -1,0 +1,563 @@
+<!-- ============================================
+     PENGUIN HAIRS - PENG HAIR STYLING PAGE
+     Paste this ENTIRE code into a Squarespace Code Block
+     Page slug: /styling
+     ============================================ -->
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ---- OVERLAY APPROACH: sits fixed on top of all Squarespace UI ---- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow: hidden !important; }
+
+#ph-overlay {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  overflow-y: scroll !important; overflow-x: hidden !important;
+  z-index: 999999 !important;
+  background: #0a0a0a !important;
+  scroll-behavior: smooth;
+}
+#ph-overlay::-webkit-scrollbar { width: 6px; }
+#ph-overlay::-webkit-scrollbar-track { background: #111; }
+#ph-overlay::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+
+#ph-app {
+  font-family: 'Lato', sans-serif;
+  color: white;
+  background: #0a0a0a;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+}
+#ph-app h1, #ph-app h2, #ph-app h3, #ph-app h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; }
+html{scroll-behavior:smooth;}
+::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:#111;} ::-webkit-scrollbar-thumb{background:#d4af37;border-radius:3px;}
+
+/* ---- Canvas ---- */
+#ph-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+
+/* ---- Nav ---- */
+#ph-nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.5rem 3rem;display:flex;align-items:center;justify-content:space-between;transition:all 0.5s ease;}
+#ph-nav.scrolled{background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,175,55,0.15);padding:1rem 3rem;}
+.ph-logo{display:flex;align-items:center;gap:0.75rem;text-decoration:none;}
+.ph-logo span{font-size:1.5rem;}
+.ph-logo h1{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;letter-spacing:0.2em;color:white;}
+.ph-nav-links{display:flex;gap:2.5rem;align-items:center;}
+.ph-nav-links a{color:rgba(255,255,255,0.8);text-decoration:none;font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.3s;position:relative;}
+.ph-nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:#d4af37;transition:width 0.3s;}
+.ph-nav-links a:hover{color:white;} .ph-nav-links a:hover::after,.ph-nav-links a.active::after{width:100%;} .ph-nav-links a.active{color:#d4af37;}
+.ph-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:0.5rem;}
+.ph-hamburger span{display:block;width:24px;height:1px;background:white;}
+.ph-mobile-menu{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.98);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
+.ph-mobile-menu.open{display:flex;}
+.ph-mobile-menu a{color:white;text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;letter-spacing:0.1em;transition:color 0.3s;}
+.ph-mobile-menu a:hover{color:#d4af37;}
+.ph-close-menu{position:absolute;top:2rem;right:2rem;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;}
+
+/* ---- Hero ---- */
+#ph-hero{position:relative;height:70vh;min-height:500px;overflow:hidden;display:flex;align-items:center;justify-content:center;z-index:2;}
+#ph-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.35);}
+#ph-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.7),rgba(0,0,0,0.4),rgba(0,0,0,0.7));}
+.ph-hero-content{position:relative;z-index:5;text-align:center;padding:2rem;}
+.ph-eyebrow{font-size:0.72rem;letter-spacing:0.4em;text-transform:uppercase;color:#d4af37;margin-bottom:1.5rem;opacity:0;animation:phFadeUp 1s ease forwards 0.2s;}
+.ph-hero-content h1{font-size:clamp(3rem,8vw,7rem);font-weight:300;letter-spacing:0.06em;background:linear-gradient(135deg,#fff 30%,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem;opacity:0;animation:phFadeUp 1.2s ease forwards 0.4s;}
+.ph-hero-content p{font-size:clamp(0.9rem,2vw,1.2rem);letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:3rem;font-weight:300;opacity:0;animation:phFadeUp 1.2s ease forwards 0.6s;}
+.ph-hero-btns{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:phFadeUp 1.2s ease forwards 0.8s;}
+
+/* ---- Buttons ---- */
+.ph-btn{padding:1.1rem 3rem;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;border:1px solid rgba(212,175,55,0.6);background:transparent;color:white;cursor:pointer;transition:all 0.4s ease;text-decoration:none;display:inline-block;position:relative;overflow:hidden;font-family:'Lato',sans-serif;}
+.ph-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#d4af37,#f4d03f);transition:left 0.4s ease;z-index:-1;}
+.ph-btn:hover{border-color:#d4af37;color:#000;transform:translateY(-2px);}
+.ph-btn:hover::before{left:0;}
+.ph-btn-gold{background:linear-gradient(135deg,#d4af37,#f4d03f);border-color:#d4af37;color:#000;font-weight:700;}
+.ph-btn-gold::before{background:#000;}
+.ph-btn-gold:hover{color:white;}
+
+/* ---- Sections ---- */
+.ph-section{position:relative;z-index:2;}
+.ph-dark{background:rgba(10,10,10,0.78);backdrop-filter:blur(4px);}
+.ph-gold-line{width:50px;height:2px;background:linear-gradient(90deg,#d4af37,#f4d03f);margin:0 auto 1.5rem;}
+.ph-container{max-width:1300px;margin:0 auto;padding:0 2rem;}
+.ph-section-header{text-align:center;padding:5rem 0 3rem;}
+.ph-section-header h2{font-size:clamp(2.5rem,5vw,4rem);font-weight:300;color:white;margin-bottom:1rem;}
+.ph-section-header p{font-size:1rem;color:rgba(255,255,255,0.45);letter-spacing:0.1em;}
+
+/* ---- Services ---- */
+#ph-services{padding-bottom:5rem;}
+.ph-services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;}
+.ph-service-card{border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);padding:3rem;transition:all 0.5s ease;cursor:pointer;position:relative;overflow:hidden;}
+.ph-service-card::before{content:'';position:absolute;top:0;left:0;width:0;height:2px;background:linear-gradient(90deg,#d4af37,#f4d03f);transition:width 0.5s ease;}
+.ph-service-card:hover{border-color:rgba(212,175,55,0.25);background:rgba(212,175,55,0.03);transform:translateY(-5px);}
+.ph-service-card:hover::before{width:100%;}
+.ph-service-icon{width:56px;height:56px;border:1px solid rgba(212,175,55,0.3);display:flex;align-items:center;justify-content:center;margin-bottom:2rem;color:#d4af37;font-size:1.3rem;transition:all 0.4s;}
+.ph-service-card:hover .ph-service-icon{background:#d4af37;color:#000;}
+.ph-service-card h3{font-size:1.8rem;font-weight:300;color:white;margin-bottom:0.75rem;}
+.ph-service-meta{display:flex;gap:1.5rem;margin-bottom:1rem;}
+.ph-service-meta span{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;}
+.ph-service-meta .ph-duration{color:rgba(255,255,255,0.4);}
+.ph-service-meta .ph-price-tag{color:#d4af37;}
+.ph-service-card p{color:rgba(255,255,255,0.5);line-height:1.8;font-size:0.92rem;}
+.ph-book-btn{margin-top:1.5rem;padding:0.6rem 1.5rem;border:1px solid rgba(212,175,55,0.4);background:transparent;color:#d4af37;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:'Lato',sans-serif;transition:all 0.3s;}
+.ph-book-btn:hover{background:#d4af37;color:#000;}
+
+/* ---- Process ---- */
+#ph-process{padding:5rem 0;}
+.ph-process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;}
+.ph-process-step{text-align:center;padding:2rem 1rem;}
+.ph-step-num{width:60px;height:60px;border:1px solid rgba(212,175,55,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#d4af37;transition:all 0.4s;}
+.ph-process-step:hover .ph-step-num{background:#d4af37;color:#000;}
+.ph-process-step h3{font-size:1.3rem;font-weight:300;color:white;margin-bottom:0.75rem;}
+.ph-process-step p{font-size:0.85rem;color:rgba(255,255,255,0.4);line-height:1.8;}
+
+/* ---- Booking ---- */
+#ph-booking{padding:5rem 0;}
+.ph-booking-wrapper{display:grid;grid-template-columns:1fr 1.4fr;gap:4rem;align-items:start;}
+.ph-booking-info h2{font-size:clamp(2rem,4vw,3.5rem);font-weight:300;color:white;margin-bottom:1.5rem;}
+.ph-booking-info p{color:rgba(255,255,255,0.5);line-height:1.9;margin-bottom:2rem;font-size:0.95rem;}
+.ph-contact-details{display:flex;flex-direction:column;gap:1rem;}
+.ph-contact-item{display:flex;align-items:center;gap:1rem;color:rgba(255,255,255,0.5);font-size:0.9rem;}
+.ph-contact-item i{color:#d4af37;width:20px;}
+
+.ph-booking-form{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);padding:3rem;}
+.ph-form-title{font-size:1.8rem;font-weight:300;margin-bottom:2rem;color:white;}
+.ph-form-group{margin-bottom:1.5rem;}
+.ph-form-label{display:block;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:0.75rem;}
+.ph-form-input,.ph-form-select,.ph-form-textarea{width:100%;padding:1rem 1.25rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:white;font-size:0.9rem;font-family:'Lato',sans-serif;transition:all 0.3s;outline:none;}
+.ph-form-input:focus,.ph-form-select:focus,.ph-form-textarea:focus{border-color:#d4af37;background:rgba(212,175,55,0.04);}
+.ph-form-select option{background:#1a1a1a;color:white;}
+.ph-form-textarea{min-height:100px;resize:vertical;}
+.ph-form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+
+/* Time Slots */
+.ph-time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;}
+.ph-time-slot{padding:0.6rem;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:0.75rem;font-family:'Lato',sans-serif;cursor:pointer;transition:all 0.3s;text-align:center;}
+.ph-time-slot:hover{border-color:rgba(212,175,55,0.4);color:white;}
+.ph-time-slot.selected{border-color:#d4af37;background:rgba(212,175,55,0.15);color:#d4af37;}
+
+.ph-submit-btn{width:100%;margin-top:1.5rem;padding:1.1rem;font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;border:1px solid #d4af37;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;transition:all 0.3s;}
+.ph-submit-btn:hover{background:transparent;color:white;}
+
+/* ---- Why Choose ---- */
+#ph-why{padding:5rem 0;}
+.ph-why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;}
+.ph-why-item{text-align:center;padding:2.5rem 2rem;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.01);transition:all 0.4s;}
+.ph-why-item:hover{border-color:rgba(212,175,55,0.2);background:rgba(212,175,55,0.02);}
+.ph-why-icon{font-size:1.8rem;color:#d4af37;margin-bottom:1.5rem;}
+.ph-why-item h3{font-size:1.5rem;font-weight:300;color:white;margin-bottom:0.75rem;}
+.ph-why-item p{color:rgba(255,255,255,0.4);line-height:1.8;font-size:0.88rem;}
+
+/* ---- Footer ---- */
+#ph-footer{background:#000;border-top:1px solid rgba(212,175,55,0.15);padding:5rem 0 2rem;position:relative;z-index:2;}
+.ph-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:4rem;}
+.ph-footer-logo{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;}
+.ph-footer-logo span{font-size:1.5rem;} .ph-footer-logo h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;letter-spacing:0.2em;}
+.ph-footer-tagline{color:rgba(255,255,255,0.4);font-size:0.9rem;line-height:1.7;}
+.ph-footer-col h4{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:1.5rem;}
+.ph-footer-col a,.ph-footer-col p{display:block;color:rgba(255,255,255,0.4);text-decoration:none;font-size:0.9rem;margin-bottom:0.75rem;transition:color 0.3s;cursor:pointer;}
+.ph-footer-col a:hover,.ph-footer-col p:hover{color:#d4af37;}
+.ph-footer-bottom{border-top:1px solid rgba(255,255,255,0.06);padding-top:2rem;text-align:center;color:rgba(255,255,255,0.25);font-size:0.85rem;}
+
+/* ---- Animations ---- */
+@keyframes phFadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+.ph-reveal{opacity:0;transform:translateY(50px);transition:opacity 0.9s ease,transform 0.9s ease;}
+.ph-reveal.ph-active{opacity:1;transform:translateY(0);}
+.ph-reveal-left{opacity:0;transform:translateX(-50px);transition:opacity 0.9s ease,transform 0.9s ease;}
+.ph-reveal-left.ph-active{opacity:1;transform:translateX(0);}
+.ph-reveal-right{opacity:0;transform:translateX(50px);transition:opacity 0.9s ease,transform 0.9s ease;}
+.ph-reveal-right.ph-active{opacity:1;transform:translateX(0);}
+
+/* ---- Toast ---- */
+.ph-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;padding:1rem 2rem;font-size:0.8rem;font-weight:700;letter-spacing:0.1em;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.ph-toast.show{opacity:1;}
+
+/* ---- Responsive ---- */
+@media(max-width:1024px){.ph-process-grid{grid-template-columns:repeat(2,1fr);}.ph-footer-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:900px){.ph-booking-wrapper{grid-template-columns:1fr;}.ph-services-grid{grid-template-columns:1fr;}.ph-why-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){
+  #ph-nav{padding:1.2rem 1.5rem;} .ph-nav-links{display:none;} .ph-hamburger{display:flex;}
+  .ph-why-grid{grid-template-columns:1fr;} .ph-process-grid{grid-template-columns:1fr 1fr;}
+  .ph-form-row{grid-template-columns:1fr;} .ph-footer-grid{grid-template-columns:1fr 1fr;gap:2rem;}
+  .ph-booking-form{padding:2rem;}
+}
+@media(max-width:480px){.ph-footer-grid{grid-template-columns:1fr;}.ph-process-grid{grid-template-columns:1fr;}}
+</style>
+
+<div id="ph-overlay">
+<canvas id="ph-canvas"></canvas>
+
+<div id="ph-app">
+
+  <!-- Nav -->
+  <nav id="ph-nav">
+    <a href="/" class="ph-logo"><span>🐧</span><h1>PENGUIN HAIRS</h1></a>
+    <div class="ph-nav-links">
+      <a href="/">Home</a>
+      <a href="/shop">Collection</a>
+      <a href="/styling" class="active">Styling</a>
+    </div>
+    <button class="ph-hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  </nav>
+
+  <div class="ph-mobile-menu" id="ph-mobile-menu">
+    <button class="ph-close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
+    <a href="/" onclick="toggleMenu()">Home</a>
+    <a href="/shop" onclick="toggleMenu()">Collection</a>
+    <a href="/styling" onclick="toggleMenu()">Styling</a>
+  </div>
+
+  <!-- Hero -->
+  <section id="ph-hero">
+    <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=1920&q=80" alt="Peng Hair Styling">
+    <div class="ph-hero-content">
+      <p class="ph-eyebrow">Professional Artistry</p>
+      <h1>Peng Hair Styling</h1>
+      <p>Expert installation & personalized styling services</p>
+      <div class="ph-hero-btns">
+        <a href="#ph-booking" class="ph-btn ph-btn-gold">Book Appointment</a>
+        <a href="#ph-services" class="ph-btn">Our Services</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="ph-section ph-dark" id="ph-services">
+    <div class="ph-container">
+      <div class="ph-section-header">
+        <div class="ph-gold-line"></div>
+        <h2 class="ph-reveal">Our Services</h2>
+        <p class="ph-reveal">Professional care from master artisans</p>
+      </div>
+      <div class="ph-services-grid" style="padding-bottom:5rem;">
+        <div class="ph-service-card ph-reveal-left">
+          <div class="ph-service-icon"><i class="fas fa-crown"></i></div>
+          <h3>Wig Installation</h3>
+          <div class="ph-service-meta">
+            <span class="ph-duration"><i class="far fa-clock"></i> 2 hours</span>
+            <span class="ph-price-tag">From $150</span>
+          </div>
+          <p>Professional wig installation with seamless blending and natural hairline customization. Our expert stylists ensure a flawless, undetectable finish every time.</p>
+          <button class="ph-book-btn" onclick="document.getElementById('ph-booking').scrollIntoView({behavior:'smooth'});document.getElementById('ph-service-select').value='Wig Installation'">Book This Service</button>
+        </div>
+        <div class="ph-service-card ph-reveal-right">
+          <div class="ph-service-icon"><i class="fas fa-cut"></i></div>
+          <h3>Custom Wig Cut</h3>
+          <div class="ph-service-meta">
+            <span class="ph-duration"><i class="far fa-clock"></i> 1.5 hours</span>
+            <span class="ph-price-tag">From $120</span>
+          </div>
+          <p>Precision cutting tailored to your face shape and style preferences. We sculpt your wig to frame your features perfectly, creating a look uniquely yours.</p>
+          <button class="ph-book-btn" onclick="document.getElementById('ph-booking').scrollIntoView({behavior:'smooth'});document.getElementById('ph-service-select').value='Custom Wig Cut'">Book This Service</button>
+        </div>
+        <div class="ph-service-card ph-reveal-left">
+          <div class="ph-service-icon"><i class="fas fa-palette"></i></div>
+          <h3>Wig Styling & Color</h3>
+          <div class="ph-service-meta">
+            <span class="ph-duration"><i class="far fa-clock"></i> 3 hours</span>
+            <span class="ph-price-tag">From $200</span>
+          </div>
+          <p>Complete styling and professional coloring services for your perfect look. From highlights to full color transformations, we bring your vision to life with artistry.</p>
+          <button class="ph-book-btn" onclick="document.getElementById('ph-booking').scrollIntoView({behavior:'smooth'});document.getElementById('ph-service-select').value='Wig Styling & Color'">Book This Service</button>
+        </div>
+        <div class="ph-service-card ph-reveal-right">
+          <div class="ph-service-icon"><i class="fas fa-spa"></i></div>
+          <h3>Maintenance & Refresh</h3>
+          <div class="ph-service-meta">
+            <span class="ph-duration"><i class="far fa-clock"></i> 1 hour</span>
+            <span class="ph-price-tag">From $80</span>
+          </div>
+          <p>Deep cleaning, conditioning, and restyling to restore your wig's beauty. Regular maintenance extends the life of your investment and keeps it looking brand new.</p>
+          <button class="ph-book-btn" onclick="document.getElementById('ph-booking').scrollIntoView({behavior:'smooth'});document.getElementById('ph-service-select').value='Maintenance & Refresh'">Book This Service</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Process -->
+  <section class="ph-section" id="ph-process">
+    <div class="ph-container">
+      <div class="ph-section-header">
+        <div class="ph-gold-line"></div>
+        <h2 class="ph-reveal">How It Works</h2>
+        <p class="ph-reveal">A seamless experience from booking to reveal</p>
+      </div>
+      <div class="ph-process-grid">
+        <div class="ph-process-step ph-reveal">
+          <div class="ph-step-num">01</div>
+          <h3>Book Online</h3>
+          <p>Choose your service, select a date and time that suits you, and fill in your details below.</p>
+        </div>
+        <div class="ph-process-step ph-reveal">
+          <div class="ph-step-num">02</div>
+          <h3>Consultation</h3>
+          <p>We discuss your vision, hair goals, and recommend the best style and service for your needs.</p>
+        </div>
+        <div class="ph-process-step ph-reveal">
+          <div class="ph-step-num">03</div>
+          <h3>Expert Styling</h3>
+          <p>Our master artisans work their craft, ensuring every detail is perfect before you see the result.</p>
+        </div>
+        <div class="ph-process-step ph-reveal">
+          <div class="ph-step-num">04</div>
+          <h3>Your Reveal</h3>
+          <p>Walk out looking and feeling flawless. We also share aftercare tips to keep your style lasting longer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking Form -->
+  <section class="ph-section ph-dark" id="ph-booking">
+    <div class="ph-container" style="padding-top:5rem;padding-bottom:5rem;">
+      <div class="ph-booking-wrapper">
+        <div class="ph-booking-info ph-reveal-left">
+          <div class="ph-gold-line" style="margin:0 0 1.5rem;"></div>
+          <h2>Book Your Appointment</h2>
+          <p>Ready to transform your look? Book a session with our expert stylists. We'll make sure every detail is perfect before you walk out the door.</p>
+          <div class="ph-contact-details">
+            <div class="ph-contact-item"><i class="far fa-envelope"></i> info@penguinhairs.com</div>
+            <div class="ph-contact-item"><i class="far fa-clock"></i> Mon – Sat: 9am – 6pm</div>
+            <div class="ph-contact-item"><i class="fab fa-instagram"></i> @penguinhairs</div>
+          </div>
+        </div>
+        <div class="ph-booking-form ph-reveal-right">
+          <h3 class="ph-form-title">Appointment Details</h3>
+          <div class="ph-form-row">
+            <div class="ph-form-group">
+              <label class="ph-form-label">First Name</label>
+              <input type="text" class="ph-form-input" id="ph-fname" placeholder="Jane">
+            </div>
+            <div class="ph-form-group">
+              <label class="ph-form-label">Last Name</label>
+              <input type="text" class="ph-form-input" id="ph-lname" placeholder="Doe">
+            </div>
+          </div>
+          <div class="ph-form-group">
+            <label class="ph-form-label">Email Address</label>
+            <input type="text" class="ph-form-input" id="ph-email" placeholder="jane@example.com">
+          </div>
+          <div class="ph-form-group">
+            <label class="ph-form-label">Select Service</label>
+            <select class="ph-form-select" id="ph-service-select">
+              <option value="">Choose a service...</option>
+              <option value="Wig Installation">Wig Installation — from $150</option>
+              <option value="Custom Wig Cut">Custom Wig Cut — from $120</option>
+              <option value="Wig Styling & Color">Wig Styling & Color — from $200</option>
+              <option value="Maintenance & Refresh">Maintenance & Refresh — from $80</option>
+            </select>
+          </div>
+          <div class="ph-form-group">
+            <label class="ph-form-label">Preferred Date</label>
+            <input type="date" class="ph-form-input" id="ph-date">
+          </div>
+          <div class="ph-form-group">
+            <label class="ph-form-label">Preferred Time</label>
+            <div class="ph-time-grid" id="ph-time-grid">
+              <button class="ph-time-slot" onclick="selectTime(this,'9:00 AM')">9:00 AM</button>
+              <button class="ph-time-slot" onclick="selectTime(this,'10:00 AM')">10:00 AM</button>
+              <button class="ph-time-slot" onclick="selectTime(this,'11:00 AM')">11:00 AM</button>
+              <button class="ph-time-slot" onclick="selectTime(this,'12:00 PM')">12:00 PM</button>
+              <button class="ph-time-slot" onclick="selectTime(this,'1:00 PM')">1:00 PM</button>
+              <button class="ph-time-slot" onclick="selectTime(this,'2:00 PM')">2:00 PM</button>
+              <button class="ph-time-slot" onclick="selectTime(this,'3:00 PM')">3:00 PM</button>
+              <button class="ph-time-slot" onclick="selectTime(this,'4:00 PM')">4:00 PM</button>
+              <button class="ph-time-slot" onclick="selectTime(this,'5:00 PM')">5:00 PM</button>
+            </div>
+          </div>
+          <div class="ph-form-group">
+            <label class="ph-form-label">Additional Notes (Optional)</label>
+            <textarea class="ph-form-textarea" id="ph-notes" placeholder="Tell us about any special requests or your hair goals..."></textarea>
+          </div>
+          <button class="ph-submit-btn" onclick="submitBooking()">Confirm Appointment</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Choose -->
+  <section class="ph-section" id="ph-why" style="padding-bottom:2rem;">
+    <div class="ph-container">
+      <div class="ph-section-header">
+        <div class="ph-gold-line"></div>
+        <h2 class="ph-reveal">Why Choose Peng Hair Styling</h2>
+      </div>
+      <div class="ph-why-grid" style="padding-bottom:5rem;">
+        <div class="ph-why-item ph-reveal">
+          <div class="ph-why-icon"><i class="fas fa-award"></i></div>
+          <h3>Master Artisans</h3>
+          <p>Our stylists are trained professionals with years of experience in luxury wig installation and hair artistry.</p>
+        </div>
+        <div class="ph-why-item ph-reveal">
+          <div class="ph-why-icon"><i class="fas fa-user"></i></div>
+          <h3>Personalized Care</h3>
+          <p>Every client is unique. We tailor every service to your specific hair type, face shape, and lifestyle.</p>
+        </div>
+        <div class="ph-why-item ph-reveal">
+          <div class="ph-why-icon"><i class="fas fa-star"></i></div>
+          <h3>Luxury Experience</h3>
+          <p>From the moment you walk in to your reveal, every detail is designed to make you feel exceptional.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="ph-footer">
+    <div class="ph-container">
+      <div class="ph-footer-grid">
+        <div>
+          <div class="ph-footer-logo"><span>🐧</span><h3>PENGUIN HAIRS</h3></div>
+          <p class="ph-footer-tagline">Premium luxury wigs and professional styling services. Where beauty meets artistry.</p>
+        </div>
+        <div class="ph-footer-col">
+          <h4>Navigate</h4>
+          <a href="/">Home</a><a href="/shop">Collection</a><a href="/styling">Styling</a>
+        </div>
+        <div class="ph-footer-col">
+          <h4>Support</h4>
+          <p>Shipping & Returns</p><p>Care Guide</p><p>FAQ</p>
+        </div>
+        <div class="ph-footer-col">
+          <h4>Contact</h4>
+          <p>info@penguinhairs.com</p><p>Instagram: @penguinhairs</p>
+        </div>
+      </div>
+      <div class="ph-footer-bottom"><p>&copy; 2026 Penguin Hairs. All rights reserved.</p></div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Toast -->
+<div class="ph-toast" id="ph-toast"></div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+
+// ---- Hide Squarespace chrome (overlay handles layout) ----
+(function(){
+  var s=document.createElement('style');
+  s.textContent='header,footer,.Header,.Footer,.site-header,.site-footer,.mobile-bar{display:none!important;}';
+  document.head.appendChild(s);
+})();
+
+
+
+        // ---- THREE.JS PARTICLE WAVE ----
+        const canvas = document.getElementById('ph-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        camera.position.set(0, 30, 60);
+        camera.lookAt(0, -10, 0);
+        const isMobile = window.innerWidth < 768;
+        const gridSize = isMobile ? 50 : 80; const spacing = 3; const total = gridSize * gridSize;
+        const geo = new THREE.BufferGeometry();
+        const p = new Float32Array(total * 3);
+        const o = new Float32Array(total * 3);
+        let ki = 0;
+        for (let i = 0; i < gridSize; i++) for (let j = 0; j < gridSize; j++) {
+            const x = (i - gridSize/2) * spacing, z = (j - gridSize/2) * spacing;
+            p[ki] = o[ki] = x; p[ki+1] = o[ki+1] = 0; p[ki+2] = o[ki+2] = z; ki += 3;
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+        const dc = document.createElement('canvas'); dc.width = dc.height = 64;
+        const dctx = dc.getContext('2d');
+        const gr = dctx.createRadialGradient(32,32,0,32,32,32);
+        gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.4,'rgba(255,255,255,0.6)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+        dctx.fillStyle = gr; dctx.fillRect(0,0,64,64);
+        const ptMat = new THREE.PointsMaterial({ color:0xffffff, size:0.35, transparent:true, opacity:0.75, blending:THREE.AdditiveBlending, map:new THREE.CanvasTexture(dc), sizeAttenuation:true, depthWrite:false });
+        const pts = new THREE.Points(geo, ptMat); scene.add(pts);
+        const lg = new THREE.BufferGeometry(); const lp = [];
+        for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+            const idx=(i*gridSize+j)*3;
+            if(j<gridSize-1){const r=(i*gridSize+(j+1))*3; lp.push(p[idx],p[idx+1],p[idx+2],p[r],p[r+1],p[r+2]);}
+            if(i<gridSize-1){const b=((i+1)*gridSize+j)*3; lp.push(p[idx],p[idx+1],p[idx+2],p[b],p[b+1],p[b+2]);}
+        }
+        lg.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+        const lines = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({color:0x88ccff,transparent:true,opacity:0.08,blending:THREE.AdditiveBlending}));
+        scene.add(lines);
+        let t = 0;
+        function animate() {
+            requestAnimationFrame(animate); t += 0.008;
+            const pa = pts.geometry.attributes.position.array;
+            const la = lines.geometry.attributes.position.array;
+            let pi = 0;
+            for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+                const ox=o[pi], oz=o[pi+2];
+                const d=Math.sqrt(ox*ox+oz*oz);
+                pa[pi+1] = Math.sin(ox*0.15+t)*8 + Math.sin(oz*0.15+t*1.2)*6 + Math.cos((ox+oz)*0.1+t*0.8)*4 + Math.sin(d*0.1-t*2)*5;
+                pi += 3;
+            }
+            let li = 0;
+            for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+                const idx=(i*gridSize+j)*3;
+                if(j<gridSize-1){const r=(i*gridSize+(j+1))*3; la[li]=pa[idx];la[li+1]=pa[idx+1];la[li+2]=pa[idx+2];la[li+3]=pa[r];la[li+4]=pa[r+1];la[li+5]=pa[r+2]; li+=6;}
+                if(i<gridSize-1){const b=((i+1)*gridSize+j)*3; la[li]=pa[idx];la[li+1]=pa[idx+1];la[li+2]=pa[idx+2];la[li+3]=pa[b];la[li+4]=pa[b+1];la[li+5]=pa[b+2]; li+=6;}
+            }
+            pts.geometry.attributes.position.needsUpdate = true;
+            lines.geometry.attributes.position.needsUpdate = true;
+            pts.rotation.y = t * 0.05; lines.rotation.y = t * 0.05;
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+// ---- NAV ----
+document.getElementById('ph-overlay').addEventListener('scroll',()=>document.getElementById('ph-nav').classList.toggle('scrolled',(document.getElementById('ph-overlay')||window).scrollTop||window.scrollY>80));
+window.toggleMenu=()=>document.getElementById('ph-mobile-menu').classList.toggle('open');
+
+// ---- SCROLL REVEAL ----
+const overlayRoot=document.getElementById('ph-overlay');
+const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('ph-active');observer.unobserve(e.target);}});},{root:overlayRoot,threshold:0.08});
+setTimeout(()=>{document.querySelectorAll('.ph-reveal,.ph-reveal-left,.ph-reveal-right').forEach(el=>el.classList.add('ph-active'));},1500);
+document.querySelectorAll('.ph-reveal,.ph-reveal-left,.ph-reveal-right').forEach(el=>observer.observe(el));
+setTimeout(()=>{document.querySelectorAll('.ph-reveal,.ph-reveal-left,.ph-reveal-right').forEach(el=>el.classList.add('ph-active'));},1500);
+
+// ---- SET MIN DATE ----
+const dateInput=document.getElementById('ph-date');
+if(dateInput){const today=new Date();const yyyy=today.getFullYear();const mm=String(today.getMonth()+1).padStart(2,'0');const dd=String(today.getDate()).padStart(2,'0');dateInput.min=`${yyyy}-${mm}-${dd}`;}
+
+// ---- TIME SLOT ----
+let selectedTime='';
+window.selectTime=(btn,time)=>{
+  document.querySelectorAll('.ph-time-slot').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); selectedTime=time;
+};
+
+// ---- BOOKING SUBMIT ----
+window.submitBooking=()=>{
+  const fname=document.getElementById('ph-fname').value.trim();
+  const email=document.getElementById('ph-email').value.trim();
+  const service=document.getElementById('ph-service-select').value;
+  const date=document.getElementById('ph-date').value;
+  if(!fname||!email||!service||!date||!selectedTime){
+    showToast('Please fill in all required fields'); return;
+  }
+  showToast(`✓ Appointment confirmed! We'll email ${email} shortly.`);
+  document.getElementById('ph-fname').value='';
+  document.getElementById('ph-lname').value='';
+  document.getElementById('ph-email').value='';
+  document.getElementById('ph-service-select').value='';
+  document.getElementById('ph-date').value='';
+  document.getElementById('ph-notes').value='';
+  document.querySelectorAll('.ph-time-slot').forEach(b=>b.classList.remove('selected'));
+  selectedTime='';
+};
+
+// ---- TOAST ----
+function showToast(msg){const t=document.getElementById('ph-toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
+
+})();
+</script>

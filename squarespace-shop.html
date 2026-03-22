@@ -1,0 +1,536 @@
+<!-- ============================================
+     PENGUIN HAIRS - SHOP / COLLECTION PAGE
+     Paste this ENTIRE code into a Squarespace Code Block
+     Page slug: /shop
+     ============================================ -->
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ---- OVERLAY APPROACH: sits fixed on top of all Squarespace UI ---- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow: hidden !important; }
+
+#ph-overlay {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  overflow-y: scroll !important; overflow-x: hidden !important;
+  z-index: 999999 !important;
+  background: #0a0a0a !important;
+  scroll-behavior: smooth;
+}
+#ph-overlay::-webkit-scrollbar { width: 6px; }
+#ph-overlay::-webkit-scrollbar-track { background: #111; }
+#ph-overlay::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+
+#ph-app {
+  font-family: 'Lato', sans-serif;
+  color: white;
+  background: #0a0a0a;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+}
+#ph-app h1, #ph-app h2, #ph-app h3, #ph-app h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; }
+html{scroll-behavior:smooth;}
+::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:#111;} ::-webkit-scrollbar-thumb{background:#d4af37;border-radius:3px;}
+
+/* ---- Canvas ---- */
+#ph-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+
+/* ---- Nav ---- */
+#ph-nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.5rem 3rem;display:flex;align-items:center;justify-content:space-between;transition:all 0.5s ease;}
+#ph-nav.scrolled{background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,175,55,0.15);padding:1rem 3rem;}
+.ph-logo{display:flex;align-items:center;gap:0.75rem;text-decoration:none;}
+.ph-logo span{font-size:1.5rem;}
+.ph-logo h1{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;letter-spacing:0.2em;color:white;}
+.ph-nav-links{display:flex;gap:2.5rem;align-items:center;}
+.ph-nav-links a{color:rgba(255,255,255,0.8);text-decoration:none;font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.3s;position:relative;}
+.ph-nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:#d4af37;transition:width 0.3s;}
+.ph-nav-links a:hover{color:white;} .ph-nav-links a:hover::after,.ph-nav-links a.active::after{width:100%;}
+.ph-nav-links a.active{color:#d4af37;}
+.ph-cart-btn{position:relative;background:none;border:none;color:white;cursor:pointer;font-size:1.1rem;padding:0.5rem;}
+.ph-cart-count{position:absolute;top:-5px;right:-5px;background:#d4af37;color:#000;font-size:0.65rem;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.ph-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:0.5rem;}
+.ph-hamburger span{display:block;width:24px;height:1px;background:white;transition:all 0.3s;}
+.ph-mobile-menu{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.98);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
+.ph-mobile-menu.open{display:flex;}
+.ph-mobile-menu a{color:white;text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;letter-spacing:0.1em;transition:color 0.3s;}
+.ph-mobile-menu a:hover{color:#d4af37;}
+.ph-close-menu{position:absolute;top:2rem;right:2rem;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;}
+
+/* ---- Shop Hero ---- */
+#ph-shop-hero{position:relative;height:45vh;min-height:300px;display:flex;align-items:center;justify-content:center;z-index:2;background:rgba(0,0,0,0.4);overflow:hidden;margin-top:0;}
+#ph-shop-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.7),rgba(0,0,0,0.5));}
+.ph-shop-hero-content{position:relative;z-index:2;text-align:center;padding:2rem;}
+.ph-shop-hero-content h1{font-size:clamp(3rem,7vw,6rem);font-weight:300;letter-spacing:0.08em;background:linear-gradient(135deg,#fff 30%,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1rem;opacity:0;animation:phFadeUp 1s ease forwards 0.3s;}
+.ph-shop-hero-content p{font-size:1rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.6);opacity:0;animation:phFadeUp 1s ease forwards 0.6s;}
+
+/* ---- Filters ---- */
+#ph-filters{position:sticky;top:72px;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);padding:0;}
+.ph-filters-inner{max-width:1400px;margin:0 auto;padding:1.2rem 2rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;}
+.ph-filter-group{display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;}
+.ph-filter-label{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-right:0.5rem;}
+.ph-filter-btn{padding:0.5rem 1.2rem;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.6);cursor:pointer;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;transition:all 0.3s;font-family:'Lato',sans-serif;}
+.ph-filter-btn:hover{border-color:rgba(212,175,55,0.5);color:white;}
+.ph-filter-btn.active{background:linear-gradient(135deg,#d4af37,#f4d03f);border-color:#d4af37;color:#000;font-weight:700;}
+.ph-search-box{display:flex;align-items:center;gap:0.75rem;border:1px solid rgba(255,255,255,0.12);padding:0.5rem 1rem;background:rgba(255,255,255,0.02);}
+.ph-search-box i{color:rgba(255,255,255,0.35);font-size:0.85rem;}
+.ph-search-box input{background:none;border:none;color:white;font-size:0.8rem;font-family:'Lato',sans-serif;outline:none;width:180px;}
+.ph-search-box input::placeholder{color:rgba(255,255,255,0.25);}
+
+/* ---- Products Grid ---- */
+#ph-shop-main{position:relative;z-index:2;max-width:1400px;margin:0 auto;padding:3rem 2rem 6rem;}
+.ph-products-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2.5rem;}
+.ph-products-header p{color:rgba(255,255,255,0.4);font-size:0.85rem;}
+.ph-sort-select{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);padding:0.5rem 1rem;font-size:0.8rem;font-family:'Lato',sans-serif;outline:none;cursor:pointer;}
+.ph-sort-select option{background:#1a1a1a;}
+
+.ph-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;}
+.ph-card{position:relative;overflow:hidden;cursor:pointer;background:#111;border:1px solid transparent;transition:all 0.5s ease;}
+.ph-card:hover{border-color:rgba(212,175,55,0.4);transform:translateY(-8px);box-shadow:0 25px 60px rgba(0,0,0,0.6);}
+.ph-card-img{height:360px;overflow:hidden;position:relative;}
+.ph-card-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.8s ease;}
+/* ---- Video support: mirrors image behaviour ---- */
+#ph-hero video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; filter: brightness(0.45);
+}
+.ph-product-card video {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.8s ease;
+}
+.ph-product-card:hover video { transform: scale(1.1); }
+.ph-card-img video {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.8s ease;
+}
+.ph-card:hover .ph-card-img video { transform: scale(1.1); }
+
+.ph-card:hover .ph-card-img img{transform:scale(1.1);}
+.ph-card-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.9));opacity:0;transition:opacity 0.5s;}
+.ph-card:hover .ph-card-overlay{opacity:1;}
+.ph-card-badge{position:absolute;top:1rem;right:1rem;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;padding:0.3rem 0.8rem;font-size:0.62rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;z-index:2;}
+.ph-card-body{padding:1.25rem;}
+.ph-card-body p{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:#d4af37;margin-bottom:0.4rem;}
+.ph-card-body h3{font-size:1.3rem;font-weight:300;margin-bottom:0.4rem;color:white;}
+.ph-card-body .ph-card-desc{font-size:0.78rem;color:rgba(255,255,255,0.4);line-height:1.6;margin-bottom:0.8rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ph-card-footer{display:flex;justify-content:space-between;align-items:center;}
+.ph-card-price{font-size:1.1rem;color:white;}
+.ph-card-price small{font-size:0.7rem;color:rgba(255,255,255,0.4);}
+.ph-quick-btn{padding:0.5rem 1rem;border:1px solid rgba(212,175,55,0.4);background:transparent;color:#d4af37;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;font-family:'Lato',sans-serif;}
+.ph-quick-btn:hover{background:#d4af37;color:#000;}
+.ph-no-results{text-align:center;padding:5rem 2rem;color:rgba(255,255,255,0.3);}
+.ph-no-results i{font-size:3rem;margin-bottom:1rem;display:block;}
+
+/* ---- Product Modal ---- */
+.ph-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:3000;display:flex;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(15px);}
+.ph-modal{background:#141414;border:1px solid rgba(212,175,55,0.2);max-width:950px;width:100%;max-height:90vh;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;animation:phSlideUp 0.4s ease;}
+.ph-modal-img{position:relative;min-height:500px;overflow:hidden;}
+.ph-modal-img img{width:100%;height:100%;object-fit:cover;}
+.ph-modal-body{padding:3rem;display:flex;flex-direction:column;overflow-y:auto;}
+.ph-modal-close{position:absolute;top:1.5rem;right:1.5rem;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.1);color:white;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;z-index:10;transition:all 0.3s;}
+.ph-modal-close:hover{background:#d4af37;color:#000;}
+.ph-modal-category{font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase;color:#d4af37;margin-bottom:0.75rem;}
+.ph-modal-title{font-size:2.2rem;font-weight:300;margin-bottom:1rem;}
+.ph-modal-desc{color:rgba(255,255,255,0.5);line-height:1.8;font-size:0.9rem;margin-bottom:1.5rem;}
+.ph-modal-price{font-size:2rem;color:white;margin-bottom:2rem;}
+.ph-modal-price small{font-size:0.9rem;color:rgba(255,255,255,0.4);}
+
+/* Customization options */
+.ph-option-group{margin-bottom:1.5rem;}
+.ph-option-label{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:0.75rem;display:block;}
+.ph-options{display:flex;flex-wrap:wrap;gap:0.5rem;}
+.ph-opt{padding:0.45rem 0.9rem;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.6);cursor:pointer;font-size:0.72rem;font-family:'Lato',sans-serif;transition:all 0.3s;}
+.ph-opt:hover{border-color:rgba(212,175,55,0.5);color:white;}
+.ph-opt.selected{background:linear-gradient(135deg,#d4af37,#f4d03f);border-color:#d4af37;color:#000;font-weight:700;}
+.ph-selection-summary{background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);padding:1rem;margin-bottom:1.5rem;font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.8;}
+.ph-add-btn{width:100%;padding:1.1rem;font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;border:1px solid #d4af37;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;transition:all 0.3s;}
+.ph-add-btn:hover{background:transparent;color:white;}
+.ph-add-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* ---- Cart Panel ---- */
+#ph-cart-panel{position:fixed;top:0;right:-420px;width:420px;height:100%;background:#111;z-index:2000;transition:right 0.4s ease;display:flex;flex-direction:column;border-left:1px solid rgba(212,175,55,0.15);}
+#ph-cart-panel.open{right:0;}
+.ph-cart-header{padding:2rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;}
+.ph-cart-header h3{font-size:1.4rem;font-weight:300;letter-spacing:0.15em;}
+.ph-cart-close{background:none;border:none;color:white;cursor:pointer;font-size:1.2rem;}
+.ph-cart-items{flex:1;overflow-y:auto;padding:1.5rem;}
+.ph-cart-empty{text-align:center;padding:4rem 2rem;color:rgba(255,255,255,0.35);}
+.ph-cart-item{padding:1.2rem 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+.ph-ci-top{display:flex;justify-content:space-between;align-items:start;margin-bottom:0.3rem;}
+.ph-ci-top h4{font-size:1rem;font-weight:400;}
+.ph-ci-top span{color:#d4af37;}
+.ph-ci-specs{font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:0.5rem;}
+.ph-ci-qty{display:flex;align-items:center;gap:0.75rem;}
+.ph-ci-qty button{background:none;border:1px solid rgba(255,255,255,0.15);color:white;width:26px;height:26px;cursor:pointer;font-size:0.9rem;transition:border-color 0.2s;}
+.ph-ci-qty button:hover{border-color:#d4af37;color:#d4af37;}
+.ph-ci-qty span{font-size:0.85rem;}
+.ph-cart-footer{padding:2rem;border-top:1px solid rgba(255,255,255,0.08);}
+.ph-cart-total{display:flex;justify-content:space-between;margin-bottom:1.5rem;font-size:1.1rem;}
+.ph-cart-total span:last-child{color:#d4af37;}
+.ph-checkout-btn{width:100%;padding:1.1rem;font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;border:1px solid #d4af37;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;transition:all 0.3s;}
+.ph-checkout-btn:hover{background:transparent;color:white;}
+
+/* ---- Animations ---- */
+@keyframes phFadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes phSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---- Responsive ---- */
+@media(max-width:1200px){.ph-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:900px){.ph-grid{grid-template-columns:repeat(2,1fr);}.ph-modal{grid-template-columns:1fr;}.ph-modal-img{min-height:300px;}}
+@media(max-width:768px){
+  #ph-nav{padding:1.2rem 1.5rem;} .ph-nav-links{display:none;} .ph-hamburger{display:flex;}
+  .ph-grid{grid-template-columns:1fr 1fr;} #ph-cart-panel{width:100%;right:-100%;}
+  .ph-filters-inner{flex-direction:column;align-items:flex-start;gap:0.75rem;}
+  .ph-modal{max-height:95vh;}
+}
+@media(max-width:480px){.ph-grid{grid-template-columns:1fr;}.ph-card-img{height:280px;}}
+</style>
+
+<div id="ph-overlay">
+<canvas id="ph-canvas"></canvas>
+
+<div id="ph-app">
+
+  <!-- Nav -->
+  <nav id="ph-nav">
+    <a href="/" class="ph-logo"><span>🐧</span><h1>PENGUIN HAIRS</h1></a>
+    <div class="ph-nav-links">
+      <a href="/">Home</a>
+      <a href="/shop" class="active">Collection</a>
+      <a href="/styling">Styling</a>
+      <button class="ph-cart-btn" onclick="toggleCart()">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="ph-cart-count" id="ph-cart-count" style="display:none">0</span>
+      </button>
+    </div>
+    <button class="ph-hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  </nav>
+
+  <div class="ph-mobile-menu" id="ph-mobile-menu">
+    <button class="ph-close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
+    <a href="/" onclick="toggleMenu()">Home</a>
+    <a href="/shop" onclick="toggleMenu()">Collection</a>
+    <a href="/styling" onclick="toggleMenu()">Styling</a>
+    <a href="#" onclick="toggleCart();toggleMenu()"><i class="fas fa-shopping-bag"></i> Cart</a>
+  </div>
+
+  <!-- Shop Hero -->
+  <section id="ph-shop-hero">
+    <div class="ph-shop-hero-content">
+      <h1>The Collection</h1>
+      <p>12 premium styles · 100% raw donor hair</p>
+    </div>
+  </section>
+
+  <!-- Filters -->
+  <div id="ph-filters">
+    <div class="ph-filters-inner">
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;">
+        <div class="ph-filter-group">
+          <span class="ph-filter-label">Category</span>
+          <button class="ph-filter-btn active" onclick="filterProducts('category','All',this)">All</button>
+          <button class="ph-filter-btn" onclick="filterProducts('category','Straight',this)">Straight</button>
+          <button class="ph-filter-btn" onclick="filterProducts('category','Wavy',this)">Wavy</button>
+          <button class="ph-filter-btn" onclick="filterProducts('category','Curly',this)">Curly</button>
+          <button class="ph-filter-btn" onclick="filterProducts('category','Short',this)">Short</button>
+        </div>
+      </div>
+      <div class="ph-search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search styles..." oninput="searchProducts(this.value)" id="ph-search">
+      </div>
+    </div>
+  </div>
+
+  <!-- Products -->
+  <main id="ph-shop-main">
+    <div class="ph-products-header">
+      <p id="ph-count">Showing all 12 styles</p>
+      <select class="ph-sort-select" onchange="sortProducts(this.value)">
+        <option value="default">Sort: Default</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="name">Name: A-Z</option>
+      </select>
+    </div>
+    <div class="ph-grid" id="ph-grid"></div>
+    <div class="ph-no-results" id="ph-no-results" style="display:none">
+      <i class="fas fa-search"></i>
+      <p>No styles found. Try a different search.</p>
+    </div>
+  </main>
+
+</div>
+
+<!-- Modal -->
+<div class="ph-modal-bg" id="ph-modal" style="display:none" onclick="closeModal(event)">
+  <div class="ph-modal" id="ph-modal-inner">
+    <div class="ph-modal-img">
+      <div id="ph-modal-media" style="width:100%;height:100%;"></div>
+      <button class="ph-modal-close" onclick="closeModalDirect()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="ph-modal-body">
+      <p class="ph-modal-category" id="ph-modal-cat"></p>
+      <h2 class="ph-modal-title" id="ph-modal-title"></h2>
+      <p class="ph-modal-desc" id="ph-modal-desc"></p>
+      <p class="ph-modal-price"><small>From </small><span id="ph-modal-price"></span></p>
+      <div id="ph-modal-opts"></div>
+      <div class="ph-selection-summary" id="ph-sel-summary" style="display:none"></div>
+      <button class="ph-add-btn" id="ph-add-btn" onclick="addToCart()" disabled>Select All Options to Add to Bag</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cart Panel -->
+<div id="ph-cart-panel">
+  <div class="ph-cart-header">
+    <h3>Your Bag</h3>
+    <button class="ph-cart-close" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="ph-cart-items" id="ph-cart-items">
+    <div class="ph-cart-empty"><i class="fas fa-shopping-bag" style="font-size:2rem;margin-bottom:1rem;display:block;color:rgba(255,255,255,0.2)"></i><p>Your bag is empty</p></div>
+  </div>
+  <div class="ph-cart-footer">
+    <div class="ph-cart-total"><span>Total</span><span id="ph-cart-total">$0.00</span></div>
+    <button class="ph-checkout-btn" onclick="alert('Checkout integration coming soon!')">Proceed to Checkout</button>
+  </div>
+</div>
+</div><!-- end ph-overlay -->
+<div id="ph-cart-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1999;display:none" onclick="toggleCart()"></div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+
+// ---- Hide Squarespace chrome (overlay handles layout) ----
+(function(){
+  var s=document.createElement('style');
+  s.textContent='header,footer,.Header,.Footer,.site-header,.site-footer,.mobile-bar{display:none!important;}';
+  document.head.appendChild(s);
+})();
+
+
+// ---- DATA ----
+const PRODUCTS = [
+  {id:1,name:'Bone Straight',category:'Straight',price:289,video:'https://res.cloudinary.com/dzbzox0x8/video/upload/q_auto:eco,w_700,h_900,c_fill,br_800k,vc_auto/v1771105365/SnapInsta.to_AQPm2TBi65QmUYxOAgFkWIIrTc9gVr8TFtxSqjGTIQXEEz0YTolg_h5LxcE-U9GH_XyXH-W-o8DoCglC_tY-F9rIyySXG86tz3dXDNY_pn9go1.mp4',lengths:['16"','18"','20"','22"','24"','26"','30"'],closures:['2*4','4*4','5*5','13*4','13*6'],colors:['Natural Black','Brown','Blonde','Burgundy','Ombre'],weights:['180g','200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG',desc:'Silky smooth bone straight hair with a flawless, mirror-like finish. The ultimate in sleek sophistication.',featured:true},
+  {id:2,name:'Raw Wavy',category:'Wavy',price:299,lengths:['16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4','13*6'],colors:['Natural Black','Brown','Burgundy'],weights:['200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG',desc:'Natural wavy texture sourced from raw donor hair. Beautiful movement and volume.',featured:true},
+  {id:3,name:'Deep Wave',category:'Curly',price:329,lengths:['14"','16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4','13*6'],colors:['Natural Black','Brown','Burgundy','Ombre'],weights:['200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ceceb112e1086ef6e/1771106638474/IMG_3445.JPG',desc:'Deep, defined wave pattern with exceptional bounce and volume throughout.',featured:true},
+  {id:4,name:'Mexican Curls Fringe',category:'Curly',price:379,lengths:['12"','14"','16"','18"','20"'],closures:['Fringe','4*4'],colors:['Natural Black','Brown','Blonde','Burgundy'],weights:['180g','200g','250g'],image:'https://images.unsplash.com/photo-1605462863863-10d9e47e15ee?w=800&q=80',desc:'Voluminous Mexican spiral curls with optional fringe. Bold, bouncy, and full of personality.'},
+  {id:5,name:'Bridal Bouncy Curls',category:'Curly',price:399,lengths:['16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4','13*6'],colors:['Natural Black','Highlight','Brown','Blonde'],weights:['250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ceceb112e1086ef6e/1771106638474/IMG_3445.JPG',desc:'Glamorous bouncy curls perfect for weddings and special occasions. Maximum volume and elegance.'},
+  {id:6,name:'Raw Bounce',category:'Curly',price:319,lengths:['14"','16"','18"','20"','22"'],closures:['4*4','5*5'],colors:['Natural Black','Brown'],weights:['200g','250g'],image:'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&q=80',desc:'Natural bounce with raw donor quality. Light, airy, and full of life.'},
+  {id:7,name:'Water Curls',category:'Curly',price:359,lengths:['16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4'],colors:['Natural Black','Burgundy','Ombre'],weights:['200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG',desc:'Loose, flowing water curl pattern with natural movement and shine.'},
+  {id:8,name:'Pixie Curls',category:'Curly',price:279,lengths:['8"','10"','12"','14"'],closures:['2*4','4*4'],colors:['Natural Black','Brown','Blonde','Burgundy'],weights:['180g','200g'],image:'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=800&q=80',desc:'Short and sassy pixie curl style. Effortlessly chic and low-maintenance.'},
+  {id:9,name:'Pixie Cut',category:'Short',price:249,lengths:['8"','10"','12"'],closures:['2*4','4*4'],colors:['Natural Black','Brown','Blonde','Burgundy','Burnt Orange'],weights:['180g'],image:'https://images.unsplash.com/photo-1524502397800-2eeaad7c3fe5?w=800&q=80',desc:'Chic pixie cut for the bold and confident. Classic meets modern.'},
+  {id:10,name:'Half-Caste Fringe',category:'Wavy',price:339,lengths:['12"','14"','16"','18"'],closures:['Fringe','4*4'],colors:['Natural Black','Highlight','Brown','Blonde'],weights:['180g','200g','250g'],image:'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?w=800&q=80',desc:'Mixed texture with stylish fringe. A unique blend of waves and movement.'},
+  {id:11,name:'Half-Caste Curls',category:'Curly',price:349,lengths:['14"','16"','18"','20"','22"'],closures:['4*4','5*5'],colors:['Natural Black','Highlight','Brown'],weights:['200g','250g'],image:'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=800&q=80',desc:'Beautiful mixed curl pattern with natural, effortless flow.'},
+  {id:12,name:'SDD Wavy (Super Double Drawn)',category:'Wavy',price:309,lengths:['16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4'],colors:['Natural Black','Brown'],weights:['200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG',desc:'Wavy texture with premium super double drawn quality — maximum volume and thickness from root to tip.'}
+];
+
+let filteredProducts = [...PRODUCTS];
+let currentFilter = 'All';
+let currentSearch = '';
+let currentSort = 'default';
+let selectedProduct = null;
+let selection = {length:'',closure:'',color:'',weight:''};
+let cart = JSON.parse(localStorage.getItem('ph-cart')||'[]');
+
+
+        // ---- THREE.JS PARTICLE WAVE ----
+        const canvas = document.getElementById('ph-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        camera.position.set(0, 30, 60);
+        camera.lookAt(0, -10, 0);
+        const isMobile = window.innerWidth < 768;
+        const gridSize = isMobile ? 50 : 80; const spacing = 3; const total = gridSize * gridSize;
+        const geo = new THREE.BufferGeometry();
+        const p = new Float32Array(total * 3);
+        const o = new Float32Array(total * 3);
+        let ki = 0;
+        for (let i = 0; i < gridSize; i++) for (let j = 0; j < gridSize; j++) {
+            const x = (i - gridSize/2) * spacing, z = (j - gridSize/2) * spacing;
+            p[ki] = o[ki] = x; p[ki+1] = o[ki+1] = 0; p[ki+2] = o[ki+2] = z; ki += 3;
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+        const dc = document.createElement('canvas'); dc.width = dc.height = 64;
+        const dctx = dc.getContext('2d');
+        const gr = dctx.createRadialGradient(32,32,0,32,32,32);
+        gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.4,'rgba(255,255,255,0.6)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+        dctx.fillStyle = gr; dctx.fillRect(0,0,64,64);
+        const ptMat = new THREE.PointsMaterial({ color:0xffffff, size:0.35, transparent:true, opacity:0.75, blending:THREE.AdditiveBlending, map:new THREE.CanvasTexture(dc), sizeAttenuation:true, depthWrite:false });
+        const pts = new THREE.Points(geo, ptMat); scene.add(pts);
+        const lg = new THREE.BufferGeometry(); const lp = [];
+        for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+            const idx=(i*gridSize+j)*3;
+            if(j<gridSize-1){const r=(i*gridSize+(j+1))*3; lp.push(p[idx],p[idx+1],p[idx+2],p[r],p[r+1],p[r+2]);}
+            if(i<gridSize-1){const b=((i+1)*gridSize+j)*3; lp.push(p[idx],p[idx+1],p[idx+2],p[b],p[b+1],p[b+2]);}
+        }
+        lg.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+        const lines = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({color:0x88ccff,transparent:true,opacity:0.08,blending:THREE.AdditiveBlending}));
+        scene.add(lines);
+        let t = 0;
+        function animate() {
+            requestAnimationFrame(animate); t += 0.008;
+            const pa = pts.geometry.attributes.position.array;
+            const la = lines.geometry.attributes.position.array;
+            let pi = 0;
+            for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+                const ox=o[pi], oz=o[pi+2];
+                const d=Math.sqrt(ox*ox+oz*oz);
+                pa[pi+1] = Math.sin(ox*0.15+t)*8 + Math.sin(oz*0.15+t*1.2)*6 + Math.cos((ox+oz)*0.1+t*0.8)*4 + Math.sin(d*0.1-t*2)*5;
+                pi += 3;
+            }
+            let li = 0;
+            for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+                const idx=(i*gridSize+j)*3;
+                if(j<gridSize-1){const r=(i*gridSize+(j+1))*3; la[li]=pa[idx];la[li+1]=pa[idx+1];la[li+2]=pa[idx+2];la[li+3]=pa[r];la[li+4]=pa[r+1];la[li+5]=pa[r+2]; li+=6;}
+                if(i<gridSize-1){const b=((i+1)*gridSize+j)*3; la[li]=pa[idx];la[li+1]=pa[idx+1];la[li+2]=pa[idx+2];la[li+3]=pa[b];la[li+4]=pa[b+1];la[li+5]=pa[b+2]; li+=6;}
+            }
+            pts.geometry.attributes.position.needsUpdate = true;
+            lines.geometry.attributes.position.needsUpdate = true;
+            pts.rotation.y = t * 0.05; lines.rotation.y = t * 0.05;
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+// ---- NAV ----
+document.getElementById('ph-overlay').addEventListener('scroll',()=>document.getElementById('ph-nav').classList.toggle('scrolled',(document.getElementById('ph-overlay')||window).scrollTop||window.scrollY>80));
+window.toggleMenu=()=>document.getElementById('ph-mobile-menu').classList.toggle('open');
+
+// ---- CART ----
+function saveCart(){localStorage.setItem('ph-cart',JSON.stringify(cart));}
+function updateCartUI(){
+  const count=cart.reduce((s,i)=>s+i.qty,0);
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const ce=document.getElementById('ph-cart-count');
+  ce.style.display=count>0?'flex':'none'; ce.textContent=count;
+  document.getElementById('ph-cart-total').textContent='$'+total.toFixed(2);
+  const items=document.getElementById('ph-cart-items');
+  if(cart.length===0){items.innerHTML='<div class="ph-cart-empty"><i class="fas fa-shopping-bag" style="font-size:2rem;margin-bottom:1rem;display:block;color:rgba(255,255,255,0.2)"></i><p>Your bag is empty</p></div>';}
+  else{items.innerHTML=cart.map((item,idx)=>`<div class="ph-cart-item"><div class="ph-ci-top"><h4>${item.name}</h4><span>$${(item.price*item.qty).toFixed(2)}</span></div><p class="ph-ci-specs">${item.specs}</p><div class="ph-ci-qty"><button onclick="updateQty(${idx},-1)">-</button><span>${item.qty}</span><button onclick="updateQty(${idx},1)">+</button></div></div>`).join('');}
+  saveCart();
+}
+window.updateQty=(idx,delta)=>{cart[idx].qty+=delta;if(cart[idx].qty<=0)cart.splice(idx,1);updateCartUI();};
+window.toggleCart=()=>{document.getElementById('ph-cart-panel').classList.toggle('open');document.getElementById('ph-cart-overlay').style.display=document.getElementById('ph-cart-panel').classList.contains('open')?'block':'none';};
+updateCartUI();
+
+// ---- RENDER PRODUCTS ----
+function renderProducts(){
+  let products=[...filteredProducts];
+  if(currentSort==='price-asc')products.sort((a,b)=>a.price-b.price);
+  else if(currentSort==='price-desc')products.sort((a,b)=>b.price-a.price);
+  else if(currentSort==='name')products.sort((a,b)=>a.name.localeCompare(b.name));
+  const grid=document.getElementById('ph-grid');
+  const noRes=document.getElementById('ph-no-results');
+  document.getElementById('ph-count').textContent=`Showing ${products.length} style${products.length!==1?'s':''}`;
+  if(products.length===0){grid.innerHTML='';noRes.style.display='block';return;}
+  noRes.style.display='none';
+  grid.innerHTML=products.map(p=>`
+    <div class="ph-card" onclick="openModal(${p.id})">
+      <div class="ph-card-img">
+        <div class="ph-card-badge">${p.category}</div>
+        ${p.video
+          ? `<video autoplay muted loop playsinline preload="auto" style="width:100%;height:100%;object-fit:cover;transition:transform 0.8s ease"><source src="${p.video}" type="video/mp4"></video>`
+          : `<img src="${p.image}" alt="${p.name}" loading="lazy">`
+        }
+        <div class="ph-card-overlay"></div>
+      </div>
+      <div class="ph-card-body">
+        <p>${p.category}</p>
+        <h3>${p.name}</h3>
+        <p class="ph-card-desc">${p.desc}</p>
+        <div class="ph-card-footer">
+          <div class="ph-card-price"><small>From </small>$${p.price}</div>
+          <button class="ph-quick-btn" onclick="event.stopPropagation();openModal(${p.id})">Customize</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ---- FILTER ----
+window.filterProducts=(type,value,btn)=>{
+  document.querySelectorAll('.ph-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter=value;
+  applyFilters();
+};
+window.searchProducts=(val)=>{currentSearch=val.toLowerCase();applyFilters();};
+window.sortProducts=(val)=>{currentSort=val;renderProducts();};
+function applyFilters(){
+  filteredProducts=PRODUCTS.filter(p=>{
+    const catOk=currentFilter==='All'||p.category===currentFilter;
+    const searchOk=!currentSearch||p.name.toLowerCase().includes(currentSearch)||p.category.toLowerCase().includes(currentSearch);
+    return catOk&&searchOk;
+  });
+  renderProducts();
+}
+
+// ---- MODAL ----
+window.openModal=(id)=>{
+  selectedProduct=PRODUCTS.find(p=>p.id===id);
+  selection={length:'',closure:'',color:'',weight:''};
+  const modalMedia = document.getElementById('ph-modal-media');
+  if(selectedProduct.video){
+    modalMedia.innerHTML=`<video autoplay muted loop playsinline preload="auto" style="width:100%;height:100%;object-fit:cover"><source src="${selectedProduct.video}" type="video/mp4"></video>`;
+  } else {
+    modalMedia.innerHTML=`<img id="ph-modal-img" src="${selectedProduct.image}" alt="${selectedProduct.name}" style="width:100%;height:100%;object-fit:cover">`;
+  }
+  document.getElementById('ph-modal-cat').textContent=selectedProduct.category;
+  document.getElementById('ph-modal-title').textContent=selectedProduct.name;
+  document.getElementById('ph-modal-desc').textContent=selectedProduct.desc;
+  document.getElementById('ph-modal-price').textContent='$'+selectedProduct.price;
+  document.getElementById('ph-sel-summary').style.display='none';
+  document.getElementById('ph-add-btn').disabled=true;
+  document.getElementById('ph-add-btn').textContent='Select All Options to Add to Bag';
+  document.getElementById('ph-modal-opts').innerHTML=`
+    <div class="ph-option-group"><span class="ph-option-label">Length *</span><div class="ph-options">${selectedProduct.lengths.map(l=>`<button class="ph-opt" onclick="selectOpt('length','${l}',this)">${l}</button>`).join('')}</div></div>
+    <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${selectedProduct.closures.map(c=>`<button class="ph-opt" onclick="selectOpt('closure','${c}',this)">${c}</button>`).join('')}</div></div>
+    <div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${selectedProduct.colors.map(c=>`<button class="ph-opt" onclick="selectOpt('color','${c}',this)">${c}</button>`).join('')}</div></div>
+    <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${selectedProduct.weights.map(w=>`<button class="ph-opt" onclick="selectOpt('weight','${w}',this)">${w}</button>`).join('')}</div></div>`;
+  document.getElementById('ph-modal').style.display='flex';
+  document.body.style.overflow='hidden';
+};
+window.selectOpt=(type,value,btn)=>{
+  btn.closest('.ph-options').querySelectorAll('.ph-opt').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selection[type]=value;
+  const allSelected=selection.length&&selection.closure&&selection.color&&selection.weight;
+  if(allSelected){
+    const sum=document.getElementById('ph-sel-summary');
+    sum.style.display='block';
+    sum.innerHTML=`<strong style="color:#d4af37;display:block;margin-bottom:0.5rem">Your Selection</strong>${selection.length} · ${selection.closure} · ${selection.color} · ${selection.weight}`;
+    document.getElementById('ph-add-btn').disabled=false;
+    document.getElementById('ph-add-btn').textContent='Add to Bag';
+  }
+};
+window.addToCart=()=>{
+  if(!selectedProduct) return;
+  const specs=`${selection.length} · ${selection.closure} · ${selection.color} · ${selection.weight}`;
+  const existing=cart.find(i=>i.id===selectedProduct.id&&i.specs===specs);
+  if(existing){existing.qty++;}
+  else{cart.push({id:selectedProduct.id,name:selectedProduct.name,price:selectedProduct.price,specs,qty:1});}
+  updateCartUI();
+  closeModalDirect();
+  toggleCart();
+};
+window.closeModal=(e)=>{if(e.target.id==='ph-modal')closeModalDirect();};
+window.closeModalDirect=()=>{document.getElementById('ph-modal').style.display='none';document.body.style.overflow='';};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();});
+
+renderProducts();
+
+})();
+</script>
