@@ -445,13 +445,6 @@ html{scroll-behavior:smooth;}
 
       <div class="ph-co-section">
         <h3>Payment</h3>
-        <div id="sq-google-pay-wrapper" style="display:none;margin-bottom:0.75rem;">
-          <div id="sq-google-pay"></div>
-        </div>
-        <div id="sq-apple-pay-wrapper" style="display:none;margin-bottom:0.75rem;">
-          <div id="sq-apple-pay"></div>
-        </div>
-        <div id="sq-divider" style="display:none;text-align:center;margin:0.75rem 0;font-size:0.7rem;letter-spacing:0.15em;color:rgba(255,255,255,0.25);text-transform:uppercase;">— or pay by card —</div>
         <div id="sq-card-container"></div>
         <div class="ph-co-error" id="ph-co-error"></div>
       </div>
@@ -856,19 +849,12 @@ window.startCheckout = () => {
   payBtn.style.display = 'block';
   payBtn.disabled = false;
   payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
-  document.getElementById('sq-google-pay-wrapper').style.display = 'none';
-  document.getElementById('sq-apple-pay-wrapper').style.display = 'none';
-  document.getElementById('sq-divider').style.display = 'none';
-
   document.getElementById('ph-co-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
   document.getElementById('ph-co-right').scrollTop = 0;
 
-  // Attach Square elements after modal is visible
-  setTimeout(() => {
-    attachSquareCard();
-    attachExpressPayments(totalStr);
-  }, 150);
+  // Attach Square card after modal is visible
+  setTimeout(() => { attachSquareCard(); }, 150);
 };
 
 window.closeCheckout = () => {
