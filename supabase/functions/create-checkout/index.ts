@@ -32,7 +32,7 @@ serve(async (req) => {
       note: item.specs,
       base_price_money: {
         amount: item.price * 100, // Square uses cents
-        currency: "USD",
+        currency: "CAD",
       },
     }));
 
