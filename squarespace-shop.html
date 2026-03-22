@@ -197,7 +197,7 @@ html{scroll-behavior:smooth;}
 .ph-co-field input::placeholder{color:rgba(255,255,255,0.2);}
 .ph-co-field select{cursor:pointer;}
 .ph-co-field select option{background:#111;}
-#sq-card-container{min-height:90px;background:#0a0a0a;border:1px solid #2a2a2a;padding:12px;}
+#sq-card-container{min-height:90px;background:#fff;border:1px solid rgba(212,175,55,0.35);padding:4px;border-radius:3px;}
 #sq-card-container.focused{border-color:#d4af37;}
 .ph-co-pay-btn{width:100%;padding:1.1rem;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;border:none;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;margin-top:1rem;}
 .ph-co-pay-btn:hover{opacity:0.9;}
@@ -456,7 +456,7 @@ html{scroll-behavior:smooth;}
         <div class="ph-co-error" id="ph-co-error"></div>
       </div>
 
-      <button class="ph-co-pay-btn" id="ph-co-pay-btn" onclick="submitPayment('card')">Pay <span id="ph-co-pay-amt"></span> CAD</button>
+      <button class="ph-co-pay-btn" id="ph-co-pay-btn" onclick="submitPayment('card')">Pay Now</button>
 
       <!-- Success state -->
       <div class="ph-co-success" id="ph-co-success">
@@ -731,6 +731,7 @@ const SQ_LOCATION_ID = 'LMF690XAMSZCZ';
 let sqPayments = null;
 let sqCard = null;
 let sqCardAttached = false;
+let sqTotalStr = '$0.00'; // stored so we can restore button text without reading from DOM
 
 // Init Square payments object on page load
 async function initSquarePayments() {
@@ -765,8 +766,8 @@ async function attachSquareCard() {
         '.input-container': { borderColor: '#333', borderRadius: '0px' },
         '.input-container.is-focus': { borderColor: '#d4af37' },
         '.input-container.is-error': { borderColor: '#e05555' },
-        'input': { color: '#ffffff', fontSize: '14px' },
-        'input::placeholder': { color: '#666' },
+        'input': { color: '#111111', fontSize: '14px' },
+        'input::placeholder': { color: '#aaaaaa' },
         '.message-text': { color: '#e05555' },
         '.message-icon': { color: '#e05555' },
       }
@@ -776,7 +777,7 @@ async function attachSquareCard() {
     errEl.style.display = 'none';
   } catch(e) {
     sqCard = null;
-    errEl.textContent = 'Card setup error: ' + e.message + '. Make sure you have added deetee001.github.io and penguinhairs.com to your Square app\'s allowed web origins.';
+    errEl.textContent = 'Card setup error: ' + e.message;
     errEl.style.display = 'block';
   }
 }
@@ -798,7 +799,13 @@ async function attachExpressPayments(totalStr) {
     document.getElementById('sq-google-pay-wrapper').style.display = 'block';
     gp.addEventListener('ontokenization', async (e) => {
       const { tokenResult } = e.detail;
-      if (tokenResult.status === 'OK') await processPayment(tokenResult.token);
+      const errEl = document.getElementById('ph-co-error');
+      if (tokenResult.status === 'OK') {
+        await processPayment(tokenResult.token);
+      } else {
+        errEl.textContent = tokenResult.errors ? tokenResult.errors.map(er => er.message).join(', ') : 'Google Pay payment was cancelled.';
+        errEl.style.display = 'block';
+      }
     });
   } catch(e) { /* Google Pay not available on this device/browser */ }
 
@@ -809,7 +816,13 @@ async function attachExpressPayments(totalStr) {
     document.getElementById('sq-apple-pay-wrapper').style.display = 'block';
     ap.addEventListener('ontokenization', async (e) => {
       const { tokenResult } = e.detail;
-      if (tokenResult.status === 'OK') await processPayment(tokenResult.token);
+      const errEl = document.getElementById('ph-co-error');
+      if (tokenResult.status === 'OK') {
+        await processPayment(tokenResult.token);
+      } else {
+        errEl.textContent = tokenResult.errors ? tokenResult.errors.map(er => er.message).join(', ') : 'Apple Pay payment was cancelled.';
+        errEl.style.display = 'block';
+      }
     });
   } catch(e) { /* Apple Pay not available on this device/browser */ }
 
@@ -834,12 +847,15 @@ window.startCheckout = () => {
       </div>
       <div class="ph-co-item-price">$${(item.price * item.qty).toFixed(2)}</div>
     </div>`).join('');
-  document.getElementById('ph-co-total-amt').textContent = '$' + totalStr;
-  document.getElementById('ph-co-pay-amt').textContent = '$' + totalStr;
+  sqTotalStr = '$' + totalStr;
+  document.getElementById('ph-co-total-amt').textContent = sqTotalStr;
 
   document.getElementById('ph-co-error').style.display = 'none';
   document.getElementById('ph-co-success').style.display = 'none';
-  document.getElementById('ph-co-pay-btn').style.display = 'block';
+  const payBtn = document.getElementById('ph-co-pay-btn');
+  payBtn.style.display = 'block';
+  payBtn.disabled = false;
+  payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
   document.getElementById('sq-google-pay-wrapper').style.display = 'none';
   document.getElementById('sq-apple-pay-wrapper').style.display = 'none';
   document.getElementById('sq-divider').style.display = 'none';
@@ -885,7 +901,7 @@ async function processPayment(token) {
     errEl.textContent = 'Please fill in all delivery fields.';
     errEl.style.display = 'block';
     payBtn.disabled = false;
-    payBtn.textContent = 'Pay ' + document.getElementById('ph-co-pay-amt').textContent + ' CAD';
+    payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
     return;
   }
 
@@ -909,7 +925,7 @@ async function processPayment(token) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';
     payBtn.disabled = false;
-    payBtn.textContent = 'Pay ' + document.getElementById('ph-co-pay-amt').textContent + ' CAD';
+    payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
   }
 }
 
