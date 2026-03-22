@@ -609,7 +609,7 @@ window.startCheckout = async () => {
   try {
     const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
       body: JSON.stringify({ cart })
     });
     const data = await res.json();

@@ -8,7 +8,7 @@ const SQUARE_VERSION = "2024-01-18";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
 };
 
 serve(async (req) => {
