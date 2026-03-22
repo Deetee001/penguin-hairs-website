@@ -6,6 +6,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://web.squarecdn.com/v1/square.js"></script>
 
 <style>
 /* ---- OVERLAY APPROACH: sits fixed on top of all Squarespace UI ---- */
@@ -162,6 +163,56 @@ html{scroll-behavior:smooth;}
 .ph-carousel-dots{position:absolute;bottom:0.8rem;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;}
 .ph-carousel-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;transition:all 0.3s;border:none;padding:0;}
 .ph-carousel-dot.active{background:#d4af37;transform:scale(1.3);}
+/* ---- Checkout Modal ---- */
+#ph-co-modal{position:fixed;inset:0;z-index:4000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);padding:1rem;}
+#ph-co-modal.open{display:flex;}
+.ph-co-panel{background:#0f0f0f;border:1px solid rgba(212,175,55,0.2);width:100%;max-width:920px;max-height:92vh;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;animation:phSlideUp 0.4s ease;position:relative;}
+.ph-co-close{position:absolute;top:1.2rem;right:1.2rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;z-index:10;transition:all 0.3s;}
+.ph-co-close:hover{background:#d4af37;color:#000;border-color:#d4af37;}
+/* Left — order summary */
+.ph-co-left{background:#080808;padding:2.5rem 2rem;display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid rgba(212,175,55,0.1);}
+.ph-co-left h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;color:#d4af37;margin-bottom:1.5rem;}
+.ph-co-items{flex:1;display:flex;flex-direction:column;gap:1rem;}
+.ph-co-item{display:flex;gap:0.8rem;align-items:flex-start;}
+.ph-co-item-img{width:52px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0;background:#1a1a1a;}
+.ph-co-item-info{flex:1;}
+.ph-co-item-name{font-size:0.85rem;color:white;margin-bottom:0.2rem;}
+.ph-co-item-specs{font-size:0.68rem;color:rgba(255,255,255,0.35);line-height:1.5;}
+.ph-co-item-price{font-size:0.85rem;color:#d4af37;white-space:nowrap;}
+.ph-co-divider{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:1.5rem 0;}
+.ph-co-total{display:flex;justify-content:space-between;align-items:center;}
+.ph-co-total span:first-child{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);}
+.ph-co-total span:last-child{font-size:1.3rem;color:white;}
+/* Right — form */
+.ph-co-right{padding:2.5rem 2rem;overflow-y:auto;display:flex;flex-direction:column;gap:0;}
+.ph-co-right h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;letter-spacing:0.2em;text-transform:uppercase;color:#d4af37;margin-bottom:1.2rem;}
+.ph-co-section{margin-bottom:1.8rem;}
+.ph-co-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;}
+.ph-co-row.full{grid-template-columns:1fr;}
+.ph-co-row.three{grid-template-columns:1fr 1fr 1fr;}
+.ph-co-field{display:flex;flex-direction:column;gap:4px;}
+.ph-co-field label{font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);}
+.ph-co-field input,.ph-co-field select{padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;color:white;font-family:'Lato',sans-serif;font-size:0.82rem;outline:none;transition:border-color 0.2s;border-radius:0;}
+.ph-co-field input:focus,.ph-co-field select:focus{border-color:#d4af37;}
+.ph-co-field input::placeholder{color:rgba(255,255,255,0.2);}
+.ph-co-field select{cursor:pointer;}
+.ph-co-field select option{background:#111;}
+#sq-card-container{min-height:90px;background:#0a0a0a;border:1px solid #2a2a2a;padding:12px;}
+#sq-card-container.focused{border-color:#d4af37;}
+.ph-co-pay-btn{width:100%;padding:1.1rem;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;border:none;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;margin-top:1rem;}
+.ph-co-pay-btn:hover{opacity:0.9;}
+.ph-co-pay-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.ph-co-error{color:#e05555;font-size:0.78rem;margin-top:0.75rem;display:none;padding:0.75rem;background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.2);}
+.ph-co-success{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 2rem;height:100%;}
+.ph-co-success-icon{font-size:3rem;color:#d4af37;margin-bottom:1rem;}
+.ph-co-success h2{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;margin-bottom:0.75rem;}
+.ph-co-success p{color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.8;}
+@media(max-width:700px){
+  .ph-co-panel{grid-template-columns:1fr;max-height:95vh;}
+  .ph-co-left{padding:1.5rem;max-height:35vh;}
+  .ph-co-right{padding:1.5rem;}
+  .ph-co-row.three{grid-template-columns:1fr 1fr;}
+}
 /* ---- Loading state ---- */
 .ph-grid-loading{grid-column:1/-1;text-align:center;padding:5rem 2rem;color:rgba(255,255,255,0.25);}
 .ph-grid-loading-spin{width:36px;height:36px;border:2px solid rgba(255,255,255,0.1);border-top-color:#d4af37;border-radius:50%;animation:phSpin .8s linear infinite;margin:0 auto 1rem;}
@@ -342,6 +393,73 @@ html{scroll-behavior:smooth;}
 </div>
 </div><!-- end ph-overlay -->
 <div id="ph-cart-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1999;display:none" onclick="toggleCart()"></div>
+
+<!-- Checkout Modal -->
+<div id="ph-co-modal">
+  <div class="ph-co-panel">
+    <button class="ph-co-close" onclick="closeCheckout()">&times;</button>
+
+    <!-- Left: Order Summary -->
+    <div class="ph-co-left">
+      <h3>Your Order</h3>
+      <div class="ph-co-items" id="ph-co-items"></div>
+      <hr class="ph-co-divider">
+      <div class="ph-co-total">
+        <span>Total</span>
+        <span id="ph-co-total-amt"></span>
+      </div>
+    </div>
+
+    <!-- Right: Forms -->
+    <div class="ph-co-right" id="ph-co-right">
+      <div class="ph-co-section">
+        <h3>Delivery</h3>
+        <div class="ph-co-row">
+          <div class="ph-co-field"><label>First Name</label><input type="text" id="co-first" placeholder="Jane"></div>
+          <div class="ph-co-field"><label>Last Name</label><input type="text" id="co-last" placeholder="Smith"></div>
+        </div>
+        <div class="ph-co-row full">
+          <div class="ph-co-field"><label>Email</label><input type="email" id="co-email" placeholder="jane@example.com"></div>
+        </div>
+        <div class="ph-co-row full">
+          <div class="ph-co-field"><label>Street Address</label><input type="text" id="co-address" placeholder="123 Main Street"></div>
+        </div>
+        <div class="ph-co-row">
+          <div class="ph-co-field"><label>City</label><input type="text" id="co-city" placeholder="Toronto"></div>
+          <div class="ph-co-field"><label>Province / State</label><input type="text" id="co-province" placeholder="ON"></div>
+        </div>
+        <div class="ph-co-row">
+          <div class="ph-co-field"><label>Postal Code</label><input type="text" id="co-postal" placeholder="M5V 1A1"></div>
+          <div class="ph-co-field"><label>Country</label>
+            <select id="co-country">
+              <option value="CA">Canada</option>
+              <option value="US">United States</option>
+              <option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option>
+              <option value="NG">Nigeria</option>
+              <option value="GH">Ghana</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="ph-co-section">
+        <h3>Payment</h3>
+        <div id="sq-card-container"></div>
+        <div class="ph-co-error" id="ph-co-error"></div>
+      </div>
+
+      <button class="ph-co-pay-btn" id="ph-co-pay-btn" onclick="submitPayment()">Pay <span id="ph-co-pay-amt"></span> CAD</button>
+
+      <!-- Success state -->
+      <div class="ph-co-success" id="ph-co-success">
+        <div class="ph-co-success-icon"><i class="fas fa-check-circle"></i></div>
+        <h2>Order Confirmed</h2>
+        <p>Thank you for your order. A confirmation will be sent to your email.<br><br>Your Penguin Hairs piece is being prepared with care.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -601,29 +719,129 @@ window.selectOpt=(type,value,btn)=>{
   }
 };
 // ---- CHECKOUT ----
-window.startCheckout = async () => {
-  if (cart.length === 0) return;
-  const btn = document.getElementById('ph-checkout-btn');
-  btn.textContent = 'Processing...';
-  btn.disabled = true;
+const SQ_APP_ID = 'sq0idp-Yyblofqvg3UKO-dVCx0D6g';
+const SQ_LOCATION_ID = 'LMF690XAMSZCZ';
+let sqPayments = null;
+let sqCard = null;
+
+async function initSquare() {
+  if (!window.Square) return;
   try {
+    sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
+    sqCard = await sqPayments.card({
+      style: {
+        '.input-container': { borderColor: '#2a2a2a', borderRadius: '0px' },
+        '.input-container.is-focus': { borderColor: '#d4af37' },
+        '.input-container.is-error': { borderColor: '#e05555' },
+        'input': { color: '#e0e0e0', fontFamily: '"Lato", sans-serif', fontSize: '14px', backgroundColor: '#0a0a0a' },
+        'input::placeholder': { color: 'rgba(255,255,255,0.2)' },
+        '.message-text': { color: '#e05555' },
+        '.message-icon': { color: '#e05555' },
+      }
+    });
+    await sqCard.attach('#sq-card-container');
+  } catch(e) {
+    console.error('Square init failed:', e);
+  }
+}
+
+window.startCheckout = () => {
+  if (cart.length === 0) return;
+
+  // Populate order summary
+  const total = cart.reduce((s,i) => s + i.price * i.qty, 0);
+  document.getElementById('ph-co-items').innerHTML = cart.map(item => `
+    <div class="ph-co-item">
+      ${item.image ? `<img class="ph-co-item-img" src="${item.image}" alt="${item.name}">` : ''}
+      <div class="ph-co-item-info">
+        <div class="ph-co-item-name">${item.name} &times;${item.qty}</div>
+        <div class="ph-co-item-specs">${item.specs}</div>
+      </div>
+      <div class="ph-co-item-price">$${(item.price * item.qty).toFixed(2)}</div>
+    </div>`).join('');
+  document.getElementById('ph-co-total-amt').textContent = '$' + total.toFixed(2);
+  document.getElementById('ph-co-pay-amt').textContent = '$' + total.toFixed(2);
+
+  // Reset state
+  document.getElementById('ph-co-error').style.display = 'none';
+  document.getElementById('ph-co-success').style.display = 'none';
+  document.getElementById('ph-co-pay-btn').style.display = 'block';
+
+  document.getElementById('ph-co-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Init Square if not yet done
+  if (!sqCard) initSquare();
+};
+
+window.closeCheckout = () => {
+  document.getElementById('ph-co-modal').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+window.submitPayment = async () => {
+  const errEl = document.getElementById('ph-co-error');
+  const payBtn = document.getElementById('ph-co-pay-btn');
+  errEl.style.display = 'none';
+
+  // Validate shipping fields
+  const shipping = {
+    firstName: document.getElementById('co-first').value.trim(),
+    lastName:  document.getElementById('co-last').value.trim(),
+    email:     document.getElementById('co-email').value.trim(),
+    address:   document.getElementById('co-address').value.trim(),
+    city:      document.getElementById('co-city').value.trim(),
+    province:  document.getElementById('co-province').value.trim(),
+    postal:    document.getElementById('co-postal').value.trim(),
+    country:   document.getElementById('co-country').value,
+  };
+
+  const missing = Object.entries(shipping).find(([,v]) => !v);
+  if (missing) {
+    errEl.textContent = 'Please fill in all delivery fields.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  payBtn.disabled = true;
+  payBtn.textContent = 'Processing...';
+
+  try {
+    // Tokenize card with Square
+    const result = await sqCard.tokenize();
+    if (result.status !== 'OK') {
+      const msg = result.errors ? result.errors.map(e => e.message).join(', ') : 'Card error. Please check your details.';
+      throw new Error(msg);
+    }
+
+    // Send to Edge Function
     const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ cart })
+      body: JSON.stringify({ cart, sourceId: result.token, shipping })
     });
     const data = await res.json();
-    if (data.url) {
-      // Open Square checkout in top-level window (works from inside iframe)
-      window.open(data.url, '_top');
+
+    if (data.success) {
+      // Clear cart, show success
+      cart = [];
+      saveCart();
+      updateCartUI();
+      // Close cart panel if open
+      document.getElementById('ph-cart-panel').classList.remove('open');
+      document.getElementById('ph-cart-overlay').style.display = 'none';
+      // Show success
+      payBtn.style.display = 'none';
+      document.getElementById('ph-co-success').style.display = 'flex';
     } else {
-      throw new Error(data.error || 'No checkout URL returned');
+      throw new Error(data.error || 'Payment failed. Please try again.');
     }
   } catch(e) {
-    alert('Checkout error: ' + e.message);
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    payBtn.disabled = false;
+    payBtn.textContent = 'Pay ' + document.getElementById('ph-co-pay-amt').textContent + ' CAD';
     console.error(e);
-    btn.textContent = 'Proceed to Checkout';
-    btn.disabled = false;
   }
 };
 
