@@ -34,10 +34,9 @@ Always automatically run:
 git add .
 git commit -m "brief description of what changed"
 git push origin gh-pages
-git checkout main && git merge gh-pages && git push origin main && git checkout gh-pages
 
-NOTE: We are on the gh-pages branch. Changes must be pushed to BOTH gh-pages and main.
-GitHub Pages serves from main. Always merge gh-pages → main after every push.
+NOTE: We work exclusively on the gh-pages branch. GitHub Pages is configured to serve
+from gh-pages. Never push to main or merge into main.
 
 ## Caching
 
