@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penguin Hairs — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:#0a0a0a;color:#e0e0e0;min-height:100vh;}
+
+/* ---- LOGIN ---- */
+#ph-login{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0a;}
+.ph-login-box{background:#111;border:1px solid #222;border-radius:12px;padding:48px 40px;width:360px;text-align:center;}
+.ph-login-box h1{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:#d4af37;margin-bottom:8px;letter-spacing:2px;}
+.ph-login-box p{color:#666;font-size:13px;margin-bottom:32px;}
+.ph-login-box input{width:100%;padding:12px 16px;background:#0a0a0a;border:1px solid #333;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:14px;outline:none;margin-bottom:12px;}
+.ph-login-box input:focus{border-color:#d4af37;}
+.ph-login-btn{width:100%;padding:12px;background:#d4af37;color:#0a0a0a;border:none;border-radius:8px;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity .2s;}
+.ph-login-btn:hover{opacity:.85;}
+.ph-login-error{color:#e05555;font-size:12px;margin-top:8px;display:none;}
+
+/* ---- ADMIN SHELL ---- */
+#ph-admin{display:none;}
+.ph-topbar{background:#111;border-bottom:1px solid #222;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.ph-topbar h1{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#d4af37;letter-spacing:2px;}
+.ph-topbar-r{display:flex;align-items:center;gap:12px;}
+.ph-status{font-size:12px;color:#666;}
+.ph-status.ok{color:#4caf50;}
+.ph-status.err{color:#e05555;}
+.ph-btn{padding:8px 18px;border-radius:6px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;}
+.ph-btn:hover{opacity:.8;}
+.ph-btn-gold{background:#d4af37;color:#0a0a0a;}
+.ph-btn-outline{background:transparent;border:1px solid #444;color:#aaa;}
+.ph-btn-outline:hover{border-color:#d4af37;color:#d4af37;}
+.ph-btn-danger{background:#c0392b;color:#fff;}
+
+.ph-main{padding:32px;max-width:1400px;margin:0 auto;}
+
+/* ---- STATS ---- */
+.ph-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:32px;}
+.ph-stat{background:#111;border:1px solid #222;border-radius:10px;padding:20px;text-align:center;}
+.ph-stat-num{font-family:'Cormorant Garamond',serif;font-size:36px;color:#d4af37;}
+.ph-stat-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+
+/* ---- TOOLBAR ---- */
+.ph-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.ph-search{flex:1;min-width:200px;padding:10px 14px;background:#111;border:1px solid #333;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:14px;outline:none;}
+.ph-search:focus{border-color:#d4af37;}
+.ph-filter-sel{padding:10px 14px;background:#111;border:1px solid #333;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;cursor:pointer;}
+.ph-filter-sel:focus{border-color:#d4af37;}
+
+/* ---- TABLE ---- */
+.ph-table-wrap{background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead{background:#161616;}
+th{padding:14px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#666;white-space:nowrap;}
+td{padding:14px 16px;border-top:1px solid #1a1a1a;font-size:13px;vertical-align:middle;}
+tr:hover td{background:rgba(212,175,55,.04);}
+.ph-prod-img{width:44px;height:44px;object-fit:cover;border-radius:6px;background:#1a1a1a;}
+.ph-prod-video-icon{width:44px;height:44px;background:#1a1a1a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#d4af37;font-size:18px;}
+.ph-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.ph-badge-curly{background:rgba(212,175,55,.15);color:#d4af37;}
+.ph-badge-wavy{background:rgba(100,160,255,.15);color:#6aa0ff;}
+.ph-badge-straight{background:rgba(200,200,200,.15);color:#ccc;}
+.ph-badge-short{background:rgba(255,140,100,.15);color:#ff8c64;}
+.ph-tag{display:inline-block;background:#1a1a1a;color:#888;padding:2px 6px;border-radius:4px;font-size:10px;margin:2px;}
+.ph-toggle{position:relative;display:inline-block;width:36px;height:20px;}
+.ph-toggle input{opacity:0;width:0;height:0;}
+.ph-toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#333;border-radius:20px;transition:.2s;}
+.ph-toggle-slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.ph-toggle input:checked+.ph-toggle-slider{background:#d4af37;}
+.ph-toggle input:checked+.ph-toggle-slider:before{transform:translateX(16px);}
+.ph-actions{display:flex;gap:8px;}
+.ph-btn-sm{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;}
+.ph-btn-sm:hover{opacity:.8;}
+.ph-edit-btn{background:rgba(212,175,55,.15);color:#d4af37;}
+.ph-del-btn{background:rgba(192,57,43,.15);color:#e05555;}
+
+/* ---- LOADING / EMPTY ---- */
+.ph-loading{text-align:center;padding:60px;color:#444;}
+.ph-loading-spin{width:32px;height:32px;border:2px solid #222;border-top-color:#d4af37;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ph-empty{text-align:center;padding:60px;color:#444;}
+
+/* ---- MODAL ---- */
+.ph-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.ph-modal-bg.open{display:flex;}
+.ph-modal{background:#111;border:1px solid #2a2a2a;border-radius:14px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;}
+.ph-modal-head{padding:24px 28px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#111;z-index:1;}
+.ph-modal-head h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#d4af37;}
+.ph-modal-close{background:none;border:none;color:#666;font-size:20px;cursor:pointer;line-height:1;}
+.ph-modal-close:hover{color:#e0e0e0;}
+.ph-modal-body{padding:28px;}
+.ph-modal-foot{padding:20px 28px;border-top:1px solid #1a1a1a;display:flex;justify-content:flex-end;gap:12px;}
+
+/* ---- FORM ---- */
+.ph-form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.ph-form-row.full{grid-template-columns:1fr;}
+.ph-form-group{display:flex;flex-direction:column;gap:6px;}
+.ph-form-group label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#666;}
+.ph-form-group input,.ph-form-group select,.ph-form-group textarea{padding:10px 14px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.ph-form-group input:focus,.ph-form-group select:focus,.ph-form-group textarea:focus{border-color:#d4af37;}
+.ph-form-group textarea{resize:vertical;min-height:80px;}
+.ph-form-group select option{background:#111;}
+.ph-hint{font-size:11px;color:#555;margin-top:2px;}
+.ph-form-check{display:flex;align-items:center;gap:10px;font-size:13px;}
+.ph-form-check input[type=checkbox]{width:16px;height:16px;accent-color:#d4af37;cursor:pointer;}
+.ph-save-status{font-size:12px;padding:6px 12px;border-radius:6px;}
+.ph-save-status.saving{color:#d4af37;}
+.ph-save-status.saved{color:#4caf50;}
+.ph-save-status.error{color:#e05555;}
+
+/* ---- CONFIRM MODAL ---- */
+#ph-confirm-modal .ph-modal{max-width:400px;}
+.ph-confirm-msg{font-size:14px;color:#aaa;line-height:1.6;}
+.ph-confirm-name{color:#e0e0e0;font-weight:700;}
+
+@media(max-width:700px){
+  .ph-form-row{grid-template-columns:1fr;}
+  .ph-main{padding:16px;}
+  .ph-topbar{padding:12px 16px;}
+  table{font-size:12px;}
+  th,td{padding:10px 10px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ph-login">
+  <div class="ph-login-box">
+    <h1>PENGUIN HAIRS</h1>
+    <p>Admin Access</p>
+    <input type="password" id="ph-pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="ph-login-btn" onclick="doLogin()">Enter</button>
+    <p class="ph-login-error" id="ph-login-err">Incorrect password.</p>
+  </div>
+</div>
+
+<!-- ADMIN SHELL -->
+<div id="ph-admin">
+  <div class="ph-topbar">
+    <h1>PENGUIN HAIRS &mdash; ADMIN</h1>
+    <div class="ph-topbar-r">
+      <span class="ph-status" id="ph-db-status">Connecting...</span>
+      <button class="ph-btn ph-btn-gold" onclick="openAddModal()">+ Add Product</button>
+      <button class="ph-btn ph-btn-outline" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="ph-main">
+    <!-- Stats -->
+    <div class="ph-stats">
+      <div class="ph-stat"><div class="ph-stat-num" id="stat-total">—</div><div class="ph-stat-label">Total Products</div></div>
+      <div class="ph-stat"><div class="ph-stat-num" id="stat-in-stock">—</div><div class="ph-stat-label">In Stock</div></div>
+      <div class="ph-stat"><div class="ph-stat-num" id="stat-featured">—</div><div class="ph-stat-label">Featured</div></div>
+      <div class="ph-stat"><div class="ph-stat-num" id="stat-categories">—</div><div class="ph-stat-label">Categories</div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="ph-toolbar">
+      <input class="ph-search" type="text" placeholder="Search products..." oninput="filterTable()" id="ph-tbl-search">
+      <select class="ph-filter-sel" onchange="filterTable()" id="ph-tbl-cat">
+        <option value="">All Categories</option>
+        <option>Straight</option>
+        <option>Wavy</option>
+        <option>Curly</option>
+        <option>Short</option>
+      </select>
+      <select class="ph-filter-sel" onchange="filterTable()" id="ph-tbl-stock">
+        <option value="">All Stock</option>
+        <option value="true">In Stock</option>
+        <option value="false">Out of Stock</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="ph-table-wrap">
+      <div class="ph-loading" id="ph-tbl-loading">
+        <div class="ph-loading-spin"></div>
+        <div>Loading products...</div>
+      </div>
+      <div id="ph-tbl-container" style="display:none">
+        <table id="ph-tbl">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Options</th>
+              <th>Featured</th>
+              <th>In Stock</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ph-tbl-body"></tbody>
+        </table>
+        <div class="ph-empty" id="ph-tbl-empty" style="display:none">No products match your search.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit / Add Modal -->
+<div class="ph-modal-bg" id="ph-edit-modal">
+  <div class="ph-modal">
+    <div class="ph-modal-head">
+      <h2 id="ph-modal-title">Edit Product</h2>
+      <button class="ph-modal-close" onclick="closeEditModal()">&times;</button>
+    </div>
+    <div class="ph-modal-body">
+      <input type="hidden" id="f-id">
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label>Product Name</label>
+          <input type="text" id="f-name" placeholder="e.g. Raw Wavy">
+        </div>
+        <div class="ph-form-group">
+          <label>Category</label>
+          <select id="f-category">
+            <option>Straight</option>
+            <option>Wavy</option>
+            <option>Curly</option>
+            <option>Short</option>
+          </select>
+        </div>
+      </div>
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label>Price (USD)</label>
+          <input type="number" id="f-price" placeholder="299" min="0">
+        </div>
+        <div class="ph-form-group">
+          <label>Sort Order</label>
+          <input type="number" id="f-sort" placeholder="1" min="0">
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Description</label>
+          <textarea id="f-desc" placeholder="Product description..."></textarea>
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Image URL</label>
+          <input type="url" id="f-image" placeholder="https://...">
+          <span class="ph-hint">Leave blank if using a video instead.</span>
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Video URL (Cloudinary .mp4)</label>
+          <input type="url" id="f-video" placeholder="https://res.cloudinary.com/...mp4">
+          <span class="ph-hint">If set, video is shown instead of image on the shop page.</span>
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Lengths (comma-separated)</label>
+          <input type="text" id="f-lengths" placeholder='16", 18", 20", 22", 24"'>
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Closures (comma-separated)</label>
+          <input type="text" id="f-closures" placeholder="4*4, 5*5, 13*4, 13*6">
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Colors (comma-separated)</label>
+          <input type="text" id="f-colors" placeholder="Natural Black, Brown, Burgundy">
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Weights (comma-separated)</label>
+          <input type="text" id="f-weights" placeholder="200g, 250g, 300g">
+        </div>
+      </div>
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label style="margin-bottom:10px;">Featured</label>
+          <label class="ph-form-check">
+            <input type="checkbox" id="f-featured">
+            Show as featured on shop
+          </label>
+        </div>
+        <div class="ph-form-group">
+          <label style="margin-bottom:10px;">In Stock</label>
+          <label class="ph-form-check">
+            <input type="checkbox" id="f-in-stock" checked>
+            Product is available
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="ph-modal-foot">
+      <span class="ph-save-status" id="ph-save-status"></span>
+      <button class="ph-btn ph-btn-outline" onclick="closeEditModal()">Cancel</button>
+      <button class="ph-btn ph-btn-gold" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="ph-modal-bg" id="ph-confirm-modal">
+  <div class="ph-modal">
+    <div class="ph-modal-head">
+      <h2>Delete Product</h2>
+      <button class="ph-modal-close" onclick="closeConfirm()">&times;</button>
+    </div>
+    <div class="ph-modal-body">
+      <p class="ph-confirm-msg">Are you sure you want to delete <span class="ph-confirm-name" id="ph-confirm-name"></span>? This cannot be undone.</p>
+    </div>
+    <div class="ph-modal-foot">
+      <button class="ph-btn ph-btn-outline" onclick="closeConfirm()">Cancel</button>
+      <button class="ph-btn ph-btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- CONFIG ----
+const SUPABASE_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
+const ADMIN_PASSWORD = 'PenguinAdmin2026!';
+
+// ---- AUTH ----
+function doLogin() {
+  const pw = document.getElementById('ph-pw-input').value;
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem('ph-admin-auth', '1');
+    document.getElementById('ph-login').style.display = 'none';
+    document.getElementById('ph-admin').style.display = 'block';
+    loadProducts();
+  } else {
+    document.getElementById('ph-login-err').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('ph-admin-auth');
+  location.reload();
+}
+
+// Auto-login if session exists
+if (sessionStorage.getItem('ph-admin-auth') === '1') {
+  document.getElementById('ph-login').style.display = 'none';
+  document.getElementById('ph-admin').style.display = 'block';
+}
+
+// ---- SUPABASE API ----
+async function sbFetch(path, options = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// ---- DATA ----
+let allProducts = [];
+let deleteTargetId = null;
+
+async function loadProducts() {
+  try {
+    allProducts = await sbFetch('products?order=sort_order.asc,id.asc&select=*');
+    document.getElementById('ph-db-status').textContent = 'Connected';
+    document.getElementById('ph-db-status').className = 'ph-status ok';
+    renderStats();
+    renderTable();
+    document.getElementById('ph-tbl-loading').style.display = 'none';
+    document.getElementById('ph-tbl-container').style.display = 'block';
+  } catch(e) {
+    document.getElementById('ph-db-status').textContent = 'DB Error';
+    document.getElementById('ph-db-status').className = 'ph-status err';
+    document.getElementById('ph-tbl-loading').innerHTML = '<p style="color:#e05555">Failed to load products. Check console.</p>';
+    console.error(e);
+  }
+}
+
+function renderStats() {
+  document.getElementById('stat-total').textContent = allProducts.length;
+  document.getElementById('stat-in-stock').textContent = allProducts.filter(p=>p.in_stock).length;
+  document.getElementById('stat-featured').textContent = allProducts.filter(p=>p.featured).length;
+  const cats = new Set(allProducts.map(p=>p.category));
+  document.getElementById('stat-categories').textContent = cats.size;
+}
+
+function badgeClass(cat) {
+  const m = {Straight:'straight',Wavy:'wavy',Curly:'curly',Short:'short'};
+  return 'ph-badge ph-badge-' + (m[cat]||'straight');
+}
+
+function renderTable() {
+  const search = document.getElementById('ph-tbl-search').value.toLowerCase();
+  const cat = document.getElementById('ph-tbl-cat').value;
+  const stock = document.getElementById('ph-tbl-stock').value;
+
+  let rows = allProducts.filter(p => {
+    if (cat && p.category !== cat) return false;
+    if (stock !== '' && String(p.in_stock) !== stock) return false;
+    if (search && !p.name.toLowerCase().includes(search) && !p.category.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('ph-tbl-body');
+  tbody.innerHTML = '';
+  document.getElementById('ph-tbl-empty').style.display = rows.length ? 'none' : 'block';
+
+  rows.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.video_url
+        ? '<div class="ph-prod-video-icon">▶</div>'
+        : p.image_url
+          ? '<img class="ph-prod-img" src="${escHtml(p.image_url)}" loading="lazy">'
+          : '<div class="ph-prod-video-icon" style="color:#444">—</div>'
+      }</td>
+      <td><strong>${escHtml(p.name)}</strong></td>
+      <td><span class="${badgeClass(p.category)}">${escHtml(p.category)}</span></td>
+      <td>$${p.price}</td>
+      <td style="max-width:200px">
+        <div>${(p.lengths||[]).map(v=>`<span class="ph-tag">${escHtml(v)}</span>`).join('')}</div>
+      </td>
+      <td>
+        <label class="ph-toggle">
+          <input type="checkbox" ${p.featured?'checked':''} onchange="toggleField(${p.id},'featured',this.checked)">
+          <span class="ph-toggle-slider"></span>
+        </label>
+      </td>
+      <td>
+        <label class="ph-toggle">
+          <input type="checkbox" ${p.in_stock?'checked':''} onchange="toggleField(${p.id},'in_stock',this.checked)">
+          <span class="ph-toggle-slider"></span>
+        </label>
+      </td>
+      <td>
+        <div class="ph-actions">
+          <button class="ph-btn-sm ph-edit-btn" onclick="openEditModal(${p.id})">Edit</button>
+          <button class="ph-btn-sm ph-del-btn" onclick="openConfirm(${p.id},'${escHtml(p.name)}')">Delete</button>
+        </div>
+      </td>
+    `;
+    // Fix image src (can't use template literal inside innerHTML template literal cleanly)
+    if (p.image_url) {
+      tr.querySelector('.ph-prod-img') && (tr.querySelector('.ph-prod-img').src = p.image_url);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function filterTable() { renderTable(); }
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ---- TOGGLE FEATURED / IN_STOCK ----
+async function toggleField(id, field, value) {
+  try {
+    await sbFetch(`products?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({[field]: value, updated_at: new Date().toISOString()})
+    });
+    const p = allProducts.find(x=>x.id===id);
+    if (p) p[field] = value;
+    renderStats();
+  } catch(e) {
+    console.error('Toggle failed', e);
+    alert('Failed to update. Please try again.');
+    loadProducts(); // re-sync
+  }
+}
+
+// ---- EDIT MODAL ----
+function openAddModal() {
+  document.getElementById('ph-modal-title').textContent = 'Add Product';
+  document.getElementById('f-id').value = '';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-category').value = 'Curly';
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-sort').value = allProducts.length + 1;
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-image').value = '';
+  document.getElementById('f-video').value = '';
+  document.getElementById('f-lengths').value = '';
+  document.getElementById('f-closures').value = '';
+  document.getElementById('f-colors').value = '';
+  document.getElementById('f-weights').value = '';
+  document.getElementById('f-featured').checked = false;
+  document.getElementById('f-in-stock').checked = true;
+  document.getElementById('ph-save-status').textContent = '';
+  document.getElementById('ph-edit-modal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const p = allProducts.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('ph-modal-title').textContent = 'Edit Product';
+  document.getElementById('f-id').value = p.id;
+  document.getElementById('f-name').value = p.name;
+  document.getElementById('f-category').value = p.category;
+  document.getElementById('f-price').value = p.price;
+  document.getElementById('f-sort').value = p.sort_order;
+  document.getElementById('f-desc').value = p.description || '';
+  document.getElementById('f-image').value = p.image_url || '';
+  document.getElementById('f-video').value = p.video_url || '';
+  document.getElementById('f-lengths').value = (p.lengths||[]).join(', ');
+  document.getElementById('f-closures').value = (p.closures||[]).join(', ');
+  document.getElementById('f-colors').value = (p.colors||[]).join(', ');
+  document.getElementById('f-weights').value = (p.weights||[]).join(', ');
+  document.getElementById('f-featured').checked = !!p.featured;
+  document.getElementById('f-in-stock').checked = !!p.in_stock;
+  document.getElementById('ph-save-status').textContent = '';
+  document.getElementById('ph-edit-modal').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('ph-edit-modal').classList.remove('open');
+}
+
+function parseCSV(val) {
+  return val.split(',').map(s=>s.trim()).filter(Boolean);
+}
+
+async function saveProduct() {
+  const id = document.getElementById('f-id').value;
+  const name = document.getElementById('f-name').value.trim();
+  const price = parseInt(document.getElementById('f-price').value, 10);
+
+  if (!name) { alert('Product name is required.'); return; }
+  if (isNaN(price) || price < 0) { alert('Enter a valid price.'); return; }
+
+  const payload = {
+    name,
+    category: document.getElementById('f-category').value,
+    price,
+    sort_order: parseInt(document.getElementById('f-sort').value, 10) || 0,
+    description: document.getElementById('f-desc').value.trim() || null,
+    image_url: document.getElementById('f-image').value.trim() || null,
+    video_url: document.getElementById('f-video').value.trim() || null,
+    lengths: parseCSV(document.getElementById('f-lengths').value),
+    closures: parseCSV(document.getElementById('f-closures').value),
+    colors: parseCSV(document.getElementById('f-colors').value),
+    weights: parseCSV(document.getElementById('f-weights').value),
+    featured: document.getElementById('f-featured').checked,
+    in_stock: document.getElementById('f-in-stock').checked,
+    updated_at: new Date().toISOString()
+  };
+
+  const statusEl = document.getElementById('ph-save-status');
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'ph-save-status saving';
+
+  try {
+    if (id) {
+      await sbFetch(`products?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+    } else {
+      await sbFetch('products', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    statusEl.textContent = 'Saved!';
+    statusEl.className = 'ph-save-status saved';
+    await loadProducts();
+    setTimeout(closeEditModal, 800);
+  } catch(e) {
+    statusEl.textContent = 'Error saving.';
+    statusEl.className = 'ph-save-status error';
+    console.error(e);
+  }
+}
+
+// ---- DELETE ----
+function openConfirm(id, name) {
+  deleteTargetId = id;
+  document.getElementById('ph-confirm-name').textContent = name;
+  document.getElementById('ph-confirm-modal').classList.add('open');
+}
+
+function closeConfirm() {
+  deleteTargetId = null;
+  document.getElementById('ph-confirm-modal').classList.remove('open');
+}
+
+async function confirmDelete() {
+  if (!deleteTargetId) return;
+  try {
+    await sbFetch(`products?id=eq.${deleteTargetId}`, { method: 'DELETE' });
+    closeConfirm();
+    await loadProducts();
+  } catch(e) {
+    alert('Failed to delete. Check console.');
+    console.error(e);
+  }
+}
+
+// Close modals on background click
+document.getElementById('ph-edit-modal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
+document.getElementById('ph-confirm-modal').addEventListener('click', function(e){ if(e.target===this) closeConfirm(); });
+
+// Auto-load if already authenticated
+if (sessionStorage.getItem('ph-admin-auth') === '1') loadProducts();
+</script>
+</body>
+</html>
