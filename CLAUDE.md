@@ -23,10 +23,24 @@ There are 3 main pages:
 
 ## Internal Link Rule (IMPORTANT)
 
-All internal navigation links (href="/", href="/shop", href="/styling") MUST include
-target="_parent" so they navigate the parent Squarespace window, NOT inside the iframe.
-Without this, links give a GitHub Pages 404. Example:
+All internal navigation links MUST have target="_parent" AND be handled by the JS
+navigation snippet at the bottom of each file. The JS uses the full absolute URL to
+avoid domain ambiguity (window.top resolves to GitHub Pages domain, not penguinhairs.com).
+
+Every link must have target="_parent":
   <a href="/shop" target="_parent">Collection</a>
+
+And each file must have this JS snippet before </script>:
+  document.querySelectorAll('a[target="_parent"]').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var href = 'https://www.penguinhairs.com' + this.getAttribute('href');
+      try { window.top.location.href = href; }
+      catch(err) { window.parent.location.href = href; }
+    });
+  });
+
+WITHOUT this, clicking nav links on penguinhairs.com redirects to deetee001.github.io/shop (404).
 
 ## After Every Change
 
