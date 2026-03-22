@@ -445,11 +445,18 @@ html{scroll-behavior:smooth;}
 
       <div class="ph-co-section">
         <h3>Payment</h3>
+        <div id="sq-google-pay-wrapper" style="display:none;margin-bottom:0.75rem;">
+          <div id="sq-google-pay"></div>
+        </div>
+        <div id="sq-apple-pay-wrapper" style="display:none;margin-bottom:0.75rem;">
+          <div id="sq-apple-pay"></div>
+        </div>
+        <div id="sq-divider" style="display:none;text-align:center;margin:0.75rem 0;font-size:0.7rem;letter-spacing:0.15em;color:rgba(255,255,255,0.25);text-transform:uppercase;">— or pay by card —</div>
         <div id="sq-card-container"></div>
         <div class="ph-co-error" id="ph-co-error"></div>
       </div>
 
-      <button class="ph-co-pay-btn" id="ph-co-pay-btn" onclick="submitPayment()">Pay <span id="ph-co-pay-amt"></span> CAD</button>
+      <button class="ph-co-pay-btn" id="ph-co-pay-btn" onclick="submitPayment('card')">Pay <span id="ph-co-pay-amt"></span> CAD</button>
 
       <!-- Success state -->
       <div class="ph-co-success" id="ph-co-success">
@@ -723,11 +730,20 @@ const SQ_APP_ID = 'sq0idp-Yyblofqvg3UKO-dVCx0D6g';
 const SQ_LOCATION_ID = 'LMF690XAMSZCZ';
 let sqPayments = null;
 let sqCard = null;
+let sqCardAttached = false;
 
-async function initSquare() {
+// Init Square payments object on page load
+async function initSquarePayments() {
   if (!window.Square) return;
   try {
     sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
+  } catch(e) { console.error('Square init:', e); }
+}
+initSquarePayments();
+
+async function attachSquareCard() {
+  if (!sqPayments || sqCardAttached) return;
+  try {
     sqCard = await sqPayments.card({
       style: {
         '.input-container': { borderColor: '#2a2a2a', borderRadius: '0px' },
@@ -740,16 +756,54 @@ async function initSquare() {
       }
     });
     await sqCard.attach('#sq-card-container');
-  } catch(e) {
-    console.error('Square init failed:', e);
-  }
+    sqCardAttached = true;
+  } catch(e) { console.error('Card attach:', e); }
+}
+
+async function attachExpressPayments(totalStr) {
+  if (!sqPayments) return;
+  const paymentRequest = sqPayments.paymentRequest({
+    countryCode: 'CA',
+    currencyCode: 'CAD',
+    requestShippingAddress: false,
+    requestBillingInfo: false,
+    total: { amount: totalStr, label: 'Penguin Hairs' },
+  });
+
+  // Google Pay
+  try {
+    const gp = await sqPayments.googlePay(paymentRequest);
+    await gp.attach('#sq-google-pay');
+    document.getElementById('sq-google-pay-wrapper').style.display = 'block';
+    gp.addEventListener('ontokenization', async (e) => {
+      const { tokenResult } = e.detail;
+      if (tokenResult.status === 'OK') await processPayment(tokenResult.token);
+    });
+  } catch(e) { /* Google Pay not available on this device/browser */ }
+
+  // Apple Pay
+  try {
+    const ap = await sqPayments.applePay(paymentRequest);
+    await ap.attach('#sq-apple-pay');
+    document.getElementById('sq-apple-pay-wrapper').style.display = 'block';
+    ap.addEventListener('ontokenization', async (e) => {
+      const { tokenResult } = e.detail;
+      if (tokenResult.status === 'OK') await processPayment(tokenResult.token);
+    });
+  } catch(e) { /* Apple Pay not available on this device/browser */ }
+
+  // Show divider if any express method available
+  const hasExpress = document.getElementById('sq-google-pay-wrapper').style.display !== 'none'
+                  || document.getElementById('sq-apple-pay-wrapper').style.display !== 'none';
+  document.getElementById('sq-divider').style.display = hasExpress ? 'block' : 'none';
 }
 
 window.startCheckout = () => {
   if (cart.length === 0) return;
 
-  // Populate order summary
   const total = cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const totalStr = total.toFixed(2);
+
   document.getElementById('ph-co-items').innerHTML = cart.map(item => `
     <div class="ph-co-item">
       ${item.image ? `<img class="ph-co-item-img" src="${item.image}" alt="${item.name}">` : ''}
@@ -759,19 +813,24 @@ window.startCheckout = () => {
       </div>
       <div class="ph-co-item-price">$${(item.price * item.qty).toFixed(2)}</div>
     </div>`).join('');
-  document.getElementById('ph-co-total-amt').textContent = '$' + total.toFixed(2);
-  document.getElementById('ph-co-pay-amt').textContent = '$' + total.toFixed(2);
+  document.getElementById('ph-co-total-amt').textContent = '$' + totalStr;
+  document.getElementById('ph-co-pay-amt').textContent = '$' + totalStr;
 
-  // Reset state
   document.getElementById('ph-co-error').style.display = 'none';
   document.getElementById('ph-co-success').style.display = 'none';
   document.getElementById('ph-co-pay-btn').style.display = 'block';
+  document.getElementById('sq-google-pay-wrapper').style.display = 'none';
+  document.getElementById('sq-apple-pay-wrapper').style.display = 'none';
+  document.getElementById('sq-divider').style.display = 'none';
 
   document.getElementById('ph-co-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // Init Square if not yet done
-  if (!sqCard) initSquare();
+  // Attach Square elements after modal is visible
+  setTimeout(() => {
+    attachSquareCard();
+    attachExpressPayments(totalStr);
+  }, 150);
 };
 
 window.closeCheckout = () => {
@@ -779,12 +838,7 @@ window.closeCheckout = () => {
   document.body.style.overflow = '';
 };
 
-window.submitPayment = async () => {
-  const errEl = document.getElementById('ph-co-error');
-  const payBtn = document.getElementById('ph-co-pay-btn');
-  errEl.style.display = 'none';
-
-  // Validate shipping fields
+async function getShipping() {
   const shipping = {
     firstName: document.getElementById('co-first').value.trim(),
     lastName:  document.getElementById('co-last').value.trim(),
@@ -795,53 +849,67 @@ window.submitPayment = async () => {
     postal:    document.getElementById('co-postal').value.trim(),
     country:   document.getElementById('co-country').value,
   };
+  return shipping;
+}
 
-  const missing = Object.entries(shipping).find(([,v]) => !v);
-  if (missing) {
-    errEl.textContent = 'Please fill in all delivery fields.';
-    errEl.style.display = 'block';
-    return;
-  }
-
+async function processPayment(token) {
+  const errEl = document.getElementById('ph-co-error');
+  const payBtn = document.getElementById('ph-co-pay-btn');
+  errEl.style.display = 'none';
   payBtn.disabled = true;
   payBtn.textContent = 'Processing...';
 
-  try {
-    // Tokenize card with Square
-    const result = await sqCard.tokenize();
-    if (result.status !== 'OK') {
-      const msg = result.errors ? result.errors.map(e => e.message).join(', ') : 'Card error. Please check your details.';
-      throw new Error(msg);
-    }
+  const shipping = await getShipping();
+  if (Object.values(shipping).some(v => !v)) {
+    errEl.textContent = 'Please fill in all delivery fields.';
+    errEl.style.display = 'block';
+    payBtn.disabled = false;
+    payBtn.textContent = 'Pay ' + document.getElementById('ph-co-pay-amt').textContent + ' CAD';
+    return;
+  }
 
-    // Send to Edge Function
+  try {
     const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ cart, sourceId: result.token, shipping })
+      body: JSON.stringify({ cart, sourceId: token, shipping })
     });
     const data = await res.json();
-
     if (data.success) {
-      // Clear cart, show success
-      cart = [];
-      saveCart();
-      updateCartUI();
-      // Close cart panel if open
+      cart = []; saveCart(); updateCartUI();
       document.getElementById('ph-cart-panel').classList.remove('open');
       document.getElementById('ph-cart-overlay').style.display = 'none';
-      // Show success
       payBtn.style.display = 'none';
       document.getElementById('ph-co-success').style.display = 'flex';
     } else {
-      throw new Error(data.error || 'Payment failed. Please try again.');
+      throw new Error(data.error || 'Payment failed.');
     }
   } catch(e) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';
     payBtn.disabled = false;
     payBtn.textContent = 'Pay ' + document.getElementById('ph-co-pay-amt').textContent + ' CAD';
-    console.error(e);
+  }
+}
+
+window.submitPayment = async (method) => {
+  const errEl = document.getElementById('ph-co-error');
+  errEl.style.display = 'none';
+  if (!sqCard) {
+    errEl.textContent = 'Card field not ready. Please wait a moment and try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  try {
+    const result = await sqCard.tokenize();
+    if (result.status !== 'OK') {
+      const msg = result.errors ? result.errors.map(e => e.message).join(', ') : 'Card error. Please check your details.';
+      throw new Error(msg);
+    }
+    await processPayment(result.token);
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
   }
 };
 
