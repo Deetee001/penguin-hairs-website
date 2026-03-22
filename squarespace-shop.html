@@ -326,7 +326,7 @@ html{scroll-behavior:smooth;}
   </div>
   <div class="ph-cart-footer">
     <div class="ph-cart-total"><span>Total</span><span id="ph-cart-total">$0.00</span></div>
-    <button class="ph-checkout-btn" onclick="alert('Checkout integration coming soon!')">Proceed to Checkout</button>
+    <button class="ph-checkout-btn" id="ph-checkout-btn" onclick="startCheckout()">Proceed to Checkout</button>
   </div>
 </div>
 </div><!-- end ph-overlay -->
@@ -575,6 +575,34 @@ window.selectOpt=(type,value,btn)=>{
     document.getElementById('ph-add-btn').textContent='Add to Bag';
   }
 };
+// ---- CHECKOUT ----
+window.startCheckout = async () => {
+  if (cart.length === 0) return;
+  const btn = document.getElementById('ph-checkout-btn');
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
+      body: JSON.stringify({ cart })
+    });
+    const data = await res.json();
+    if (data.url) {
+      try { window.top.location.href = data.url; }
+      catch(e) { window.location.href = data.url; }
+    } else {
+      throw new Error(data.error || 'No checkout URL returned');
+    }
+  } catch(e) {
+    alert('Checkout failed. Please try again.');
+    console.error(e);
+  } finally {
+    btn.textContent = 'Proceed to Checkout';
+    btn.disabled = false;
+  }
+};
+
 window.addToCart=()=>{
   if(!selectedProduct) return;
   const specs=`${selection.length} · ${selection.closure} · ${selection.color} · ${selection.weight}`;
