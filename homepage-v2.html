@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penguin Hairs — Your Crown. Reimagined.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#d4af37;
+  --gold-dim:rgba(212,175,55,0.12);
+  --dark:#0a0a0a;
+  --dark-warm:#0f0c06;
+  --cream:#f5f0e8;
+  --mocha:#9a6b4b;
+  --text:rgba(245,240,232,0.75);
+}
+html{scroll-behavior:smooth;}
+body{background:var(--dark);color:var(--cream);font-family:'Lato',sans-serif;overflow-x:hidden;cursor:none;}
+
+/* ---- LOADER ---- */
+#ph-loader{
+  position:fixed;inset:0;z-index:999999;
+  background:var(--dark);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;
+  transition:opacity 0.8s ease,visibility 0.8s ease;
+}
+#ph-loader.out{opacity:0;visibility:hidden;pointer-events:none;}
+.ph-loader-logo{
+  font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;
+  letter-spacing:0.5em;text-transform:uppercase;color:white;
+}
+.ph-loader-bar{width:160px;height:1px;background:rgba(255,255,255,0.08);position:relative;overflow:hidden;}
+.ph-loader-bar::after{
+  content:'';position:absolute;left:0;top:0;height:100%;width:0;
+  background:var(--gold);
+  animation:loaderLine 1.2s cubic-bezier(0.76,0,0.24,1) forwards 0.3s;
+}
+@keyframes loaderLine{to{width:100%;}}
+
+/* ---- CUSTOM CURSOR ---- */
+#ph-cursor{
+  position:fixed;top:0;left:0;width:10px;height:10px;
+  border-radius:50%;background:var(--gold);
+  pointer-events:none;z-index:999998;
+  transform:translate(-50%,-50%);
+  transition:width 0.3s,height 0.3s,opacity 0.3s,background 0.3s;
+  mix-blend-mode:difference;
+}
+#ph-cursor-ring{
+  position:fixed;top:0;left:0;width:36px;height:36px;
+  border-radius:50%;border:1px solid rgba(212,175,55,0.4);
+  pointer-events:none;z-index:999997;
+  transform:translate(-50%,-50%);
+  transition:width 0.4s,height 0.4s,opacity 0.4s,border-color 0.3s;
+}
+body:has(a:hover) #ph-cursor,
+body:has(button:hover) #ph-cursor{width:6px;height:6px;}
+body:has(a:hover) #ph-cursor-ring,
+body:has(button:hover) #ph-cursor-ring{width:56px;height:56px;border-color:rgba(212,175,55,0.7);}
+@media(hover:none){#ph-cursor,#ph-cursor-ring{display:none;}}
+
+/* ---- SCROLL PROGRESS ---- */
+#ph-progress{
+  position:fixed;top:0;left:0;height:2px;width:0%;
+  background:linear-gradient(90deg,var(--gold),#f4d03f);
+  z-index:99999;transition:width 0.05s linear;
+}
+
+/* ---- NAV ---- */
+#ph-nav{
+  position:fixed;top:2px;left:0;right:0;z-index:9999;
+  padding:1.5rem 4rem;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background 0.4s,backdrop-filter 0.4s,padding 0.4s;
+}
+#ph-nav.scrolled{
+  background:rgba(10,10,10,0.9);backdrop-filter:blur(20px);
+  padding:1rem 4rem;
+  border-bottom:1px solid var(--gold-dim);
+}
+.ph-nav-logo{
+  font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;
+  letter-spacing:0.35em;text-transform:uppercase;color:white;
+  text-decoration:none;cursor:none;
+}
+.ph-nav-logo span{color:var(--gold);}
+.ph-nav-links{display:flex;gap:2.5rem;align-items:center;list-style:none;}
+.ph-nav-links a{
+  font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(245,240,232,0.6);text-decoration:none;cursor:none;
+  transition:color 0.3s;position:relative;
+}
+.ph-nav-links a::after{
+  content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;
+  background:var(--gold);transition:width 0.3s;
+}
+.ph-nav-links a:hover{color:var(--cream);}
+.ph-nav-links a:hover::after{width:100%;}
+.ph-nav-cta{
+  background:var(--gold);color:#000 !important;
+  padding:0.6rem 1.4rem;font-weight:700;
+  transition:opacity 0.3s !important;
+}
+.ph-nav-cta::after{display:none !important;}
+.ph-nav-cta:hover{opacity:0.85 !important;}
+.ph-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:none;padding:4px;}
+.ph-hamburger span{display:block;width:24px;height:1px;background:var(--cream);transition:all 0.3s;}
+.ph-mobile-menu{
+  display:none;position:fixed;inset:0;background:rgba(10,10,10,0.98);
+  z-index:9998;flex-direction:column;align-items:flex-start;justify-content:center;
+  padding:4rem;border-left:1px solid var(--gold-dim);
+}
+.ph-mobile-menu.open{display:flex;}
+.ph-mobile-menu a{
+  font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;
+  color:var(--cream);text-decoration:none;letter-spacing:0.05em;
+  display:block;margin-bottom:1.5rem;
+  transform:translateX(-20px);opacity:0;
+  animation:menuIn 0.5s ease forwards;
+}
+.ph-mobile-menu a:nth-child(2){animation-delay:0.08s;}
+.ph-mobile-menu a:nth-child(3){animation-delay:0.16s;}
+.ph-mobile-menu a:nth-child(4){animation-delay:0.24s;}
+@keyframes menuIn{to{transform:translateX(0);opacity:1;}}
+.ph-menu-close{
+  position:absolute;top:2rem;right:2rem;
+  background:none;border:none;color:var(--cream);font-size:1.5rem;cursor:none;
+}
+@media(max-width:768px){
+  #ph-nav{padding:1.2rem 1.5rem;}
+  #ph-nav.scrolled{padding:0.9rem 1.5rem;}
+  .ph-nav-links{display:none;}
+  .ph-hamburger{display:flex;}
+}
+
+/* ---- HERO ---- */
+#ph-hero{
+  position:relative;height:100vh;min-height:600px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#ph-hero-canvas{
+  position:absolute;inset:0;z-index:0;
+}
+.ph-hero-inner{
+  position:relative;z-index:2;text-align:center;
+  padding:0 2rem;max-width:1100px;
+}
+.ph-hero-eyebrow{
+  font-size:0.65rem;letter-spacing:0.5em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:2rem;
+  opacity:0;transform:translateY(10px);
+  animation:fadeUp 0.8s ease forwards 1.6s;
+}
+.ph-hero-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3.5rem,11vw,12rem);
+  font-weight:300;line-height:0.95;
+  letter-spacing:0.02em;
+  color:white;margin-bottom:2rem;
+}
+.ph-hero-title .line{
+  display:block;overflow:hidden;
+}
+.ph-hero-title .word{
+  display:inline-block;
+  transform:translateY(105%);
+  animation:wordReveal 1s cubic-bezier(0.76,0,0.24,1) forwards;
+}
+.ph-hero-title .line:nth-child(1) .word{animation-delay:1.8s;}
+.ph-hero-title .line:nth-child(2) .word{animation-delay:2.0s;color:var(--gold);}
+.ph-hero-subtitle{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1rem,2vw,1.4rem);font-weight:300;font-style:italic;
+  color:rgba(245,240,232,0.55);letter-spacing:0.05em;
+  margin-bottom:3rem;
+  opacity:0;
+  animation:fadeUp 0.8s ease forwards 2.4s;
+}
+.ph-hero-ctas{
+  display:flex;gap:1rem;align-items:center;justify-content:center;flex-wrap:wrap;
+  opacity:0;
+  animation:fadeUp 0.8s ease forwards 2.7s;
+}
+.ph-btn-gold{
+  display:inline-block;padding:1rem 2.5rem;
+  background:var(--gold);color:#000;
+  font-family:'Lato',sans-serif;font-size:0.7rem;font-weight:700;
+  letter-spacing:0.25em;text-transform:uppercase;
+  text-decoration:none;border:none;cursor:none;
+  position:relative;overflow:hidden;
+  transition:opacity 0.3s,transform 0.3s;
+}
+.ph-btn-gold:hover{opacity:0.9;transform:scale(1.02);}
+.ph-btn-ghost{
+  display:inline-block;padding:1rem 2.5rem;
+  background:transparent;color:var(--cream);
+  font-family:'Lato',sans-serif;font-size:0.7rem;font-weight:400;
+  letter-spacing:0.25em;text-transform:uppercase;
+  text-decoration:none;border:1px solid rgba(245,240,232,0.2);cursor:none;
+  transition:border-color 0.3s,color 0.3s;
+}
+.ph-btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.ph-scroll-cue{
+  position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:0.5rem;
+  opacity:0;animation:fadeUp 0.8s ease forwards 3.2s;z-index:2;
+}
+.ph-scroll-cue span{
+  font-size:0.55rem;letter-spacing:0.4em;text-transform:uppercase;
+  color:rgba(245,240,232,0.35);
+}
+.ph-scroll-line{
+  width:1px;height:40px;background:linear-gradient(to bottom,var(--gold),transparent);
+  animation:scrollPulse 2s ease-in-out infinite 3.5s;
+}
+@keyframes scrollPulse{0%,100%{opacity:1;transform:scaleY(1);}50%{opacity:0.3;transform:scaleY(0.6);}}
+@keyframes wordReveal{to{transform:translateY(0);}}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+
+/* ---- INTRO STRIP ---- */
+#ph-intro{
+  background:var(--dark-warm);
+  padding:5rem 4rem;
+  display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr 1px 1fr;
+  align-items:center;gap:0;
+  border-top:1px solid var(--gold-dim);border-bottom:1px solid var(--gold-dim);
+}
+.ph-intro-stat{
+  text-align:center;padding:1rem 2rem;
+}
+.ph-intro-stat-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.5rem,5vw,5rem);font-weight:300;
+  color:white;line-height:1;display:block;
+}
+.ph-intro-stat-num em{font-style:normal;color:var(--gold);}
+.ph-intro-stat-label{
+  font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;
+  color:rgba(245,240,232,0.35);margin-top:0.5rem;display:block;
+}
+.ph-intro-divider{width:1px;background:var(--gold-dim);height:60px;align-self:center;}
+@media(max-width:768px){
+  #ph-intro{grid-template-columns:1fr 1fr;gap:2rem;padding:3rem 1.5rem;}
+  .ph-intro-divider{display:none;}
+}
+
+/* ---- SECTION COMMONS ---- */
+.ph-section{padding:8rem 4rem;}
+.ph-eyebrow{
+  font-size:0.62rem;letter-spacing:0.5em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:1rem;display:block;
+}
+.ph-section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.5rem,5vw,5rem);font-weight:300;
+  color:white;line-height:1.1;margin-bottom:1rem;
+}
+.ph-section-title em{font-style:italic;color:var(--gold);}
+.ph-section-sub{
+  font-size:0.9rem;color:var(--text);line-height:1.9;
+  max-width:500px;
+}
+@media(max-width:768px){.ph-section{padding:5rem 1.5rem;}}
+
+/* ---- COLLECTION ---- */
+#ph-collection{background:var(--dark);}
+.ph-coll-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  margin-bottom:4rem;flex-wrap:wrap;gap:1.5rem;
+}
+.ph-coll-grid{
+  display:grid;
+  grid-template-columns:3fr 2fr;
+  grid-template-rows:auto auto;
+  gap:10px;
+}
+.ph-coll-card{
+  position:relative;overflow:hidden;
+  background:#111;cursor:none;
+  clip-path:inset(100% 0 0 0);
+}
+.ph-coll-card.revealed{clip-path:inset(0% 0 0 0);transition:clip-path 1.2s cubic-bezier(0.76,0,0.24,1);}
+.ph-coll-card:nth-child(1){grid-row:span 2;aspect-ratio:3/4;}
+.ph-coll-card:nth-child(2){aspect-ratio:4/3;}
+.ph-coll-card:nth-child(3){aspect-ratio:4/3;}
+.ph-coll-card:nth-child(4){
+  grid-column:1;grid-row:3;aspect-ratio:4/3;
+}
+.ph-coll-card:nth-child(5){
+  grid-column:2;grid-row:3;aspect-ratio:4/3;
+}
+.ph-coll-card img,.ph-coll-card video{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.ph-coll-card:hover img,.ph-coll-card:hover video{transform:scale(1.06);}
+.ph-coll-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0) 50%);
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:1.5rem;
+  opacity:0;transition:opacity 0.4s;
+}
+.ph-coll-card:hover .ph-coll-overlay{opacity:1;}
+.ph-coll-always{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:1.2rem 1.5rem;
+  background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);
+}
+.ph-coll-name{
+  font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;
+  color:white;display:block;
+}
+.ph-coll-price{font-size:0.7rem;color:var(--gold);letter-spacing:0.1em;}
+.ph-coll-action{
+  display:inline-block;margin-top:0.8rem;
+  font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--gold);border-bottom:1px solid var(--gold);
+  padding-bottom:2px;
+}
+.ph-coll-view-all{
+  text-align:center;margin-top:4rem;
+}
+.ph-placeholder-img{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#1a1a1a 0%,#111 50%,#1e1a0f 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.ph-placeholder-img span{
+  font-family:'Cormorant Garamond',serif;font-size:3rem;
+  color:rgba(212,175,55,0.15);letter-spacing:0.2em;
+}
+@media(max-width:768px){
+  .ph-coll-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;}
+  .ph-coll-card{aspect-ratio:3/4 !important;grid-row:auto !important;grid-column:auto !important;}
+  .ph-coll-overlay{opacity:1;}
+}
+
+/* ---- PINNED STORY ---- */
+#ph-story{
+  position:relative;
+  background:var(--dark-warm);
+  min-height:100vh;
+  overflow:hidden;
+}
+.ph-story-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 70% 50%,rgba(212,175,55,0.04) 0%,transparent 70%),
+             linear-gradient(135deg,#0f0c06 0%,#1a1505 50%,#0f0c06 100%);
+}
+.ph-story-bg::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 80px,rgba(212,175,55,0.02) 80px,rgba(212,175,55,0.02) 81px
+  );
+}
+.ph-story-container{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:1fr 1fr;
+  min-height:100vh;
+  align-items:center;
+  padding:0 4rem;
+  gap:6rem;
+}
+.ph-story-left{
+  display:flex;flex-direction:column;justify-content:center;
+}
+.ph-story-line{
+  width:40px;height:1px;background:var(--gold);margin-bottom:3rem;
+}
+.ph-story-blocks{display:flex;flex-direction:column;gap:4rem;}
+.ph-story-block{
+  opacity:0;transform:translateY(30px);
+  transition:opacity 0.8s ease,transform 0.8s ease;
+}
+.ph-story-block.visible{opacity:1;transform:translateY(0);}
+.ph-story-block-num{
+  font-size:0.55rem;letter-spacing:0.4em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:0.75rem;display:block;
+}
+.ph-story-block p{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.6rem,2.5vw,2.4rem);font-weight:300;
+  color:white;line-height:1.4;
+}
+.ph-story-block p em{font-style:italic;color:var(--gold);}
+.ph-story-right{
+  display:flex;align-items:center;justify-content:center;
+}
+.ph-story-visual{
+  width:100%;max-width:460px;aspect-ratio:3/4;
+  position:relative;
+}
+.ph-story-img-frame{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#1e1a0f,#2a2010);
+  border:1px solid rgba(212,175,55,0.15);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.ph-story-img-frame::before{
+  content:'';position:absolute;
+  width:200%;height:200%;
+  background:radial-gradient(ellipse,rgba(212,175,55,0.08) 0%,transparent 60%);
+  animation:shimmer 6s ease-in-out infinite;
+}
+@keyframes shimmer{0%,100%{transform:translate(-25%,-25%);}50%{transform:translate(-30%,-35%) rotate(5deg);}}
+.ph-story-img-frame span{
+  font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:300;
+  letter-spacing:0.3em;color:rgba(212,175,55,0.3);text-transform:uppercase;
+  position:relative;z-index:1;
+}
+.ph-story-accent{
+  position:absolute;top:-20px;right:-20px;
+  width:80px;height:80px;
+  border:1px solid rgba(212,175,55,0.2);
+  border-radius:50%;
+}
+.ph-story-accent2{
+  position:absolute;bottom:-12px;left:-12px;
+  width:40px;height:40px;
+  background:var(--gold);opacity:0.15;
+}
+@media(max-width:768px){
+  .ph-story-container{grid-template-columns:1fr;padding:4rem 1.5rem;gap:3rem;}
+  .ph-story-right{display:none;}
+}
+
+/* ---- CRAFT SPLIT ---- */
+#ph-craft{
+  display:grid;grid-template-columns:1fr 1px 1fr;
+  min-height:70vh;
+  border-top:1px solid var(--gold-dim);border-bottom:1px solid var(--gold-dim);
+}
+.ph-craft-left{
+  background:var(--dark);
+  padding:6rem 5rem;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.ph-craft-quote{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2rem,3.5vw,3.5rem);font-weight:300;font-style:italic;
+  color:white;line-height:1.3;margin-bottom:2.5rem;
+}
+.ph-craft-quote em{font-style:normal;color:var(--gold);}
+.ph-craft-body{
+  font-size:0.85rem;line-height:1.95;color:var(--text);
+  max-width:420px;margin-bottom:2rem;
+}
+.ph-craft-divider{width:1px;background:var(--gold-dim);}
+.ph-craft-right{
+  background:var(--dark-warm);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:6rem 4rem;gap:2rem;
+}
+.ph-craft-detail{
+  width:100%;max-width:380px;
+  border:1px solid var(--gold-dim);
+  padding:2rem 2.5rem;
+  position:relative;
+  clip-path:inset(100% 0 0 0);
+  transition:clip-path 1s cubic-bezier(0.76,0,0.24,1);
+}
+.ph-craft-detail.revealed{clip-path:inset(0%);}
+.ph-craft-detail::before{
+  content:'';position:absolute;top:-1px;left:2rem;right:2rem;
+  height:1px;background:var(--gold);
+}
+.ph-craft-detail-label{
+  font-size:0.58rem;letter-spacing:0.4em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:0.75rem;display:block;
+}
+.ph-craft-detail-text{
+  font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;
+  color:white;line-height:1.6;
+}
+@media(max-width:768px){
+  #ph-craft{grid-template-columns:1fr;}
+  .ph-craft-divider{display:none;}
+  .ph-craft-left,.ph-craft-right{padding:4rem 1.5rem;}
+}
+
+/* ---- STATS ---- */
+#ph-stats{
+  background:var(--dark-warm);
+  padding:6rem 4rem;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:2rem;
+  border-top:1px solid var(--gold-dim);
+  border-bottom:1px solid var(--gold-dim);
+}
+.ph-stat{text-align:center;padding:1rem;}
+.ph-stat-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3rem,6vw,7rem);font-weight:300;
+  color:white;line-height:1;display:block;
+}
+.ph-stat-num .suf{color:var(--gold);}
+.ph-stat-label{
+  font-size:0.58rem;letter-spacing:0.35em;text-transform:uppercase;
+  color:rgba(245,240,232,0.35);margin-top:0.75rem;display:block;
+  line-height:1.8;
+}
+@media(max-width:768px){
+  #ph-stats{grid-template-columns:1fr 1fr;padding:4rem 1.5rem;}
+}
+
+/* ---- TESTIMONIALS ---- */
+#ph-testimonials{
+  background:var(--dark);
+  padding:8rem 4rem;
+  overflow:hidden;
+}
+.ph-test-header{margin-bottom:4rem;}
+.ph-test-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.5rem;
+}
+.ph-test-card{
+  border:1px solid var(--gold-dim);
+  padding:2.5rem;position:relative;
+  transition:border-color 0.4s;
+  opacity:0;transform:translateY(40px);
+}
+.ph-test-card.visible{opacity:1;transform:translateY(0);transition:opacity 0.8s ease,transform 0.8s ease,border-color 0.4s;}
+.ph-test-card:hover{border-color:rgba(212,175,55,0.3);}
+.ph-test-card::before{
+  content:'✦';
+  position:absolute;top:2rem;right:2rem;
+  font-size:0.7rem;color:var(--gold);opacity:0.4;
+}
+.ph-test-stars{color:var(--gold);font-size:0.75rem;letter-spacing:0.2em;margin-bottom:1.5rem;}
+.ph-test-quote{
+  font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:300;
+  font-style:italic;color:var(--cream);line-height:1.7;margin-bottom:2rem;
+}
+.ph-test-author{display:flex;align-items:center;gap:1rem;}
+.ph-test-avatar{
+  width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),#9a6b4b);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:500;
+  color:#000;flex-shrink:0;
+}
+.ph-test-name{font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream);}
+.ph-test-location{font-size:0.62rem;color:rgba(245,240,232,0.35);margin-top:2px;}
+@media(max-width:768px){
+  #ph-testimonials{padding:5rem 1.5rem;}
+  .ph-test-grid{
+    display:flex;overflow-x:scroll;gap:1rem;
+    scroll-snap-type:x mandatory;padding-bottom:1.5rem;
+  }
+  .ph-test-card{min-width:82vw;scroll-snap-align:start;}
+}
+
+/* ---- EDITORIAL BANNER ---- */
+#ph-editorial{
+  position:relative;height:60vh;min-height:400px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.ph-editorial-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,#0f0c06 0%,#1a1a1a 40%,#0a0a0a 100%);
+}
+.ph-editorial-bg::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(212,175,55,0.06),transparent 70%);
+}
+.ph-editorial-inner{
+  position:relative;z-index:2;text-align:center;
+}
+.ph-editorial-label{
+  font-size:0.6rem;letter-spacing:0.6em;text-transform:uppercase;
+  color:rgba(245,240,232,0.4);margin-bottom:1.5rem;display:block;
+}
+.ph-editorial-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3rem,7vw,8rem);font-weight:300;
+  color:white;line-height:1;margin-bottom:2.5rem;
+}
+.ph-editorial-title em{font-style:italic;color:var(--gold);}
+.ph-editorial-link{
+  display:inline-flex;align-items:center;gap:0.8rem;
+  font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--cream);text-decoration:none;cursor:none;
+  border-bottom:1px solid rgba(245,240,232,0.2);padding-bottom:4px;
+  transition:color 0.3s,border-color 0.3s;
+}
+.ph-editorial-link:hover{color:var(--gold);border-color:var(--gold);}
+.ph-editorial-link::after{content:'→';font-size:0.9rem;}
+
+/* ---- NEWSLETTER ---- */
+#ph-newsletter{
+  background:var(--gold);
+  padding:5rem 4rem;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:3rem;flex-wrap:wrap;
+}
+.ph-nl-text h2{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3.5rem);
+  font-weight:300;color:#000;line-height:1.2;margin-bottom:0.5rem;
+}
+.ph-nl-text p{font-size:0.8rem;color:rgba(0,0,0,0.55);letter-spacing:0.05em;}
+.ph-nl-form{display:flex;gap:0;flex:1;max-width:480px;min-width:280px;}
+.ph-nl-input{
+  flex:1;padding:1rem 1.5rem;
+  background:rgba(0,0,0,0.08);border:1px solid rgba(0,0,0,0.15);border-right:none;
+  font-family:'Lato',sans-serif;font-size:0.8rem;
+  color:#000;outline:none;
+}
+.ph-nl-input::placeholder{color:rgba(0,0,0,0.4);}
+.ph-nl-btn{
+  padding:1rem 1.8rem;
+  background:#000;color:var(--gold);border:none;cursor:none;
+  font-family:'Lato',sans-serif;font-size:0.65rem;font-weight:700;
+  letter-spacing:0.2em;text-transform:uppercase;
+  transition:background 0.3s;white-space:nowrap;
+}
+.ph-nl-btn:hover{background:#1a1a1a;}
+@media(max-width:768px){
+  #ph-newsletter{padding:3rem 1.5rem;flex-direction:column;}
+  .ph-nl-form{max-width:100%;width:100%;}
+}
+
+/* ---- FOOTER ---- */
+#ph-footer{
+  background:var(--dark);
+  padding:4rem 4rem 2rem;
+  border-top:1px solid var(--gold-dim);
+}
+.ph-footer-top{
+  display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;
+  gap:3rem;margin-bottom:4rem;
+}
+.ph-footer-brand-name{
+  font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:300;
+  letter-spacing:0.3em;text-transform:uppercase;color:white;margin-bottom:1rem;
+}
+.ph-footer-brand-name span{color:var(--gold);}
+.ph-footer-tagline{font-size:0.78rem;color:var(--text);line-height:1.8;max-width:220px;}
+.ph-footer-col h4{
+  font-size:0.6rem;letter-spacing:0.35em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:1.2rem;
+}
+.ph-footer-col a{
+  display:block;font-size:0.78rem;color:rgba(245,240,232,0.45);
+  text-decoration:none;margin-bottom:0.75rem;cursor:none;
+  transition:color 0.3s;
+}
+.ph-footer-col a:hover{color:var(--cream);}
+.ph-footer-bottom{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;
+  padding-top:2rem;border-top:1px solid var(--gold-dim);
+}
+.ph-footer-copy{font-size:0.65rem;color:rgba(245,240,232,0.25);letter-spacing:0.1em;}
+.ph-footer-socials{display:flex;gap:1.5rem;}
+.ph-footer-socials a{
+  font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(245,240,232,0.35);text-decoration:none;cursor:none;
+  transition:color 0.3s;
+}
+.ph-footer-socials a:hover{color:var(--gold);}
+@media(max-width:768px){
+  #ph-footer{padding:3rem 1.5rem 2rem;}
+  .ph-footer-top{grid-template-columns:1fr 1fr;gap:2rem;}
+  .ph-footer-bottom{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="ph-loader">
+  <div class="ph-loader-logo">Penguin Hairs</div>
+  <div class="ph-loader-bar"></div>
+</div>
+
+<!-- CUSTOM CURSOR -->
+<div id="ph-cursor"></div>
+<div id="ph-cursor-ring"></div>
+
+<!-- SCROLL PROGRESS -->
+<div id="ph-progress"></div>
+
+<!-- NAV -->
+<nav id="ph-nav">
+  <a href="https://www.penguinhairs.com/" class="ph-nav-logo">Penguin<span> Hairs</span></a>
+  <ul class="ph-nav-links">
+    <li><a href="https://www.penguinhairs.com/">Home</a></li>
+    <li><a href="https://www.penguinhairs.com/shop">Collection</a></li>
+    <li><a href="https://www.penguinhairs.com/styling">Styling</a></li>
+    <li><a href="https://www.penguinhairs.com/shop" class="ph-nav-cta">Shop Now</a></li>
+  </ul>
+  <button class="ph-hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="ph-mobile-menu" id="ph-mobile-menu">
+  <button class="ph-menu-close" onclick="toggleMenu()">✕</button>
+  <a href="https://www.penguinhairs.com/">Home</a>
+  <a href="https://www.penguinhairs.com/shop">Collection</a>
+  <a href="https://www.penguinhairs.com/styling">Styling</a>
+  <a href="https://www.penguinhairs.com/shop">Shop Now →</a>
+</div>
+
+<!-- HERO -->
+<section id="ph-hero">
+  <canvas id="ph-hero-canvas"></canvas>
+  <div class="ph-hero-inner">
+    <span class="ph-hero-eyebrow">Luxury Human Hair · Est. 2024</span>
+    <h1 class="ph-hero-title">
+      <span class="line"><span class="word">Your Crown.</span></span>
+      <span class="line"><span class="word">Reimagined.</span></span>
+    </h1>
+    <p class="ph-hero-subtitle">Luxury human hair for women who move with intention.</p>
+    <div class="ph-hero-ctas">
+      <a href="https://www.penguinhairs.com/shop" class="ph-btn-gold ph-magnetic">Discover the Collection</a>
+      <a href="#ph-story" class="ph-btn-ghost">Our Story</a>
+    </div>
+  </div>
+  <div class="ph-scroll-cue">
+    <span>Scroll</span>
+    <div class="ph-scroll-line"></div>
+  </div>
+</section>
+
+<!-- INTRO STATS STRIP -->
+<div id="ph-intro">
+  <div class="ph-intro-stat">
+    <span class="ph-intro-stat-num" data-count="10000" data-suffix="<em>+</em>">0</span>
+    <span class="ph-intro-stat-label">Women Served</span>
+  </div>
+  <div class="ph-intro-divider"></div>
+  <div class="ph-intro-stat">
+    <span class="ph-intro-stat-num">100<em>%</em></span>
+    <span class="ph-intro-stat-label">Human Hair</span>
+  </div>
+  <div class="ph-intro-divider"></div>
+  <div class="ph-intro-stat">
+    <span class="ph-intro-stat-num">48<em>h</em></span>
+    <span class="ph-intro-stat-label">Dispatch</span>
+  </div>
+  <div class="ph-intro-divider"></div>
+  <div class="ph-intro-stat">
+    <span class="ph-intro-stat-num">★ 5<em>.0</em></span>
+    <span class="ph-intro-stat-label">Rated</span>
+  </div>
+</div>
+
+<!-- COLLECTION -->
+<section id="ph-collection" class="ph-section">
+  <div class="ph-coll-header">
+    <div>
+      <span class="ph-eyebrow">The Collection</span>
+      <h2 class="ph-section-title">Hair That <em>Moves</em><br>With You</h2>
+    </div>
+    <a href="https://www.penguinhairs.com/shop" class="ph-btn-ghost ph-magnetic">View All</a>
+  </div>
+  <div class="ph-coll-grid" id="ph-coll-grid">
+    <!-- Populated from Supabase -->
+  </div>
+  <div class="ph-coll-view-all">
+    <a href="https://www.penguinhairs.com/shop" class="ph-btn-gold ph-magnetic">Explore Full Collection</a>
+  </div>
+</section>
+
+<!-- BRAND STORY -->
+<section id="ph-story">
+  <div class="ph-story-bg"></div>
+  <div class="ph-story-container">
+    <div class="ph-story-left">
+      <div class="ph-story-line"></div>
+      <span class="ph-eyebrow">Our Story</span>
+      <div class="ph-story-blocks">
+        <div class="ph-story-block">
+          <span class="ph-story-block-num">01</span>
+          <p>"Built for women who refuse to <em>compromise</em> — on quality, on beauty, or on themselves."</p>
+        </div>
+        <div class="ph-story-block">
+          <span class="ph-story-block-num">02</span>
+          <p>"We source only the finest human hair — <em>cuticle-aligned</em>, ethically obtained, crafted to last."</p>
+        </div>
+        <div class="ph-story-block">
+          <span class="ph-story-block-num">03</span>
+          <p>"Because <em>your crown</em> deserves nothing less than extraordinary."</p>
+        </div>
+      </div>
+    </div>
+    <div class="ph-story-right">
+      <div class="ph-story-visual">
+        <div class="ph-story-img-frame">
+          <span>Penguin Hairs</span>
+        </div>
+        <div class="ph-story-accent"></div>
+        <div class="ph-story-accent2"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CRAFTSMANSHIP SPLIT -->
+<section id="ph-craft">
+  <div class="ph-craft-left">
+    <span class="ph-eyebrow">The Difference</span>
+    <blockquote class="ph-craft-quote">
+      "Every strand is selected. Every texture is <em>intentional</em>. Nothing is left to chance."
+    </blockquote>
+    <p class="ph-craft-body">At Penguin Hairs, quality isn't a promise — it's a process. Each bundle passes through rigorous quality checks before it ever reaches your hands. We believe the women who wear our hair deserve to feel that difference from the first touch.</p>
+    <a href="https://www.penguinhairs.com/shop" class="ph-btn-gold ph-magnetic" style="align-self:flex-start;margin-top:1rem;">Shop the Collection</a>
+  </div>
+  <div class="ph-craft-divider"></div>
+  <div class="ph-craft-right">
+    <div class="ph-craft-detail" id="ph-craft-1">
+      <span class="ph-craft-detail-label">Sourcing</span>
+      <p class="ph-craft-detail-text">100% ethically sourced human hair. Cuticle-intact and aligned for a natural, tangle-free experience.</p>
+    </div>
+    <div class="ph-craft-detail" id="ph-craft-2">
+      <span class="ph-craft-detail-label">Quality</span>
+      <p class="ph-craft-detail-text">Triple-weft construction. No shedding. No matting. Just hair that performs as beautifully as it looks.</p>
+    </div>
+    <div class="ph-craft-detail" id="ph-craft-3">
+      <span class="ph-craft-detail-label">Longevity</span>
+      <p class="ph-craft-detail-text">With proper care, Penguin Hairs extensions last 12–24 months. An investment in yourself that pays daily.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div id="ph-stats">
+  <div class="ph-stat">
+    <span class="ph-stat-num"><span class="count-up" data-target="10000">0</span><span class="suf">+</span></span>
+    <span class="ph-stat-label">Happy Customers<br>& Counting</span>
+  </div>
+  <div class="ph-stat">
+    <span class="ph-stat-num"><span class="count-up" data-target="100">0</span><span class="suf">%</span></span>
+    <span class="ph-stat-label">Human Hair.<br>Always.</span>
+  </div>
+  <div class="ph-stat">
+    <span class="ph-stat-num"><span class="count-up" data-target="48">0</span><span class="suf">h</span></span>
+    <span class="ph-stat-label">Average<br>Dispatch Time</span>
+  </div>
+  <div class="ph-stat">
+    <span class="ph-stat-num"><span class="count-up" data-target="5">0</span><span class="suf">.0★</span></span>
+    <span class="ph-stat-label">Average<br>Customer Rating</span>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<section id="ph-testimonials">
+  <div class="ph-test-header">
+    <span class="ph-eyebrow">From Our Community</span>
+    <h2 class="ph-section-title">Real Women.<br><em>Real Results.</em></h2>
+  </div>
+  <div class="ph-test-grid">
+    <div class="ph-test-card">
+      <div class="ph-test-stars">★★★★★</div>
+      <p class="ph-test-quote">"I've tried so many brands and nothing compares. The hair is silky, thick, and looks completely natural. I get compliments every single day."</p>
+      <div class="ph-test-author">
+        <div class="ph-test-avatar">A</div>
+        <div>
+          <div class="ph-test-name">Aisha M.</div>
+          <div class="ph-test-location">Toronto, ON</div>
+        </div>
+      </div>
+    </div>
+    <div class="ph-test-card">
+      <div class="ph-test-stars">★★★★★</div>
+      <p class="ph-test-quote">"Penguin Hairs changed how I see myself. The lace closure blends so perfectly — my stylist couldn't believe it wasn't my natural hair."</p>
+      <div class="ph-test-author">
+        <div class="ph-test-avatar">J</div>
+        <div>
+          <div class="ph-test-name">Jade R.</div>
+          <div class="ph-test-location">Vancouver, BC</div>
+        </div>
+      </div>
+    </div>
+    <div class="ph-test-card">
+      <div class="ph-test-stars">★★★★★</div>
+      <p class="ph-test-quote">"Worth every single penny. Fast shipping, beautiful packaging, and the hair itself is absolutely stunning. My new forever brand."</p>
+      <div class="ph-test-author">
+        <div class="ph-test-avatar">N</div>
+        <div>
+          <div class="ph-test-name">Nadia K.</div>
+          <div class="ph-test-location">Calgary, AB</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EDITORIAL BANNER -->
+<section id="ph-editorial">
+  <div class="ph-editorial-bg"></div>
+  <div class="ph-editorial-inner">
+    <span class="ph-editorial-label">Inspiration & Tutorials</span>
+    <h2 class="ph-editorial-title">The Styling <em>Edit</em></h2>
+    <a href="https://www.penguinhairs.com/styling" class="ph-editorial-link">Explore Looks</a>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<div id="ph-newsletter">
+  <div class="ph-nl-text">
+    <h2>Join the Inner Circle.</h2>
+    <p>First access to new collections. Exclusive offers. No noise.</p>
+  </div>
+  <form class="ph-nl-form" onsubmit="return false;">
+    <input type="email" class="ph-nl-input" placeholder="Your email address">
+    <button type="submit" class="ph-nl-btn">Subscribe</button>
+  </form>
+</div>
+
+<!-- FOOTER -->
+<footer id="ph-footer">
+  <div class="ph-footer-top">
+    <div>
+      <div class="ph-footer-brand-name">Penguin<span> Hairs</span></div>
+      <p class="ph-footer-tagline">Luxury human hair for women who refuse to compromise. Quality you can feel. Confidence you can see.</p>
+    </div>
+    <div class="ph-footer-col">
+      <h4>Shop</h4>
+      <a href="https://www.penguinhairs.com/shop">All Hair</a>
+      <a href="https://www.penguinhairs.com/shop">Curly</a>
+      <a href="https://www.penguinhairs.com/shop">Straight</a>
+      <a href="https://www.penguinhairs.com/shop">Wigs & Closures</a>
+    </div>
+    <div class="ph-footer-col">
+      <h4>Info</h4>
+      <a href="#">Shipping & Returns</a>
+      <a href="#">Hair Care Guide</a>
+      <a href="#">FAQ</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="ph-footer-col">
+      <h4>Follow</h4>
+      <a href="#">Instagram</a>
+      <a href="#">TikTok</a>
+      <a href="#">Pinterest</a>
+      <a href="#">YouTube</a>
+    </div>
+  </div>
+  <div class="ph-footer-bottom">
+    <span class="ph-footer-copy">© 2024 Penguin Hairs. All rights reserved.</span>
+    <div class="ph-footer-socials">
+      <a href="#">Instagram</a>
+      <a href="#">TikTok</a>
+      <a href="#">Pinterest</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ---- SUPABASE ----
+const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
+
+// ---- LOADER ----
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('ph-loader').classList.add('out');
+  }, 1600);
+});
+
+// ---- CURSOR ----
+const cursor = document.getElementById('ph-cursor');
+const ring = document.getElementById('ph-cursor-ring');
+let mx = -100, my = -100, rx = -100, ry = -100;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+(function animateCursor(){
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateCursor);
+})();
+
+// ---- SCROLL PROGRESS ----
+const progress = document.getElementById('ph-progress');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  progress.style.width = pct + '%';
+});
+
+// ---- NAV ----
+const nav = document.getElementById('ph-nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+function toggleMenu() {
+  document.getElementById('ph-mobile-menu').classList.toggle('open');
+}
+
+// ---- THREE.JS HERO CANVAS ----
+(function(){
+  const canvas = document.getElementById('ph-hero-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, canvas.offsetWidth / canvas.offsetHeight, 0.1, 1000);
+  camera.position.z = 5;
+
+  const count = 6000;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const phases = new Float32Array(count);
+  const W = 16, H = 9;
+
+  for (let i = 0; i < count; i++) {
+    positions[i * 3]     = (Math.random() - 0.5) * W;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * H;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+    phases[i] = Math.random() * Math.PI * 2;
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+  const material = new THREE.PointsMaterial({
+    color: 0xd4af37,
+    size: 0.012,
+    transparent: true,
+    opacity: 0.35,
+    sizeAttenuation: true
+  });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  let t = 0;
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', e => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 0.3;
+    mouseY = -(e.clientY / window.innerHeight - 0.5) * 0.3;
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.004;
+    const pos = geometry.attributes.position.array;
+    for (let i = 0; i < count; i++) {
+      const ix = i * 3;
+      const x = positions[ix];
+      pos[ix + 1] = positions[ix + 1] + Math.sin(t + x * 0.5 + phases[i]) * 0.15;
+    }
+    geometry.attributes.position.needsUpdate = true;
+    points.rotation.y = mouseX * 0.5;
+    points.rotation.x = mouseY * 0.5;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+
+// ---- GSAP SCROLL ANIMATIONS ----
+gsap.registerPlugin(ScrollTrigger);
+
+// Collection cards reveal
+function revealCards() {
+  document.querySelectorAll('.ph-coll-card').forEach((card, i) => {
+    ScrollTrigger.create({
+      trigger: card,
+      start: 'top 88%',
+      onEnter: () => {
+        setTimeout(() => card.classList.add('revealed'), i * 120);
+      }
+    });
+  });
+}
+
+// Card tilt (desktop only)
+function initCardTilt() {
+  if (window.innerWidth < 768) return;
+  document.querySelectorAll('.ph-coll-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      gsap.to(card, { rotationY: x * 8, rotationX: -y * 8, transformPerspective: 1000, duration: 0.4, ease: 'power2.out' });
+    });
+    card.addEventListener('mouseleave', () => {
+      gsap.to(card, { rotationY: 0, rotationX: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)' });
+    });
+  });
+}
+
+// Magnetic buttons
+function initMagnetic() {
+  if (window.innerWidth < 768) return;
+  document.querySelectorAll('.ph-magnetic').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const r = btn.getBoundingClientRect();
+      const x = (e.clientX - r.left - r.width / 2) * 0.25;
+      const y = (e.clientY - r.top - r.height / 2) * 0.25;
+      gsap.to(btn, { x, y, duration: 0.4, ease: 'power2.out' });
+    });
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.3)' });
+    });
+  });
+}
+
+// Story blocks reveal on scroll
+function initStoryBlocks() {
+  document.querySelectorAll('.ph-story-block').forEach((block, i) => {
+    ScrollTrigger.create({
+      trigger: block,
+      start: 'top 80%',
+      onEnter: () => {
+        setTimeout(() => block.classList.add('visible'), i * 200);
+      }
+    });
+  });
+}
+
+// Craft details reveal
+function initCraftReveals() {
+  ['ph-craft-1','ph-craft-2','ph-craft-3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 85%',
+      onEnter: () => setTimeout(() => el.classList.add('revealed'), i * 200)
+    });
+  });
+}
+
+// Testimonial cards reveal
+function initTestimonials() {
+  document.querySelectorAll('.ph-test-card').forEach((card, i) => {
+    ScrollTrigger.create({
+      trigger: '#ph-testimonials',
+      start: 'top 70%',
+      onEnter: () => setTimeout(() => card.classList.add('visible'), i * 150)
+    });
+  });
+}
+
+// Count-up animation
+function initCounters() {
+  document.querySelectorAll('.count-up').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => {
+        const duration = 1800;
+        const start = performance.now();
+        function update(now) {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(eased * target).toLocaleString();
+          if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+      }
+    });
+  });
+}
+
+// Section fade-ups
+function initFadeUps() {
+  gsap.utils.toArray('.ph-eyebrow, .ph-section-title, .ph-section-sub, .ph-coll-header').forEach(el => {
+    gsap.from(el, {
+      opacity: 0, y: 30, duration: 0.9, ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 88%' }
+    });
+  });
+}
+
+// ---- COLLECTION FROM SUPABASE ----
+async function loadCollection() {
+  const grid = document.getElementById('ph-coll-grid');
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/products?in_stock=eq.true&order=sort_order.asc,id.asc&select=*&limit=4`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    const products = await res.json();
+    if (!products.length) { grid.innerHTML = '<p style="color:rgba(255,255,255,0.3);padding:2rem;">No products found.</p>'; return; }
+
+    grid.innerHTML = products.map((p, i) => {
+      const img = (p.image_urls && p.image_urls[0]) || p.image_url;
+      const media = p.video_url
+        ? `<video src="${p.video_url}" autoplay muted loop playsinline></video>`
+        : img
+          ? `<img src="${img}" alt="${p.name}" loading="lazy">`
+          : `<div class="ph-placeholder-img"><span>PH</span></div>`;
+      return `
+        <div class="ph-coll-card" style="cursor:none;" onclick="window.location.href='https://www.penguinhairs.com/shop'">
+          ${media}
+          <div class="ph-coll-always">
+            <span class="ph-coll-name">${p.name}</span>
+            <span class="ph-coll-price">$${p.price}</span>
+          </div>
+          <div class="ph-coll-overlay">
+            <span class="ph-coll-name">${p.name}</span>
+            <span class="ph-coll-price" style="margin-top:4px;">$${p.price}</span>
+            <span class="ph-coll-action">View Product</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    revealCards();
+    initCardTilt();
+  } catch(e) {
+    grid.innerHTML = '<p style="color:rgba(255,255,255,0.3);padding:2rem;">Collection loading...</p>';
+    console.error(e);
+  }
+}
+
+// ---- INIT ----
+window.addEventListener('DOMContentLoaded', () => {
+  loadCollection();
+  initStoryBlocks();
+  initCraftReveals();
+  initTestimonials();
+  initCounters();
+  initFadeUps();
+  setTimeout(initMagnetic, 200);
+});
+</script>
+</body>
+</html>
