@@ -9,19 +9,8 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Lato',sans-serif;background:#0a0a0a;color:#e0e0e0;min-height:100vh;}
 
-/* ---- LOGIN ---- */
-#ph-login{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0a;}
-.ph-login-box{background:#111;border:1px solid #222;border-radius:12px;padding:48px 40px;width:360px;text-align:center;}
-.ph-login-box h1{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:#d4af37;margin-bottom:8px;letter-spacing:2px;}
-.ph-login-box p{color:#666;font-size:13px;margin-bottom:32px;}
-.ph-login-box input{width:100%;padding:12px 16px;background:#0a0a0a;border:1px solid #333;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:14px;outline:none;margin-bottom:12px;}
-.ph-login-box input:focus{border-color:#d4af37;}
-.ph-login-btn{width:100%;padding:12px;background:#d4af37;color:#0a0a0a;border:none;border-radius:8px;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity .2s;}
-.ph-login-btn:hover{opacity:.85;}
-.ph-login-error{color:#e05555;font-size:12px;margin-top:8px;display:none;}
-
 /* ---- ADMIN SHELL ---- */
-#ph-admin{display:none;}
+#ph-admin{display:block;}
 .ph-topbar{background:#111;border-bottom:1px solid #222;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .ph-topbar h1{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#d4af37;letter-spacing:2px;}
 .ph-topbar-r{display:flex;align-items:center;gap:12px;}
@@ -127,17 +116,6 @@ tr:hover td{background:rgba(212,175,55,.04);}
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="ph-login">
-  <div class="ph-login-box">
-    <h1>PENGUIN HAIRS</h1>
-    <p>Admin Access</p>
-    <input type="password" id="ph-pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="ph-login-btn" onclick="doLogin()">Enter</button>
-    <p class="ph-login-error" id="ph-login-err">Incorrect password.</p>
-  </div>
-</div>
-
 <!-- ADMIN SHELL -->
 <div id="ph-admin">
   <div class="ph-topbar">
@@ -145,7 +123,6 @@ tr:hover td{background:rgba(212,175,55,.04);}
     <div class="ph-topbar-r">
       <span class="ph-status" id="ph-db-status">Connecting...</span>
       <button class="ph-btn ph-btn-gold" onclick="openAddModal()">+ Add Product</button>
-      <button class="ph-btn ph-btn-outline" onclick="doLogout()">Logout</button>
     </div>
   </div>
 
@@ -327,31 +304,6 @@ tr:hover td{background:rgba(212,175,55,.04);}
 // ---- CONFIG ----
 const SUPABASE_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
-const ADMIN_PASSWORD = 'PenguinAdmin2026!';
-
-// ---- AUTH ----
-function doLogin() {
-  const pw = document.getElementById('ph-pw-input').value;
-  if (pw === ADMIN_PASSWORD) {
-    sessionStorage.setItem('ph-admin-auth', '1');
-    document.getElementById('ph-login').style.display = 'none';
-    document.getElementById('ph-admin').style.display = 'block';
-    loadProducts();
-  } else {
-    document.getElementById('ph-login-err').style.display = 'block';
-  }
-}
-
-function doLogout() {
-  sessionStorage.removeItem('ph-admin-auth');
-  location.reload();
-}
-
-// Auto-login if session exists
-if (sessionStorage.getItem('ph-admin-auth') === '1') {
-  document.getElementById('ph-login').style.display = 'none';
-  document.getElementById('ph-admin').style.display = 'block';
-}
 
 // ---- SUPABASE API ----
 async function sbFetch(path, options = {}) {
@@ -614,8 +566,8 @@ async function confirmDelete() {
 document.getElementById('ph-edit-modal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
 document.getElementById('ph-confirm-modal').addEventListener('click', function(e){ if(e.target===this) closeConfirm(); });
 
-// Auto-load if already authenticated
-if (sessionStorage.getItem('ph-admin-auth') === '1') loadProducts();
+// Load products on page start
+loadProducts();
 </script>
 </body>
 </html>
