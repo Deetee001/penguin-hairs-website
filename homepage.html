@@ -1,0 +1,721 @@
+<!-- ============================================
+     PENGUIN HAIRS - HOME PAGE
+     Paste this ENTIRE code into a Squarespace Code Block
+     Page slug: / (your homepage)
+     ============================================ -->
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ---- OVERLAY APPROACH: sits fixed on top of all Squarespace UI ---- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow: hidden !important; }
+
+#ph-overlay {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  overflow-y: scroll !important; overflow-x: hidden !important;
+  z-index: 999999 !important;
+  background: #0a0a0a !important;
+  scroll-behavior: smooth;
+}
+#ph-overlay::-webkit-scrollbar { width: 6px; }
+#ph-overlay::-webkit-scrollbar-track { background: #111; }
+#ph-overlay::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+
+#ph-app {
+  font-family: 'Lato', sans-serif;
+  color: white;
+  background: #0a0a0a;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+}
+#ph-app h1, #ph-app h2, #ph-app h3, #ph-app h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; }
+html { scroll-behavior: smooth; }
+
+
+  100% { opacity: 0.35; }
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+
+/* ---- Canvas ---- */
+#ph-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 1; pointer-events: none;
+}
+
+/* ---- Nav ---- */
+#ph-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  padding: 1.5rem 3rem;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: all 0.5s ease;
+}
+#ph-nav.scrolled {
+  background: rgba(10,10,10,0.95); backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(212,175,55,0.15);
+  padding: 1rem 3rem;
+}
+.ph-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+.ph-logo span { font-size: 1.5rem; }
+.ph-logo h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 400; letter-spacing: 0.2em; color: white; }
+.ph-nav-links { display: flex; gap: 2.5rem; align-items: center; }
+.ph-nav-links a {
+  color: rgba(255,255,255,0.8); text-decoration: none;
+  font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase;
+  transition: color 0.3s; position: relative;
+}
+.ph-nav-links a::after {
+  content: ''; position: absolute; bottom: -3px; left: 0;
+  width: 0; height: 1px; background: #d4af37; transition: width 0.3s;
+}
+.ph-nav-links a:hover { color: white; }
+.ph-nav-links a:hover::after { width: 100%; }
+.ph-cart-btn {
+  position: relative; background: none; border: none; color: white;
+  cursor: pointer; font-size: 1.1rem; padding: 0.5rem;
+}
+.ph-cart-count {
+  position: absolute; top: -5px; right: -5px;
+  background: #d4af37; color: #000; font-size: 0.65rem; font-weight: 700;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.ph-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 0.5rem; }
+.ph-hamburger span { display: block; width: 24px; height: 1px; background: white; transition: all 0.3s; }
+.ph-mobile-menu {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(10,10,10,0.98); z-index: 999; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2rem;
+}
+.ph-mobile-menu.open { display: flex; }
+.ph-mobile-menu a {
+  color: white; text-decoration: none; font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem; font-weight: 300; letter-spacing: 0.1em;
+  transition: color 0.3s;
+}
+.ph-mobile-menu a:hover { color: #d4af37; }
+.ph-close-menu { position: absolute; top: 2rem; right: 2rem; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+
+/* ---- Hero ---- */
+#ph-hero {
+  position: relative; height: 100vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2; background: rgba(0,0,0,0.3);
+}
+#ph-hero img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: top center; filter: brightness(0.4);
+  will-change: transform; transform: translateZ(0);
+}
+.ph-hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.7) 100%);
+}
+.ph-hero-content {
+  position: relative; z-index: 5; text-align: center; padding: 2rem;
+  display: flex; flex-direction: column; align-items: center;
+}
+.ph-hero-eyebrow {
+  font-size: 0.75rem; letter-spacing: 0.4em; text-transform: uppercase;
+  color: #d4af37; margin-bottom: 2rem;
+  opacity: 0; animation: phFadeUp 1s ease forwards 0.2s;
+}
+.ph-hero-title {
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: clamp(3.5rem, 9vw, 9rem); letter-spacing: 0.05em; line-height: 1;
+  background: linear-gradient(135deg, #fff 30%, #d4af37 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 1.5rem;
+  opacity: 0; animation: phFadeUp 1.2s ease forwards 0.4s;
+}
+.ph-hero-sub {
+  font-size: clamp(0.9rem, 2vw, 1.2rem); letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(255,255,255,0.7); margin-bottom: 3.5rem; font-weight: 300;
+  opacity: 0; animation: phFadeUp 1.2s ease forwards 0.6s;
+}
+.ph-hero-btns {
+  display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center;
+  opacity: 0; animation: phFadeUp 1.2s ease forwards 0.8s;
+}
+.ph-scroll-hint {
+  position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  opacity: 0; animation: phFadeIn 1s ease forwards 1.5s; cursor: pointer;
+}
+.ph-scroll-hint span { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: #d4af37; }
+.ph-scroll-line {
+  width: 1px; height: 50px;
+  background: linear-gradient(to bottom, transparent, #d4af37);
+  animation: phScrollAnim 2s infinite;
+}
+@keyframes phScrollAnim { 0%,100%{opacity:0;transform:translateY(0)} 50%{opacity:1;transform:translateY(12px)} }
+
+/* ---- Buttons ---- */
+.ph-btn {
+  padding: 1.1rem 3rem; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+  border: 1px solid rgba(212,175,55,0.6); background: transparent; color: white;
+  cursor: pointer; transition: all 0.4s ease; text-decoration: none; display: inline-block;
+  position: relative; overflow: hidden;
+}
+.ph-btn::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(135deg, #d4af37, #f4d03f); transition: left 0.4s ease; z-index: -1;
+}
+.ph-btn:hover { border-color: #d4af37; color: #000; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(212,175,55,0.2); }
+.ph-btn:hover::before { left: 0; }
+.ph-btn-gold { background: linear-gradient(135deg, #d4af37, #f4d03f); border-color: #d4af37; color: #000; font-weight: 700; }
+.ph-btn-gold::before { background: #000; }
+.ph-btn-gold:hover { color: white; }
+
+/* ---- Sections ---- */
+.ph-section { position: relative; z-index: 2; }
+.ph-dark { background: rgba(10,10,10,0.78); backdrop-filter: blur(4px); }
+.ph-gold-line { width: 50px; height: 2px; background: linear-gradient(90deg, #d4af37, #f4d03f); margin: 0 auto 1.5rem; }
+.ph-section-header { text-align: center; margin-bottom: 5rem; padding-top: 6rem; }
+.ph-section-header h2 { font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 300; color: white; margin-bottom: 1rem; }
+.ph-section-header p { font-size: 1rem; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; }
+.ph-container { max-width: 1300px; margin: 0 auto; padding: 0 2rem; }
+
+/* ---- Featured Products ---- */
+#ph-featured { padding-bottom: 6rem; }
+.ph-products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.ph-product-card {
+  position: relative; overflow: hidden; cursor: pointer;
+  background: #1a1a1a; border: 1px solid transparent;
+  transition: all 0.5s ease; height: 550px;
+}
+.ph-product-card:hover { border-color: rgba(212,175,55,0.4); transform: translateY(-8px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.ph-product-card img { width: 100%; height: 100%; object-fit: cover; object-position: top center; transition: transform 0.8s ease; }
+/* ---- Video support: mirrors image behaviour ---- */
+#ph-hero video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; filter: brightness(0.45);
+}
+.ph-product-card video {
+  width: 100%; height: 100%; object-fit: cover; object-position: top center;
+  transition: transform 0.8s ease;
+  will-change: transform; transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+.ph-product-card:hover video { transform: scale(1.1); }
+.ph-card-img video {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.8s ease;
+}
+.ph-card:hover .ph-card-img video { transform: scale(1.1); }
+
+.ph-product-card:hover img { transform: scale(1.1); }
+.ph-product-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.92));
+  opacity: 0; transition: opacity 0.5s;
+}
+.ph-product-card:hover .ph-product-overlay { opacity: 1; }
+.ph-product-info {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 2rem;
+  transform: translateY(20px); opacity: 0; transition: all 0.5s ease;
+}
+.ph-product-card:hover .ph-product-info { transform: translateY(0); opacity: 1; }
+.ph-product-info p { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: #d4af37; margin-bottom: 0.5rem; }
+.ph-product-info h3 { font-size: 1.8rem; font-weight: 300; margin-bottom: 0.5rem; }
+.ph-product-info .ph-price { font-size: 1.3rem; color: rgba(255,255,255,0.8); }
+.ph-product-badge {
+  position: absolute; top: 1.5rem; right: 1.5rem;
+  background: linear-gradient(135deg, #d4af37, #f4d03f);
+  color: #000; padding: 0.4rem 1rem; font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase; z-index: 2;
+}
+
+/* ---- Parallax ---- */
+.ph-parallax {
+  position: relative; height: 80vh; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; z-index: 2;
+}
+.ph-parallax img {
+  position: absolute; top: -20%; left: 0; width: 100%; height: 140%;
+  object-fit: cover; filter: brightness(0.45); will-change: transform;
+}
+.ph-parallax-content { position: relative; z-index: 5; text-align: center; padding: 2rem; }
+.ph-parallax-content h2 {
+  font-size: clamp(2.5rem, 7vw, 7rem); font-weight: 300; letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #fff, #d4af37);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 1rem;
+}
+.ph-parallax-content p { font-size: clamp(1rem, 2vw, 1.4rem); letter-spacing: 0.25em; color: rgba(255,255,255,0.75); }
+
+/* ---- Split ---- */
+.ph-split { display: grid; grid-template-columns: 1fr 1fr; min-height: 600px; position: relative; z-index: 2; }
+.ph-split-img { position: relative; overflow: hidden; }
+.ph-split-img img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.65); transition: transform 0.8s ease; }
+.ph-split:hover .ph-split-img img { transform: scale(1.05); }
+.ph-split-content {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 5rem; background: rgba(10,10,10,0.8); backdrop-filter: blur(4px);
+}
+.ph-split-content h2 { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 300; color: white; margin-bottom: 1.5rem; }
+.ph-split-content p { color: rgba(255,255,255,0.55); line-height: 1.9; margin-bottom: 2.5rem; font-size: 1rem; }
+
+/* ---- Why Section ---- */
+#ph-why { padding: 6rem 0; }
+.ph-why-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin-bottom: 4rem; }
+.ph-why-card {
+  padding: 3rem; border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02); transition: all 0.4s;
+}
+.ph-why-card:hover { border-color: rgba(212,175,55,0.3); background: rgba(212,175,55,0.03); }
+.ph-why-card h3 { font-size: 1.6rem; font-weight: 300; color: white; margin-bottom: 1rem; }
+.ph-why-card p { color: rgba(255,255,255,0.5); line-height: 1.9; font-size: 0.95rem; }
+.ph-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+.ph-stat { text-align: center; padding: 2.5rem 1rem; border: 1px solid rgba(212,175,55,0.15); }
+.ph-stat h3 { font-size: 2.5rem; font-weight: 300; color: #d4af37; margin-bottom: 0.5rem; }
+.ph-stat p { font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+
+/* ---- Footer ---- */
+#ph-footer { background: #000; border-top: 1px solid rgba(212,175,55,0.15); padding: 5rem 0 2rem; position: relative; z-index: 2; }
+.ph-footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 4rem; }
+.ph-footer-logo { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.ph-footer-logo span { font-size: 1.5rem; }
+.ph-footer-logo h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 400; letter-spacing: 0.2em; }
+.ph-footer-tagline { color: rgba(255,255,255,0.4); font-size: 0.9rem; line-height: 1.7; }
+.ph-footer-col h4 { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 1.5rem; }
+.ph-footer-col a, .ph-footer-col p { display: block; color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.9rem; margin-bottom: 0.75rem; transition: color 0.3s; cursor: pointer; }
+.ph-footer-col a:hover, .ph-footer-col p:hover { color: #d4af37; }
+.ph-footer-bottom { border-top: 1px solid rgba(255,255,255,0.06); padding-top: 2rem; text-align: center; color: rgba(255,255,255,0.25); font-size: 0.85rem; }
+
+/* ---- Animations ---- */
+@keyframes phFadeUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes phFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.ph-reveal { opacity: 0; transform: translateY(50px); transition: opacity 0.9s ease, transform 0.9s ease; }
+.ph-reveal.ph-active { opacity: 1; transform: translateY(0); }
+.ph-reveal-left { opacity: 0; transform: translateX(-50px); transition: opacity 0.9s ease, transform 0.9s ease; }
+.ph-reveal-left.ph-active { opacity: 1; transform: translateX(0); }
+.ph-reveal-right { opacity: 0; transform: translateX(50px); transition: opacity 0.9s ease, transform 0.9s ease; }
+.ph-reveal-right.ph-active { opacity: 1; transform: translateX(0); }
+
+/* ---- Cart Panel ---- */
+#ph-cart-panel {
+  position: fixed; top: 0; right: -420px; width: 420px; height: 100%;
+  background: #111; z-index: 2000; transition: right 0.4s ease;
+  display: flex; flex-direction: column; border-left: 1px solid rgba(212,175,55,0.15);
+}
+#ph-cart-panel.open { right: 0; }
+.ph-cart-header { padding: 2rem; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; }
+.ph-cart-header h3 { font-size: 1.4rem; font-weight: 300; letter-spacing: 0.15em; }
+.ph-cart-close { background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; }
+.ph-cart-items { flex: 1; overflow-y: auto; padding: 1.5rem; }
+.ph-cart-empty { text-align: center; padding: 4rem 2rem; color: rgba(255,255,255,0.35); }
+.ph-cart-item { padding: 1.2rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: start; }
+.ph-cart-item-info h4 { font-size: 1rem; font-weight: 400; margin-bottom: 0.3rem; }
+.ph-cart-item-info p { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+.ph-cart-item-price { color: #d4af37; font-size: 1rem; }
+.ph-cart-footer { padding: 2rem; border-top: 1px solid rgba(255,255,255,0.08); }
+.ph-cart-total { display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 1.1rem; }
+.ph-cart-total span:last-child { color: #d4af37; }
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .ph-products-grid { grid-template-columns: repeat(2, 1fr); }
+  .ph-stats { grid-template-columns: repeat(2, 1fr); }
+  .ph-footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  #ph-nav { padding: 1.2rem 1.5rem; }
+  .ph-nav-links { display: none; }
+  .ph-hamburger { display: flex; }
+  .ph-products-grid { grid-template-columns: 1fr; }
+  .ph-split { grid-template-columns: 1fr; }
+  .ph-split-content { padding: 3rem 2rem; }
+  .ph-why-grid { grid-template-columns: 1fr; }
+  .ph-stats { grid-template-columns: repeat(2, 1fr); }
+  .ph-footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .ph-product-card { height: 420px; }
+  .ph-section-header { padding-top: 4rem; margin-bottom: 3rem; }
+  #ph-cart-panel { width: 100%; right: -100%; }
+}
+@media (max-width: 480px) {
+  .ph-footer-grid { grid-template-columns: 1fr; }
+  .ph-stats { grid-template-columns: 1fr 1fr; }
+}
+</style>
+
+<!-- ============ HTML STRUCTURE ============ -->
+
+<div id="ph-overlay">
+<canvas id="ph-canvas"></canvas>
+
+<div id="ph-app">
+
+  <!-- Navigation -->
+  <nav id="ph-nav">
+    <a href="/" class="ph-logo">
+      <span>🐧</span>
+      <h1>PENGUIN HAIRS</h1>
+    </a>
+    <div class="ph-nav-links">
+      <a href="/">Home</a>
+      <a href="/shop">Collection</a>
+      <a href="/styling">Styling</a>
+      <button class="ph-cart-btn" onclick="toggleCart()">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="ph-cart-count" id="ph-cart-count" style="display:none">0</span>
+      </button>
+    </div>
+    <button class="ph-hamburger" onclick="toggleMenu()" id="ph-ham">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="ph-mobile-menu" id="ph-mobile-menu">
+    <button class="ph-close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
+    <a href="/" onclick="toggleMenu()">Home</a>
+    <a href="/shop" onclick="toggleMenu()">Collection</a>
+    <a href="/styling" onclick="toggleMenu()">Styling</a>
+    <a href="#" onclick="toggleCart();toggleMenu()"><i class="fas fa-shopping-bag"></i> Cart</a>
+  </div>
+
+  <!-- Hero -->
+  <section id="ph-hero">
+    <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG" alt="Luxury Hair">
+    <div class="ph-hero-overlay"></div>
+    <div class="ph-hero-content">
+      <p class="ph-hero-eyebrow">Luxury Hair · Est. 2020</p>
+      <h1 class="ph-hero-title">PENGUIN HAIRS</h1>
+      <p class="ph-hero-sub">Premium Raw Donor Wigs & Styling</p>
+      <div class="ph-hero-btns">
+        <a href="/shop" class="ph-btn ph-btn-gold">Shop Collection</a>
+        <a href="/styling" class="ph-btn">Book Styling</a>
+      </div>
+    </div>
+    <div class="ph-scroll-hint" onclick="document.getElementById('ph-featured').scrollIntoView({behavior:'smooth'})">
+      <span>Explore</span>
+      <div class="ph-scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- Featured Collection -->
+  <section class="ph-section ph-dark" id="ph-featured">
+    <div class="ph-container">
+      <div class="ph-section-header">
+        <div class="ph-gold-line"></div>
+        <h2 class="ph-reveal">Featured Collection</h2>
+        <p class="ph-reveal">Curated luxury for the modern woman</p>
+      </div>
+      <div class="ph-products-grid">
+        <div class="ph-product-card ph-reveal-left" onclick="window.location='/shop'">
+          <div class="ph-product-badge">Straight</div>
+          <video autoplay muted loop playsinline preload="auto" 
+  style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
+         transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);
+         backface-visibility:hidden;-webkit-backface-visibility:hidden;
+         perspective:1000px;-webkit-perspective:1000px;">
+  <source src="https://res.cloudinary.com/dzbzox0x8/video/upload/q_auto:eco,w_700,h_900,c_fill,br_800k,vc_auto/v1771105365/SnapInsta.to_AQPm2TBi65QmUYxOAgFkWIIrTc9gVr8TFtxSqjGTIQXEEz0YTolg_h5LxcE-U9GH_XyXH-W-o8DoCglC_tY-F9rIyySXG86tz3dXDNY_pn9go1.mp4" type="video/mp4">
+</video>
+          <div class="ph-product-overlay"></div>
+          <div class="ph-product-info">
+            <p>Straight</p>
+            <h3>Bone Straight</h3>
+            <p class="ph-price">From $289</p>
+          </div>
+        </div>
+        <div class="ph-product-card ph-reveal" onclick="window.location='/shop'">
+          <div class="ph-product-badge">Wavy</div>
+          <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG" alt="Raw Wavy">
+          <div class="ph-product-overlay"></div>
+          <div class="ph-product-info">
+            <p>Wavy</p>
+            <h3>Raw Wavy</h3>
+            <p class="ph-price">From $299</p>
+          </div>
+        </div>
+        <div class="ph-product-card ph-reveal-right" onclick="window.location='/shop'">
+          <div class="ph-product-badge">Curly</div>
+          <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ceceb112e1086ef6e/1771106638474/IMG_3445.JPG" alt="Deep Wave">
+          <div class="ph-product-overlay"></div>
+          <div class="ph-product-info">
+            <p>Curly</p>
+            <h3>Deep Wave</h3>
+            <p class="ph-price">From $329</p>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:3rem; padding-bottom:6rem;">
+        <a href="/shop" class="ph-btn ph-reveal">View Full Collection</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Parallax 1 -->
+  <section class="ph-parallax" id="ph-par1">
+    <img src="https://images.unsplash.com/photo-1594552072238-52fd5f8e4a8e?w=1920&q=80" alt="Effortless Beauty" id="ph-par1-img">
+    <div class="ph-parallax-content">
+      <h2 class="ph-reveal">Effortless Beauty</h2>
+      <p class="ph-reveal">Handcrafted perfection in every texture</p>
+    </div>
+  </section>
+
+  <!-- Split - Peng Hair Styling -->
+  <section class="ph-split ph-section">
+    <div class="ph-split-img">
+      <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG" alt="Styling">
+    </div>
+    <div class="ph-split-content">
+      <div class="ph-gold-line" style="margin: 0 0 2rem 0;"></div>
+      <h2 class="ph-reveal">Peng Hair Styling</h2>
+      <p class="ph-reveal">Professional installation and styling services by master artisans. Experience personalized care that brings your vision to life with precision and artistry.</p>
+      <a href="/styling" class="ph-btn ph-reveal" style="align-self:flex-start">View Services</a>
+    </div>
+  </section>
+
+  <!-- Parallax 2 -->
+  <section class="ph-parallax" id="ph-par2">
+    <img src="https://images.unsplash.com/photo-1596704017424-e5e1ddd9de65?w=1920&q=80" alt="Quality" id="ph-par2-img">
+    <div class="ph-parallax-content">
+      <h2 class="ph-reveal">Uncompromising Quality</h2>
+      <p class="ph-reveal">100% Raw Donor Hair</p>
+    </div>
+  </section>
+
+  <!-- Why Section -->
+  <section class="ph-section ph-dark" id="ph-why">
+    <div class="ph-container">
+      <div class="ph-section-header">
+        <div class="ph-gold-line"></div>
+        <h2 class="ph-reveal">Why Our Hair Is Different</h2>
+        <p class="ph-reveal">Understanding quality makes all the difference</p>
+      </div>
+      <div class="ph-why-grid" style="margin-bottom:3rem;">
+        <div class="ph-why-card ph-reveal-left">
+          <h3>100% Raw Donor Hair</h3>
+          <p>Our raw donor hair is unprocessed and comes from a single donor, ensuring all cuticles are intact and aligned. This means minimal tangling, natural shine, and hair that can be colored and styled just like your own.</p>
+        </div>
+        <div class="ph-why-card ph-reveal-right">
+          <h3>Double Drawn Quality</h3>
+          <p>Double drawn hair means shorter hairs have been removed, leaving only the longest strands. This creates uniform thickness from root to tip, giving you fuller, more voluminous hair throughout the entire length.</p>
+        </div>
+      </div>
+      <div class="ph-stats ph-reveal">
+        <div class="ph-stat"><h3>500+</h3><p>Happy Clients</p></div>
+        <div class="ph-stat"><h3>12</h3><p>Wig Styles</p></div>
+        <div class="ph-stat"><h3>100%</h3><p>Raw Donor</p></div>
+        <div class="ph-stat"><h3>4+</h3><p>Years Experience</p></div>
+      </div>
+      <div style="padding-bottom:6rem;"></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="ph-footer">
+    <div class="ph-container">
+      <div class="ph-footer-grid">
+        <div>
+          <div class="ph-footer-logo"><span>🐧</span><h3>PENGUIN HAIRS</h3></div>
+          <p class="ph-footer-tagline">Premium luxury wigs and professional styling services. Where beauty meets artistry.</p>
+        </div>
+        <div class="ph-footer-col">
+          <h4>Navigate</h4>
+          <a href="/">Home</a>
+          <a href="/shop">Collection</a>
+          <a href="/styling">Styling</a>
+        </div>
+        <div class="ph-footer-col">
+          <h4>Support</h4>
+          <p>Shipping & Returns</p>
+          <p>Care Guide</p>
+          <p>FAQ</p>
+        </div>
+        <div class="ph-footer-col">
+          <h4>Contact</h4>
+          <p>info@penguinhairs.com</p>
+          <p>Instagram: @penguinhairs</p>
+        </div>
+      </div>
+      <div class="ph-footer-bottom">
+        <p>&copy; 2026 Penguin Hairs. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Cart Panel -->
+<div id="ph-cart-panel">
+  <div class="ph-cart-header">
+    <h3>Your Bag</h3>
+    <button class="ph-cart-close" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="ph-cart-items" id="ph-cart-items">
+    <div class="ph-cart-empty">
+      <i class="fas fa-shopping-bag" style="font-size:2rem;margin-bottom:1rem;display:block;color:rgba(255,255,255,0.2)"></i>
+      <p>Your bag is empty</p>
+    </div>
+  </div>
+  <div class="ph-cart-footer">
+    <div class="ph-cart-total">
+      <span>Total</span>
+      <span id="ph-cart-total">$0.00</span>
+    </div>
+    <button class="ph-btn ph-btn-gold" style="width:100%" onclick="alert('Checkout integration coming soon!')">Proceed to Checkout</button>
+  </div>
+</div>
+</div><!-- end ph-overlay -->
+<div id="ph-cart-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1999;display:none" onclick="toggleCart()"></div>
+
+<!-- Scripts -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+
+// ---- Hide Squarespace chrome (overlay handles layout) ----
+(function(){
+  var s=document.createElement('style');
+  s.textContent='header,footer,.Header,.Footer,.site-header,.site-footer,.mobile-bar{display:none!important;}';
+  document.head.appendChild(s);
+})();
+
+
+
+        // ---- THREE.JS PARTICLE WAVE ----
+        const canvas = document.getElementById('ph-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        camera.position.set(0, 30, 60);
+        camera.lookAt(0, -10, 0);
+        const isMobile = window.innerWidth < 768;
+        const gridSize = isMobile ? 50 : 80; const spacing = 3; const total = gridSize * gridSize;
+        const geo = new THREE.BufferGeometry();
+        const p = new Float32Array(total * 3);
+        const o = new Float32Array(total * 3);
+        let ki = 0;
+        for (let i = 0; i < gridSize; i++) for (let j = 0; j < gridSize; j++) {
+            const x = (i - gridSize/2) * spacing, z = (j - gridSize/2) * spacing;
+            p[ki] = o[ki] = x; p[ki+1] = o[ki+1] = 0; p[ki+2] = o[ki+2] = z; ki += 3;
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+        const dc = document.createElement('canvas'); dc.width = dc.height = 64;
+        const dctx = dc.getContext('2d');
+        const gr = dctx.createRadialGradient(32,32,0,32,32,32);
+        gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.4,'rgba(255,255,255,0.6)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+        dctx.fillStyle = gr; dctx.fillRect(0,0,64,64);
+        const ptMat = new THREE.PointsMaterial({ color:0xffffff, size:0.35, transparent:true, opacity:0.75, blending:THREE.AdditiveBlending, map:new THREE.CanvasTexture(dc), sizeAttenuation:true, depthWrite:false });
+        const pts = new THREE.Points(geo, ptMat); scene.add(pts);
+        const lg = new THREE.BufferGeometry(); const lp = [];
+        for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+            const idx=(i*gridSize+j)*3;
+            if(j<gridSize-1){const r=(i*gridSize+(j+1))*3; lp.push(p[idx],p[idx+1],p[idx+2],p[r],p[r+1],p[r+2]);}
+            if(i<gridSize-1){const b=((i+1)*gridSize+j)*3; lp.push(p[idx],p[idx+1],p[idx+2],p[b],p[b+1],p[b+2]);}
+        }
+        lg.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+        const lines = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({color:0x88ccff,transparent:true,opacity:0.08,blending:THREE.AdditiveBlending}));
+        scene.add(lines);
+        let t = 0;
+        function animate() {
+            requestAnimationFrame(animate); t += 0.008;
+            const pa = pts.geometry.attributes.position.array;
+            const la = lines.geometry.attributes.position.array;
+            let pi = 0;
+            for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+                const ox=o[pi], oz=o[pi+2];
+                const d=Math.sqrt(ox*ox+oz*oz);
+                pa[pi+1] = Math.sin(ox*0.15+t)*8 + Math.sin(oz*0.15+t*1.2)*6 + Math.cos((ox+oz)*0.1+t*0.8)*4 + Math.sin(d*0.1-t*2)*5;
+                pi += 3;
+            }
+            let li = 0;
+            for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+                const idx=(i*gridSize+j)*3;
+                if(j<gridSize-1){const r=(i*gridSize+(j+1))*3; la[li]=pa[idx];la[li+1]=pa[idx+1];la[li+2]=pa[idx+2];la[li+3]=pa[r];la[li+4]=pa[r+1];la[li+5]=pa[r+2]; li+=6;}
+                if(i<gridSize-1){const b=((i+1)*gridSize+j)*3; la[li]=pa[idx];la[li+1]=pa[idx+1];la[li+2]=pa[idx+2];la[li+3]=pa[b];la[li+4]=pa[b+1];la[li+5]=pa[b+2]; li+=6;}
+            }
+            pts.geometry.attributes.position.needsUpdate = true;
+            lines.geometry.attributes.position.needsUpdate = true;
+            pts.rotation.y = t * 0.05; lines.rotation.y = t * 0.05;
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+// ---- NAV SCROLL ----
+document.getElementById('ph-overlay').addEventListener('scroll', function(){
+  const nav = document.getElementById('ph-nav');
+  nav.classList.toggle('scrolled', (document.getElementById('ph-overlay')||{scrollTop:0}).scrollTop > 80);
+});
+
+// ---- MOBILE MENU ----
+window.toggleMenu = function(){
+  document.getElementById('ph-mobile-menu').classList.toggle('open');
+};
+
+// ---- FORCE VIDEO AUTOPLAY ON DESKTOP ----
+window.addEventListener('load', function() {
+  document.querySelectorAll('video').forEach(function(v) {
+    v.muted = true;
+    var playPromise = v.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(function() {
+        // Autoplay blocked — play on first user interaction
+        document.addEventListener('click', function() { v.play(); }, { once: true });
+        document.addEventListener('touchstart', function() { v.play(); }, { once: true });
+      });
+    }
+  });
+});
+
+// ---- CART ----
+let cart = JSON.parse(localStorage.getItem('ph-cart')||'[]');
+function updateCartUI(){
+  const count = cart.reduce((s,i)=>s+i.qty,0);
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const el = document.getElementById('ph-cart-count');
+  el.style.display = count>0 ? 'flex' : 'none';
+  el.textContent = count;
+  document.getElementById('ph-cart-total').textContent = '$'+total.toFixed(2);
+  const items = document.getElementById('ph-cart-items');
+  if(cart.length===0){items.innerHTML='<div class="ph-cart-empty"><i class="fas fa-shopping-bag" style="font-size:2rem;margin-bottom:1rem;display:block;color:rgba(255,255,255,0.2)"></i><p>Your bag is empty</p></div>';}
+  else{items.innerHTML=cart.map((i,idx)=>`<div class="ph-cart-item"><div class="ph-cart-item-info"><h4>${i.name}</h4><p>${i.specs}</p><p>Qty: ${i.qty}</p></div><span class="ph-cart-item-price">$${(i.price*i.qty).toFixed(2)}</span></div>`).join('');}
+  localStorage.setItem('ph-cart',JSON.stringify(cart));
+}
+window.toggleCart = function(){
+  document.getElementById('ph-cart-panel').classList.toggle('open');
+  document.getElementById('ph-cart-overlay').style.display = document.getElementById('ph-cart-panel').classList.contains('open') ? 'block' : 'none';
+};
+updateCartUI();
+
+// ---- PARALLAX ----
+document.getElementById('ph-overlay').addEventListener('scroll', function(){
+  const scrollY = (document.getElementById('ph-overlay')||window).scrollTop||window.scrollY;
+  const p1 = document.getElementById('ph-par1');
+  const p2 = document.getElementById('ph-par2');
+  if(p1){const img=document.getElementById('ph-par1-img');const r=p1.getBoundingClientRect();if(img&&r.bottom>0&&r.top<window.innerHeight)img.style.transform=`translateY(${r.top*0.2}px)`;}
+  if(p2){const img=document.getElementById('ph-par2-img');const r=p2.getBoundingClientRect();if(img&&r.bottom>0&&r.top<window.innerHeight)img.style.transform=`translateY(${r.top*0.2}px)`;}
+});
+
+// ---- SCROLL REVEAL ----
+const overlayRoot = document.getElementById('ph-overlay');
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('ph-active'); observer.unobserve(e.target); }});
+},{root: overlayRoot, threshold:0.1});
+document.querySelectorAll('.ph-reveal,.ph-reveal-left,.ph-reveal-right').forEach(el=>observer.observe(el));
+// Safety fallback: force all reveals visible after 1.5s
+setTimeout(()=>{
+  document.querySelectorAll('.ph-reveal,.ph-reveal-left,.ph-reveal-right').forEach(el=>el.classList.add('ph-active'));
+}, 1500);
+
+})();
+</script>
