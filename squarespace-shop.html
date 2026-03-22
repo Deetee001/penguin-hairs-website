@@ -154,6 +154,18 @@ html{scroll-behavior:smooth;}
 .ph-add-btn:hover{background:transparent;color:white;}
 .ph-add-btn:disabled{opacity:0.4;cursor:not-allowed;}
 
+/* ---- Modal Carousel ---- */
+.ph-carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);color:white;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;z-index:10;transition:all 0.3s;backdrop-filter:blur(4px);}
+.ph-carousel-arrow:hover{background:#d4af37;color:#000;border-color:#d4af37;}
+.ph-carousel-prev{left:1rem;}
+.ph-carousel-next{right:1rem;}
+.ph-carousel-dots{position:absolute;bottom:0.8rem;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;}
+.ph-carousel-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;transition:all 0.3s;border:none;padding:0;}
+.ph-carousel-dot.active{background:#d4af37;transform:scale(1.3);}
+/* ---- Loading state ---- */
+.ph-grid-loading{grid-column:1/-1;text-align:center;padding:5rem 2rem;color:rgba(255,255,255,0.25);}
+.ph-grid-loading-spin{width:36px;height:36px;border:2px solid rgba(255,255,255,0.1);border-top-color:#d4af37;border-radius:50%;animation:phSpin .8s linear infinite;margin:0 auto 1rem;}
+@keyframes phSpin{to{transform:rotate(360deg)}}
 /* ---- Cart Panel ---- */
 #ph-cart-panel{position:fixed;top:0;right:-420px;width:420px;height:100%;background:#111;z-index:2000;transition:right 0.4s ease;display:flex;flex-direction:column;border-left:1px solid rgba(212,175,55,0.15);}
 #ph-cart-panel.open{right:0;}
@@ -287,6 +299,9 @@ html{scroll-behavior:smooth;}
     <div class="ph-modal-img">
       <div id="ph-modal-media" style="width:100%;height:100%;"></div>
       <button class="ph-modal-close" onclick="closeModalDirect()"><i class="fas fa-times"></i></button>
+      <button class="ph-carousel-arrow ph-carousel-prev" id="ph-carousel-prev" style="display:none" onclick="carouselStep(-1)">&#8249;</button>
+      <button class="ph-carousel-arrow ph-carousel-next" id="ph-carousel-next" style="display:none" onclick="carouselStep(1)">&#8250;</button>
+      <div class="ph-carousel-dots" id="ph-carousel-dots"></div>
     </div>
     <div class="ph-modal-body">
       <p class="ph-modal-category" id="ph-modal-cat"></p>
@@ -330,25 +345,13 @@ html{scroll-behavior:smooth;}
 })();
 
 
-// ---- DATA ----
-const PRODUCTS = [
-  {id:1,name:'Bone Straight',category:'Straight',price:289,video:'https://res.cloudinary.com/dzbzox0x8/video/upload/q_auto:eco,w_700,h_900,c_fill,br_800k,vc_auto/v1771105365/SnapInsta.to_AQPm2TBi65QmUYxOAgFkWIIrTc9gVr8TFtxSqjGTIQXEEz0YTolg_h5LxcE-U9GH_XyXH-W-o8DoCglC_tY-F9rIyySXG86tz3dXDNY_pn9go1.mp4',lengths:['16"','18"','20"','22"','24"','26"','30"'],closures:['2*4','4*4','5*5','13*4','13*6'],colors:['Natural Black','Brown','Blonde','Burgundy','Ombre'],weights:['180g','200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG',desc:'Silky smooth bone straight hair with a flawless, mirror-like finish. The ultimate in sleek sophistication.',featured:true},
-  {id:2,name:'Raw Wavy',category:'Wavy',price:299,lengths:['16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4','13*6'],colors:['Natural Black','Brown','Burgundy'],weights:['200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG',desc:'Natural wavy texture sourced from raw donor hair. Beautiful movement and volume.',featured:true},
-  {id:3,name:'Deep Wave',category:'Curly',price:329,lengths:['14"','16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4','13*6'],colors:['Natural Black','Brown','Burgundy','Ombre'],weights:['200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ceceb112e1086ef6e/1771106638474/IMG_3445.JPG',desc:'Deep, defined wave pattern with exceptional bounce and volume throughout.',featured:true},
-  {id:4,name:'Mexican Curls Fringe',category:'Curly',price:379,lengths:['12"','14"','16"','18"','20"'],closures:['Fringe','4*4'],colors:['Natural Black','Brown','Blonde','Burgundy'],weights:['180g','200g','250g'],image:'https://images.unsplash.com/photo-1605462863863-10d9e47e15ee?w=800&q=80',desc:'Voluminous Mexican spiral curls with optional fringe. Bold, bouncy, and full of personality.'},
-  {id:5,name:'Bridal Bouncy Curls',category:'Curly',price:399,lengths:['16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4','13*6'],colors:['Natural Black','Highlight','Brown','Blonde'],weights:['250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ceceb112e1086ef6e/1771106638474/IMG_3445.JPG',desc:'Glamorous bouncy curls perfect for weddings and special occasions. Maximum volume and elegance.'},
-  {id:6,name:'Raw Bounce',category:'Curly',price:319,lengths:['14"','16"','18"','20"','22"'],closures:['4*4','5*5'],colors:['Natural Black','Brown'],weights:['200g','250g'],image:'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&q=80',desc:'Natural bounce with raw donor quality. Light, airy, and full of life.'},
-  {id:7,name:'Water Curls',category:'Curly',price:359,lengths:['16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4'],colors:['Natural Black','Burgundy','Ombre'],weights:['200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG',desc:'Loose, flowing water curl pattern with natural movement and shine.'},
-  {id:8,name:'Pixie Curls',category:'Curly',price:279,lengths:['8"','10"','12"','14"'],closures:['2*4','4*4'],colors:['Natural Black','Brown','Blonde','Burgundy'],weights:['180g','200g'],image:'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=800&q=80',desc:'Short and sassy pixie curl style. Effortlessly chic and low-maintenance.'},
-  {id:9,name:'Pixie Cut',category:'Short',price:249,lengths:['8"','10"','12"'],closures:['2*4','4*4'],colors:['Natural Black','Brown','Blonde','Burgundy','Burnt Orange'],weights:['180g'],image:'https://images.unsplash.com/photo-1524502397800-2eeaad7c3fe5?w=800&q=80',desc:'Chic pixie cut for the bold and confident. Classic meets modern.'},
-  {id:13,name:'Ombre Bob',category:'Short',price:200,lengths:['10"'],closures:['2*4','4*4'],colors:['Ombre'],weights:['180g','200g'],video:'https://res.cloudinary.com/dzbzox0x8/video/upload/q_auto,w_700,h_900,c_fill/v1774161129/Ombre_10_bob_2_6_iu4hnp.mp4',image:'',desc:'Sleek 10 inch ombre bob wig. Bold colour graduation with a clean, sophisticated cut.',featured:true},
-  {id:10,name:'Half-Caste Fringe',category:'Wavy',price:339,lengths:['12"','14"','16"','18"'],closures:['Fringe','4*4'],colors:['Natural Black','Highlight','Brown','Blonde'],weights:['180g','200g','250g'],image:'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?w=800&q=80',desc:'Mixed texture with stylish fringe. A unique blend of waves and movement.'},
-  {id:11,name:'Half-Caste Curls',category:'Curly',price:349,lengths:['14"','16"','18"','20"','22"'],closures:['4*4','5*5'],colors:['Natural Black','Highlight','Brown'],weights:['200g','250g'],image:'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=800&q=80',desc:'Beautiful mixed curl pattern with natural, effortless flow.'},
-  {id:12,name:'SDD Wavy (Super Double Drawn)',category:'Wavy',price:309,lengths:['16"','18"','20"','22"','24"'],closures:['4*4','5*5','13*4'],colors:['Natural Black','Brown'],weights:['200g','250g','300g'],image:'https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG',desc:'Wavy texture with premium super double drawn quality — maximum volume and thickness from root to tip.'},
-  {id:14,name:'Burmese Curls',category:'Curly',price:329,lengths:['16"','18"','20"','22"','24"'],closures:['5*5','4*4','13*4','13*6'],colors:['Natural Black','Brown','Burgundy'],weights:['200g','250g','300g'],image:'https://res.cloudinary.com/dzbzox0x8/image/upload/v1774161101/Burmese_curls_22_5_5_swkqwi.jpg',desc:'Luxurious Burmese curls with a rich, defined curl pattern. Naturally full with effortless volume. Available with 5*5 closure for maximum coverage.',featured:true}
-];
+// ---- SUPABASE ----
+const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
 
-let filteredProducts = [...PRODUCTS];
+// ---- DATA ----
+let PRODUCTS = [];
+let filteredProducts = [];
 let currentFilter = 'All';
 let currentSearch = '';
 let currentSort = 'default';
@@ -455,20 +458,21 @@ function renderProducts(){
   document.getElementById('ph-count').textContent=`Showing ${products.length} style${products.length!==1?'s':''}`;
   if(products.length===0){grid.innerHTML='';noRes.style.display='block';return;}
   noRes.style.display='none';
+  const thumb=(p)=> p.image_urls&&p.image_urls.length ? p.image_urls[0] : (p.image_url||'');
   grid.innerHTML=products.map(p=>`
     <div class="ph-card" onclick="openModal(${p.id})">
       <div class="ph-card-img">
         <div class="ph-card-badge">${p.category}</div>
-        ${p.video
-          ? `<video autoplay muted loop playsinline preload="auto" style="width:100%;height:100%;object-fit:cover;transition:transform 0.8s ease"><source src="${p.video}" type="video/mp4"></video>`
-          : `<img src="${p.image}" alt="${p.name}" loading="lazy">`
+        ${p.video_url
+          ? `<video autoplay muted loop playsinline preload="auto" style="width:100%;height:100%;object-fit:cover;transition:transform 0.8s ease"><source src="${p.video_url}" type="video/mp4"></video>`
+          : `<img src="${thumb(p)}" alt="${p.name}" loading="lazy">`
         }
         <div class="ph-card-overlay"></div>
       </div>
       <div class="ph-card-body">
         <p>${p.category}</p>
         <h3>${p.name}</h3>
-        <p class="ph-card-desc">${p.desc}</p>
+        <p class="ph-card-desc">${p.description||''}</p>
         <div class="ph-card-footer">
           <div class="ph-card-price"><small>From </small>$${p.price}</div>
           <button class="ph-quick-btn" onclick="event.stopPropagation();openModal(${p.id})">Customize</button>
@@ -495,28 +499,65 @@ function applyFilters(){
   renderProducts();
 }
 
+// ---- CAROUSEL ----
+let carouselImages=[];
+let carouselIndex=0;
+function carouselShow(idx){
+  carouselIndex=idx;
+  const media=document.getElementById('ph-modal-media');
+  media.innerHTML=`<img src="${carouselImages[idx]}" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.3s">`;
+  document.querySelectorAll('.ph-carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+}
+window.carouselStep=(dir)=>{
+  const next=(carouselIndex+dir+carouselImages.length)%carouselImages.length;
+  carouselShow(next);
+};
+
 // ---- MODAL ----
 window.openModal=(id)=>{
   selectedProduct=PRODUCTS.find(p=>p.id===id);
+  if(!selectedProduct) return;
   selection={length:'',closure:'',color:'',weight:''};
-  const modalMedia = document.getElementById('ph-modal-media');
-  if(selectedProduct.video){
-    modalMedia.innerHTML=`<video autoplay muted loop playsinline preload="auto" style="width:100%;height:100%;object-fit:cover"><source src="${selectedProduct.video}" type="video/mp4"></video>`;
+  const modalMedia=document.getElementById('ph-modal-media');
+  const prevBtn=document.getElementById('ph-carousel-prev');
+  const nextBtn=document.getElementById('ph-carousel-next');
+  const dotsEl=document.getElementById('ph-carousel-dots');
+
+  if(selectedProduct.video_url){
+    // Video — no carousel
+    carouselImages=[];
+    modalMedia.innerHTML=`<video autoplay muted loop playsinline preload="auto" style="width:100%;height:100%;object-fit:cover"><source src="${selectedProduct.video_url}" type="video/mp4"></video>`;
+    prevBtn.style.display='none'; nextBtn.style.display='none'; dotsEl.innerHTML='';
   } else {
-    modalMedia.innerHTML=`<img id="ph-modal-img" src="${selectedProduct.image}" alt="${selectedProduct.name}" style="width:100%;height:100%;object-fit:cover">`;
+    carouselImages=(selectedProduct.image_urls&&selectedProduct.image_urls.length)
+      ? selectedProduct.image_urls
+      : (selectedProduct.image_url ? [selectedProduct.image_url] : []);
+    carouselIndex=0;
+    if(carouselImages.length>0){
+      modalMedia.innerHTML=`<img src="${carouselImages[0]}" alt="${selectedProduct.name}" style="width:100%;height:100%;object-fit:cover">`;
+    } else {
+      modalMedia.innerHTML='';
+    }
+    if(carouselImages.length>1){
+      prevBtn.style.display='flex'; nextBtn.style.display='flex';
+      dotsEl.innerHTML=carouselImages.map((_,i)=>`<button class="ph-carousel-dot${i===0?' active':''}" onclick="carouselShow(${i})"></button>`).join('');
+    } else {
+      prevBtn.style.display='none'; nextBtn.style.display='none'; dotsEl.innerHTML='';
+    }
   }
+
   document.getElementById('ph-modal-cat').textContent=selectedProduct.category;
   document.getElementById('ph-modal-title').textContent=selectedProduct.name;
-  document.getElementById('ph-modal-desc').textContent=selectedProduct.desc;
+  document.getElementById('ph-modal-desc').textContent=selectedProduct.description||'';
   document.getElementById('ph-modal-price').textContent='$'+selectedProduct.price;
   document.getElementById('ph-sel-summary').style.display='none';
   document.getElementById('ph-add-btn').disabled=true;
   document.getElementById('ph-add-btn').textContent='Select All Options to Add to Bag';
   document.getElementById('ph-modal-opts').innerHTML=`
-    <div class="ph-option-group"><span class="ph-option-label">Length *</span><div class="ph-options">${selectedProduct.lengths.map(l=>`<button class="ph-opt" onclick="selectOpt('length','${l}',this)">${l}</button>`).join('')}</div></div>
-    <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${selectedProduct.closures.map(c=>`<button class="ph-opt" onclick="selectOpt('closure','${c}',this)">${c}</button>`).join('')}</div></div>
-    <div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${selectedProduct.colors.map(c=>`<button class="ph-opt" onclick="selectOpt('color','${c}',this)">${c}</button>`).join('')}</div></div>
-    <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${selectedProduct.weights.map(w=>`<button class="ph-opt" onclick="selectOpt('weight','${w}',this)">${w}</button>`).join('')}</div></div>`;
+    <div class="ph-option-group"><span class="ph-option-label">Length *</span><div class="ph-options">${(selectedProduct.lengths||[]).map(l=>`<button class="ph-opt" onclick="selectOpt('length','${l}',this)">${l}</button>`).join('')}</div></div>
+    <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${(selectedProduct.closures||[]).map(c=>`<button class="ph-opt" onclick="selectOpt('closure','${c}',this)">${c}</button>`).join('')}</div></div>
+    <div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${(selectedProduct.colors||[]).map(c=>`<button class="ph-opt" onclick="selectOpt('color','${c}',this)">${c}</button>`).join('')}</div></div>
+    <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${(selectedProduct.weights||[]).map(w=>`<button class="ph-opt" onclick="selectOpt('weight','${w}',this)">${w}</button>`).join('')}</div></div>`;
   document.getElementById('ph-modal').style.display='flex';
   document.body.style.overflow='hidden';
 };
@@ -547,7 +588,23 @@ window.closeModal=(e)=>{if(e.target.id==='ph-modal')closeModalDirect();};
 window.closeModalDirect=()=>{document.getElementById('ph-modal').style.display='none';document.body.style.overflow='';};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();});
 
-renderProducts();
+// ---- LOAD FROM SUPABASE ----
+(async function loadProducts(){
+  const grid=document.getElementById('ph-grid');
+  grid.innerHTML='<div class="ph-grid-loading"><div class="ph-grid-loading-spin"></div><p>Loading collection...</p></div>';
+  try {
+    const res=await fetch(SB_URL+'/rest/v1/products?in_stock=eq.true&order=sort_order.asc,id.asc&select=*',{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    PRODUCTS=await res.json();
+    filteredProducts=[...PRODUCTS];
+    document.getElementById('ph-count').textContent=`Showing all ${PRODUCTS.length} styles`;
+    renderProducts();
+  } catch(e){
+    grid.innerHTML='<div class="ph-grid-loading"><p style="color:rgba(255,255,255,0.3)">Failed to load collection. Please refresh.</p></div>';
+    console.error(e);
+  }
+})();
 
 })();
 
