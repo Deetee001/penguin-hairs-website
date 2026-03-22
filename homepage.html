@@ -728,7 +728,7 @@ setTimeout(()=>{
 document.querySelectorAll('a[target="_parent"]').forEach(function(link) {
   link.addEventListener('click', function(e) {
     e.preventDefault();
-    var href = this.getAttribute('href');
+    var href = 'https://www.penguinhairs.com' + this.getAttribute('href');
     try {
       window.top.location.href = href;
     } catch(err) {
