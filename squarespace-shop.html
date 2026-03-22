@@ -742,22 +742,43 @@ async function initSquarePayments() {
 initSquarePayments();
 
 async function attachSquareCard() {
-  if (!sqPayments || sqCardAttached) return;
+  if (sqCardAttached) return;
+  const errEl = document.getElementById('ph-co-error');
+  // Init sqPayments if not yet done (Square.js may load after our script)
+  if (!sqPayments) {
+    if (!window.Square) {
+      errEl.textContent = 'Square payment library failed to load. Please refresh the page.';
+      errEl.style.display = 'block';
+      return;
+    }
+    try {
+      sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
+    } catch(e) {
+      errEl.textContent = 'Payment init error: ' + e.message;
+      errEl.style.display = 'block';
+      return;
+    }
+  }
   try {
     sqCard = await sqPayments.card({
       style: {
-        '.input-container': { borderColor: '#2a2a2a', borderRadius: '0px' },
+        '.input-container': { borderColor: '#333', borderRadius: '0px' },
         '.input-container.is-focus': { borderColor: '#d4af37' },
         '.input-container.is-error': { borderColor: '#e05555' },
-        'input': { color: '#e0e0e0', fontFamily: '"Lato", sans-serif', fontSize: '14px', backgroundColor: '#0a0a0a' },
-        'input::placeholder': { color: 'rgba(255,255,255,0.2)' },
+        'input': { color: '#ffffff', fontFamily: '"Lato", sans-serif', fontSize: '14px' },
+        'input::placeholder': { color: '#666' },
         '.message-text': { color: '#e05555' },
         '.message-icon': { color: '#e05555' },
       }
     });
-    await sqCard.attach('#sq-card-container');
+    await sqCard.attach(document.getElementById('sq-card-container'));
     sqCardAttached = true;
-  } catch(e) { console.error('Card attach:', e); }
+    errEl.style.display = 'none';
+  } catch(e) {
+    sqCard = null;
+    errEl.textContent = 'Card setup error: ' + e.message + '. Make sure you have added deetee001.github.io and penguinhairs.com to your Square app\'s allowed web origins.';
+    errEl.style.display = 'block';
+  }
 }
 
 async function attachExpressPayments(totalStr) {
@@ -895,9 +916,11 @@ async function processPayment(token) {
 window.submitPayment = async (method) => {
   const errEl = document.getElementById('ph-co-error');
   errEl.style.display = 'none';
-  if (!sqCard) {
-    errEl.textContent = 'Card field not ready. Please wait a moment and try again.';
+  if (!sqCard || !sqCardAttached) {
+    errEl.textContent = 'Card payment form is not ready yet. Please wait a moment, then try again.';
     errEl.style.display = 'block';
+    // Try to attach again
+    await attachSquareCard();
     return;
   }
   try {
