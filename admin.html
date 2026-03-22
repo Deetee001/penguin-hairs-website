@@ -695,7 +695,13 @@ async function saveProduct() {
     await loadProducts();
     setTimeout(closeEditModal, 800);
   } catch(e) {
-    statusEl.textContent = 'Error saving.';
+    let msg = e.message || 'Unknown error';
+    // Parse Supabase JSON error if possible
+    try {
+      const parsed = JSON.parse(msg);
+      msg = parsed.message || parsed.details || parsed.hint || msg;
+    } catch(_) {}
+    statusEl.textContent = 'Error: ' + msg;
     statusEl.className = 'ph-save-status error';
     console.error(e);
   }
