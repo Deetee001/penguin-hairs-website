@@ -202,7 +202,7 @@ html{scroll-behavior:smooth;}
 .ph-co-pay-btn{width:100%;padding:1.1rem;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;border:none;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;margin-top:1rem;}
 .ph-co-pay-btn:hover{opacity:0.9;}
 .ph-co-pay-btn:disabled{opacity:0.4;cursor:not-allowed;}
-.ph-co-error{color:#e05555;font-size:0.78rem;margin-top:0.75rem;display:none;padding:0.75rem;background:rgba(224,85,85,0.08);border:1px solid rgba(224,85,85,0.2);}
+.ph-co-error{color:#ff6b6b;font-size:0.8rem;margin-top:0.75rem;display:none;padding:0.85rem 1rem;background:rgba(224,85,85,0.12);border:1px solid rgba(224,85,85,0.35);border-left:3px solid #e05555;line-height:1.5;}
 .ph-co-success{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 2rem;height:100%;}
 .ph-co-success-icon{font-size:3rem;color:#d4af37;margin-bottom:1rem;}
 .ph-co-success h2{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;margin-bottom:0.75rem;}
@@ -922,7 +922,30 @@ async function processPayment(token) {
       payBtn.style.display = 'none';
       document.getElementById('ph-co-success').style.display = 'flex';
     } else {
-      throw new Error(data.error || 'Payment failed.');
+      // Parse Square error codes into friendly messages
+      const SQUARE_ERRORS = {
+        'INSUFFICIENT_FUNDS': 'Your card has insufficient funds. Please use a different card.',
+        'CARD_DECLINED': 'Your card was declined. Please try a different payment method.',
+        'VERIFY_CVV_FAILURE': 'The security code (CVV) is incorrect. Please check and try again.',
+        'VERIFY_AVS_FAILURE': 'Your billing address did not match. Please check your card details.',
+        'INVALID_EXPIRATION': 'Your card expiration date is invalid.',
+        'CARD_EXPIRED': 'Your card has expired. Please use a different card.',
+        'INVALID_CARD': 'The card number is invalid. Please check and try again.',
+        'CARD_NOT_SUPPORTED': 'This card type is not supported. Please try a different card.',
+        'CVV_FAILURE': 'The security code (CVV) is incorrect.',
+        'ADDRESS_VERIFICATION_FAILURE': 'Address verification failed. Please check your billing address.',
+        'PAYMENT_LIMIT_EXCEEDED': 'This payment exceeds the allowed limit.',
+      };
+      let errorMsg = 'Payment failed. Please try again.';
+      try {
+        const errs = JSON.parse(data.error);
+        if (Array.isArray(errs) && errs.length > 0) {
+          errorMsg = SQUARE_ERRORS[errs[0].code] || errs[0].detail || errorMsg;
+        }
+      } catch(e) {
+        if (data.error) errorMsg = data.error;
+      }
+      throw new Error(errorMsg);
     }
   } catch(e) {
     errEl.textContent = e.message;
