@@ -553,11 +553,12 @@ window.openModal=(id)=>{
   document.getElementById('ph-sel-summary').style.display='none';
   document.getElementById('ph-add-btn').disabled=true;
   document.getElementById('ph-add-btn').textContent='Select All Options to Add to Bag';
+  const optBtn=(type,val)=>`<button class="ph-opt" data-type="${type}" data-val="${val.replace(/"/g,'&quot;')}" onclick="selectOpt(this.dataset.type,this.dataset.val,this)">${val}</button>`;
   document.getElementById('ph-modal-opts').innerHTML=`
-    <div class="ph-option-group"><span class="ph-option-label">Length *</span><div class="ph-options">${(selectedProduct.lengths||[]).map(l=>`<button class="ph-opt" onclick="selectOpt('length','${l}',this)">${l}</button>`).join('')}</div></div>
-    <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${(selectedProduct.closures||[]).map(c=>`<button class="ph-opt" onclick="selectOpt('closure','${c}',this)">${c}</button>`).join('')}</div></div>
-    <div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${(selectedProduct.colors||[]).map(c=>`<button class="ph-opt" onclick="selectOpt('color','${c}',this)">${c}</button>`).join('')}</div></div>
-    <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${(selectedProduct.weights||[]).map(w=>`<button class="ph-opt" onclick="selectOpt('weight','${w}',this)">${w}</button>`).join('')}</div></div>`;
+    <div class="ph-option-group"><span class="ph-option-label">Length *</span><div class="ph-options">${(selectedProduct.lengths||[]).map(l=>optBtn('length',l)).join('')}</div></div>
+    <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${(selectedProduct.closures||[]).map(c=>optBtn('closure',c)).join('')}</div></div>
+    <div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${(selectedProduct.colors||[]).map(c=>optBtn('color',c)).join('')}</div></div>
+    <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${(selectedProduct.weights||[]).map(w=>optBtn('weight',w)).join('')}</div></div>`;
   document.getElementById('ph-modal').style.display='flex';
   document.body.style.overflow='hidden';
 };
