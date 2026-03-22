@@ -115,7 +115,14 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-add-img-row input:focus{border-color:#d4af37;}
 .ph-add-img-btn{padding:10px 16px;background:rgba(212,175,55,.15);color:#d4af37;border:1px solid rgba(212,175,55,.3);border-radius:8px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .ph-add-img-btn:hover{background:rgba(212,175,55,.25);}
+.ph-upload-btn{padding:10px 16px;background:rgba(255,255,255,.05);color:#aaa;border:1px solid #333;border-radius:8px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.ph-upload-btn:hover{border-color:#d4af37;color:#d4af37;}
 .ph-img-count{font-size:11px;color:#555;margin-bottom:6px;}
+.ph-upload-progress{display:none;align-items:center;gap:10px;padding:10px 14px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;margin-top:8px;}
+.ph-upload-progress.active{display:flex;}
+.ph-progress-bar-wrap{flex:1;height:4px;background:#222;border-radius:4px;overflow:hidden;}
+.ph-progress-bar{height:100%;background:#d4af37;border-radius:4px;transition:width .2s;width:0%;}
+.ph-upload-label{font-size:11px;color:#888;white-space:nowrap;}
 
 /* ---- CONFIRM MODAL ---- */
 #ph-confirm-modal .ph-modal{max-width:400px;}
@@ -241,11 +248,17 @@ tr:hover td{background:rgba(212,175,55,.04);}
         <div class="ph-form-group">
           <label>Photos <span id="f-img-count" class="ph-img-count"></span></label>
           <div class="ph-img-gallery" id="f-img-gallery"></div>
+          <div class="ph-upload-progress" id="ph-upload-progress">
+            <div class="ph-progress-bar-wrap"><div class="ph-progress-bar" id="ph-progress-bar"></div></div>
+            <span class="ph-upload-label" id="ph-upload-label">Uploading...</span>
+          </div>
           <div class="ph-add-img-row" style="margin-top:10px;">
             <input type="url" id="f-img-add-input" placeholder="Paste image URL and click Add...">
-            <button type="button" class="ph-add-img-btn" onclick="addImageUrl()">+ Add Photo</button>
+            <button type="button" class="ph-add-img-btn" onclick="addImageUrl()">+ Add URL</button>
+            <button type="button" class="ph-upload-btn" onclick="document.getElementById('f-img-file').click()">⬆ Upload</button>
+            <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="uploadToCloudinary(this)">
           </div>
-          <span class="ph-hint">First photo is the main thumbnail. Add multiple for a gallery carousel on the shop page.</span>
+          <span class="ph-hint">Upload from your computer or paste a URL. First photo is the main thumbnail.</span>
         </div>
       </div>
       <div class="ph-form-row full">
@@ -508,9 +521,74 @@ function addImageUrl() {
   currentImages.push(url);
   input.value = '';
   renderImageGallery();
-  // Scroll gallery into view
   document.getElementById('f-img-gallery').lastElementChild &&
     document.getElementById('f-img-gallery').lastElementChild.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ---- CLOUDINARY UPLOAD ----
+const CLOUDINARY_CLOUD = 'dzbzox0x8';
+const CLOUDINARY_PRESET = 'Penguin-Uploads';
+
+async function uploadToCloudinary(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = ''; // reset so same file can be re-selected
+
+  const progressWrap = document.getElementById('ph-upload-progress');
+  const progressBar = document.getElementById('ph-progress-bar');
+  const progressLabel = document.getElementById('ph-upload-label');
+
+  progressWrap.classList.add('active');
+  progressBar.style.width = '0%';
+  progressLabel.textContent = 'Uploading...';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+
+  // Folder: penguin-hairs/products
+  formData.append('folder', 'penguin-hairs/products');
+
+  try {
+    // Use XHR so we can show real progress
+    const url = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 90);
+          progressBar.style.width = pct + '%';
+          progressLabel.textContent = `Uploading... ${pct}%`;
+        }
+      };
+
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          resolve(data.secure_url);
+        } else {
+          reject(new Error('Upload failed: ' + xhr.responseText));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(formData);
+    });
+
+    progressBar.style.width = '100%';
+    progressLabel.textContent = 'Done!';
+
+    currentImages.push(url);
+    renderImageGallery();
+
+    setTimeout(() => progressWrap.classList.remove('active'), 1200);
+  } catch(e) {
+    progressLabel.textContent = 'Upload failed. Try again.';
+    progressBar.style.width = '0%';
+    console.error(e);
+    setTimeout(() => progressWrap.classList.remove('active'), 3000);
+  }
 }
 
 // Allow pressing Enter in the add input
