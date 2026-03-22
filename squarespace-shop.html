@@ -614,15 +614,14 @@ window.startCheckout = async () => {
     });
     const data = await res.json();
     if (data.url) {
-      try { window.top.location.href = data.url; }
-      catch(e) { window.location.href = data.url; }
+      // Open Square checkout in top-level window (works from inside iframe)
+      window.open(data.url, '_top');
     } else {
       throw new Error(data.error || 'No checkout URL returned');
     }
   } catch(e) {
-    alert('Checkout failed. Please try again.');
+    alert('Checkout error: ' + e.message);
     console.error(e);
-  } finally {
     btn.textContent = 'Proceed to Checkout';
     btn.disabled = false;
   }
