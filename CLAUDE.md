@@ -60,6 +60,25 @@ No-cache meta tags are in homepage.html to prevent browser caching:
   <meta http-equiv="Expires" content="0">
 If browser shows stale content, use Ctrl+Shift+R for a hard refresh.
 
+## Future: Admin / Product Management Page (NOT YET BUILT)
+
+A future admin page is planned where the owner can:
+- View, add, edit, and delete product listings
+- Update prices that reflect live on the website
+- Handle payment processing
+
+This will likely require a backend. Supabase is the preferred choice.
+Products are currently hardcoded in the PRODUCTS array in squarespace-shop.html.
+All prices are placeholders for now — the admin page is where real pricing will be managed.
+
+## Product Notes
+
+- All prices in squarespace-shop.html are PLACEHOLDERS — do not treat them as final
+- Videos are hosted on Cloudinary. Use .mp4 extension (not .mov) for browser compatibility
+  e.g. change /upload/v.../file.mov → /upload/q_auto,w_700,h_900,c_fill/v.../file.mp4
+- If a product has a `video` field, the card renders a video instead of an image
+- Bob wigs go under category: 'Short'
+
 ## Design Rules
 
 - Background is always dark: #0a0a0a
