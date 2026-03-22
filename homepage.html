@@ -361,14 +361,14 @@ html { scroll-behavior: smooth; }
 
   <!-- Navigation -->
   <nav id="ph-nav">
-    <a href="/" class="ph-logo">
+    <a href="/" class="ph-logo" target="_parent">
       <span>🐧</span>
       <h1>PENGUIN HAIRS</h1>
     </a>
     <div class="ph-nav-links">
-      <a href="/">Home</a>
-      <a href="/shop">Collection</a>
-      <a href="/styling">Styling</a>
+      <a href="/" target="_parent">Home</a>
+      <a href="/shop" target="_parent">Collection</a>
+      <a href="/styling" target="_parent">Styling</a>
       <button class="ph-cart-btn" onclick="toggleCart()">
         <i class="fas fa-shopping-bag"></i>
         <span class="ph-cart-count" id="ph-cart-count" style="display:none">0</span>
@@ -382,9 +382,9 @@ html { scroll-behavior: smooth; }
   <!-- Mobile Menu -->
   <div class="ph-mobile-menu" id="ph-mobile-menu">
     <button class="ph-close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
-    <a href="/" onclick="toggleMenu()">Home</a>
-    <a href="/shop" onclick="toggleMenu()">Collection</a>
-    <a href="/styling" onclick="toggleMenu()">Styling</a>
+    <a href="/" onclick="toggleMenu()" target="_parent">Home</a>
+    <a href="/shop" onclick="toggleMenu()" target="_parent">Collection</a>
+    <a href="/styling" onclick="toggleMenu()" target="_parent">Styling</a>
     <a href="#" onclick="toggleCart();toggleMenu()"><i class="fas fa-shopping-bag"></i> Cart</a>
   </div>
 
@@ -397,8 +397,8 @@ html { scroll-behavior: smooth; }
       <h1 class="ph-hero-title">PENGUIN HAIRS</h1>
       <p class="ph-hero-sub">Premium Raw Donor Wigs & Styling</p>
       <div class="ph-hero-btns">
-        <a href="/shop" class="ph-btn ph-btn-gold">Shop Collection</a>
-        <a href="/styling" class="ph-btn">Book Styling</a>
+        <a href="/shop" class="ph-btn ph-btn-gold" target="_parent">Shop Collection</a>
+        <a href="/styling" class="ph-btn" target="_parent">Book Styling</a>
       </div>
     </div>
     <div class="ph-scroll-hint" onclick="document.getElementById('ph-featured').scrollIntoView({behavior:'smooth'})">
@@ -454,7 +454,7 @@ html { scroll-behavior: smooth; }
         </div>
       </div>
       <div style="text-align:center; margin-top:3rem; padding-bottom:6rem;">
-        <a href="/shop" class="ph-btn ph-reveal">View Full Collection</a>
+        <a href="/shop" class="ph-btn ph-reveal" target="_parent">View Full Collection</a>
       </div>
     </div>
   </section>
@@ -477,7 +477,7 @@ html { scroll-behavior: smooth; }
       <div class="ph-gold-line" style="margin: 0 0 2rem 0;"></div>
       <h2 class="ph-reveal">Peng Hair Styling</h2>
       <p class="ph-reveal">Professional installation and styling services by master artisans. Experience personalized care that brings your vision to life with precision and artistry.</p>
-      <a href="/styling" class="ph-btn ph-reveal" style="align-self:flex-start">View Services</a>
+      <a href="/styling" class="ph-btn ph-reveal" style="align-self:flex-start" target="_parent">View Services</a>
     </div>
   </section>
 
@@ -528,9 +528,9 @@ html { scroll-behavior: smooth; }
         </div>
         <div class="ph-footer-col">
           <h4>Navigate</h4>
-          <a href="/">Home</a>
-          <a href="/shop">Collection</a>
-          <a href="/styling">Styling</a>
+          <a href="/" target="_parent">Home</a>
+          <a href="/shop" target="_parent">Collection</a>
+          <a href="/styling" target="_parent">Styling</a>
         </div>
         <div class="ph-footer-col">
           <h4>Support</h4>

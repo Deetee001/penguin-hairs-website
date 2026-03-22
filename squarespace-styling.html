@@ -193,20 +193,20 @@ html{scroll-behavior:smooth;}
 
   <!-- Nav -->
   <nav id="ph-nav">
-    <a href="/" class="ph-logo"><span>🐧</span><h1>PENGUIN HAIRS</h1></a>
+    <a href="/" class="ph-logo" target="_parent"><span>🐧</span><h1>PENGUIN HAIRS</h1></a>
     <div class="ph-nav-links">
-      <a href="/">Home</a>
-      <a href="/shop">Collection</a>
-      <a href="/styling" class="active">Styling</a>
+      <a href="/" target="_parent">Home</a>
+      <a href="/shop" target="_parent">Collection</a>
+      <a href="/styling" class="active" target="_parent">Styling</a>
     </div>
     <button class="ph-hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
   </nav>
 
   <div class="ph-mobile-menu" id="ph-mobile-menu">
     <button class="ph-close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
-    <a href="/" onclick="toggleMenu()">Home</a>
-    <a href="/shop" onclick="toggleMenu()">Collection</a>
-    <a href="/styling" onclick="toggleMenu()">Styling</a>
+    <a href="/" onclick="toggleMenu()" target="_parent">Home</a>
+    <a href="/shop" onclick="toggleMenu()" target="_parent">Collection</a>
+    <a href="/styling" onclick="toggleMenu()" target="_parent">Styling</a>
   </div>
 
   <!-- Hero -->
@@ -414,7 +414,7 @@ html{scroll-behavior:smooth;}
         </div>
         <div class="ph-footer-col">
           <h4>Navigate</h4>
-          <a href="/">Home</a><a href="/shop">Collection</a><a href="/styling">Styling</a>
+          <a href="/" target="_parent">Home</a><a href="/shop" target="_parent">Collection</a><a href="/styling" target="_parent">Styling</a>
         </div>
         <div class="ph-footer-col">
           <h4>Support</h4>
