@@ -100,6 +100,23 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-save-status.saved{color:#4caf50;}
 .ph-save-status.error{color:#e05555;}
 
+/* ---- IMAGE GALLERY MANAGER ---- */
+.ph-img-gallery{display:flex;flex-direction:column;gap:10px;}
+.ph-img-item{display:flex;align-items:center;gap:10px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;}
+.ph-img-thumb{width:52px;height:52px;object-fit:cover;border-radius:6px;background:#1a1a1a;flex-shrink:0;}
+.ph-img-thumb-placeholder{width:52px;height:52px;background:#1a1a1a;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#444;font-size:20px;}
+.ph-img-url{flex:1;padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:12px;outline:none;}
+.ph-img-url:focus{border-color:#d4af37;}
+.ph-img-del{background:rgba(192,57,43,.15);color:#e05555;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:14px;flex-shrink:0;}
+.ph-img-del:hover{background:rgba(192,57,43,.3);}
+.ph-img-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#d4af37;background:rgba(212,175,55,.1);padding:2px 6px;border-radius:4px;flex-shrink:0;}
+.ph-add-img-row{display:flex;gap:8px;margin-top:4px;}
+.ph-add-img-row input{flex:1;padding:10px 14px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;}
+.ph-add-img-row input:focus{border-color:#d4af37;}
+.ph-add-img-btn{padding:10px 16px;background:rgba(212,175,55,.15);color:#d4af37;border:1px solid rgba(212,175,55,.3);border-radius:8px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.ph-add-img-btn:hover{background:rgba(212,175,55,.25);}
+.ph-img-count{font-size:11px;color:#555;margin-bottom:6px;}
+
 /* ---- CONFIRM MODAL ---- */
 #ph-confirm-modal .ph-modal{max-width:400px;}
 .ph-confirm-msg{font-size:14px;color:#aaa;line-height:1.6;}
@@ -222,9 +239,13 @@ tr:hover td{background:rgba(212,175,55,.04);}
       </div>
       <div class="ph-form-row full">
         <div class="ph-form-group">
-          <label>Image URL</label>
-          <input type="url" id="f-image" placeholder="https://...">
-          <span class="ph-hint">Leave blank if using a video instead.</span>
+          <label>Photos <span id="f-img-count" class="ph-img-count"></span></label>
+          <div class="ph-img-gallery" id="f-img-gallery"></div>
+          <div class="ph-add-img-row" style="margin-top:10px;">
+            <input type="url" id="f-img-add-input" placeholder="Paste image URL and click Add...">
+            <button type="button" class="ph-add-img-btn" onclick="addImageUrl()">+ Add Photo</button>
+          </div>
+          <span class="ph-hint">First photo is the main thumbnail. Add multiple for a gallery carousel on the shop page.</span>
         </div>
       </div>
       <div class="ph-form-row full">
@@ -376,15 +397,17 @@ function renderTable() {
   document.getElementById('ph-tbl-empty').style.display = rows.length ? 'none' : 'block';
 
   rows.forEach(p => {
+    const thumb = p.video_url
+      ? '<div class="ph-prod-video-icon">▶</div>'
+      : (p.image_urls && p.image_urls.length)
+        ? `<img class="ph-prod-img" src="${escHtml(p.image_urls[0])}" loading="lazy">`
+        : '<div class="ph-prod-video-icon" style="color:#444">—</div>';
+    const imgCount = (p.image_urls && p.image_urls.length > 1)
+      ? `<span class="ph-tag" style="margin-left:4px">${p.image_urls.length} photos</span>` : '';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${p.video_url
-        ? '<div class="ph-prod-video-icon">▶</div>'
-        : p.image_url
-          ? '<img class="ph-prod-img" src="${escHtml(p.image_url)}" loading="lazy">'
-          : '<div class="ph-prod-video-icon" style="color:#444">—</div>'
-      }</td>
-      <td><strong>${escHtml(p.name)}</strong></td>
+      <td>${thumb}</td>
+      <td><strong>${escHtml(p.name)}</strong>${imgCount}</td>
       <td><span class="${badgeClass(p.category)}">${escHtml(p.category)}</span></td>
       <td>$${p.price}</td>
       <td style="max-width:200px">
@@ -409,10 +432,6 @@ function renderTable() {
         </div>
       </td>
     `;
-    // Fix image src (can't use template literal inside innerHTML template literal cleanly)
-    if (p.image_url) {
-      tr.querySelector('.ph-prod-img') && (tr.querySelector('.ph-prod-img').src = p.image_url);
-    }
     tbody.appendChild(tr);
   });
 }
@@ -441,6 +460,66 @@ async function toggleField(id, field, value) {
   }
 }
 
+// ---- IMAGE GALLERY ----
+let currentImages = []; // array of URL strings being edited
+
+function renderImageGallery() {
+  const gallery = document.getElementById('f-img-gallery');
+  const countEl = document.getElementById('f-img-count');
+  gallery.innerHTML = '';
+  countEl.textContent = currentImages.length ? `(${currentImages.length} photo${currentImages.length>1?'s':''})` : '';
+
+  currentImages.forEach((url, i) => {
+    const item = document.createElement('div');
+    item.className = 'ph-img-item';
+    item.innerHTML = `
+      ${url ? `<img class="ph-img-thumb" src="${escHtml(url)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+               <div class="ph-img-thumb-placeholder" style="display:none">?</div>`
+             : '<div class="ph-img-thumb-placeholder">?</div>'}
+      ${i === 0 ? '<span class="ph-img-badge">Main</span>' : ''}
+      <input class="ph-img-url" type="url" value="${escHtml(url)}" placeholder="Image URL..." oninput="updateImageUrl(${i}, this.value)">
+      <button class="ph-img-del" onclick="removeImage(${i})" title="Remove photo">✕</button>
+    `;
+    gallery.appendChild(item);
+  });
+
+  document.getElementById('f-img-add-input').value = '';
+}
+
+function updateImageUrl(index, value) {
+  currentImages[index] = value.trim();
+  // Update thumb preview live
+  const items = document.getElementById('f-img-gallery').querySelectorAll('.ph-img-item');
+  if (items[index]) {
+    const img = items[index].querySelector('.ph-img-thumb');
+    if (img) img.src = value.trim();
+  }
+}
+
+function removeImage(index) {
+  currentImages.splice(index, 1);
+  renderImageGallery();
+}
+
+function addImageUrl() {
+  const input = document.getElementById('f-img-add-input');
+  const url = input.value.trim();
+  if (!url) { input.focus(); return; }
+  currentImages.push(url);
+  input.value = '';
+  renderImageGallery();
+  // Scroll gallery into view
+  document.getElementById('f-img-gallery').lastElementChild &&
+    document.getElementById('f-img-gallery').lastElementChild.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// Allow pressing Enter in the add input
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('f-img-add-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); addImageUrl(); }
+  });
+});
+
 // ---- EDIT MODAL ----
 function openAddModal() {
   document.getElementById('ph-modal-title').textContent = 'Add Product';
@@ -450,7 +529,6 @@ function openAddModal() {
   document.getElementById('f-price').value = '';
   document.getElementById('f-sort').value = allProducts.length + 1;
   document.getElementById('f-desc').value = '';
-  document.getElementById('f-image').value = '';
   document.getElementById('f-video').value = '';
   document.getElementById('f-lengths').value = '';
   document.getElementById('f-closures').value = '';
@@ -459,6 +537,8 @@ function openAddModal() {
   document.getElementById('f-featured').checked = false;
   document.getElementById('f-in-stock').checked = true;
   document.getElementById('ph-save-status').textContent = '';
+  currentImages = [];
+  renderImageGallery();
   document.getElementById('ph-edit-modal').classList.add('open');
 }
 
@@ -472,7 +552,6 @@ function openEditModal(id) {
   document.getElementById('f-price').value = p.price;
   document.getElementById('f-sort').value = p.sort_order;
   document.getElementById('f-desc').value = p.description || '';
-  document.getElementById('f-image').value = p.image_url || '';
   document.getElementById('f-video').value = p.video_url || '';
   document.getElementById('f-lengths').value = (p.lengths||[]).join(', ');
   document.getElementById('f-closures').value = (p.closures||[]).join(', ');
@@ -481,6 +560,8 @@ function openEditModal(id) {
   document.getElementById('f-featured').checked = !!p.featured;
   document.getElementById('f-in-stock').checked = !!p.in_stock;
   document.getElementById('ph-save-status').textContent = '';
+  currentImages = [...(p.image_urls || [])];
+  renderImageGallery();
   document.getElementById('ph-edit-modal').classList.add('open');
 }
 
@@ -500,13 +581,17 @@ async function saveProduct() {
   if (!name) { alert('Product name is required.'); return; }
   if (isNaN(price) || price < 0) { alert('Enter a valid price.'); return; }
 
+  // Collect image URLs from currentImages (filter out blanks)
+  const imageUrls = currentImages.filter(u => u && u.trim());
+
   const payload = {
     name,
     category: document.getElementById('f-category').value,
     price,
     sort_order: parseInt(document.getElementById('f-sort').value, 10) || 0,
     description: document.getElementById('f-desc').value.trim() || null,
-    image_url: document.getElementById('f-image').value.trim() || null,
+    image_url: imageUrls[0] || null,   // keep legacy field in sync
+    image_urls: imageUrls,
     video_url: document.getElementById('f-video').value.trim() || null,
     lengths: parseCSV(document.getElementById('f-lengths').value),
     closures: parseCSV(document.getElementById('f-closures').value),
