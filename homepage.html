@@ -336,26 +336,42 @@ html { scroll-behavior: smooth; }
   .ph-nav-links { display: none; }
   .ph-hamburger { display: flex; }
   .ph-products-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .ph-section-header h2 { font-size: clamp(1.8rem, 6vw, 3rem); }
   .ph-split { grid-template-columns: 1fr; }
   .ph-split-img { height: 55vw; }
   .ph-split-content { padding: 2.5rem 1.5rem; }
+  .ph-split-content h2 { font-size: clamp(1.6rem, 5vw, 2.5rem); }
   .ph-why-grid { grid-template-columns: 1fr; }
   .ph-why-card { padding: 2rem 1.5rem; }
+  .ph-why-card h3 { font-size: 1.4rem; }
   .ph-stats { grid-template-columns: repeat(2, 1fr); }
+  .ph-stat h3 { font-size: 2rem; }
   .ph-footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
   .ph-section-header { padding-top: 3rem; margin-bottom: 2.5rem; }
   #ph-why { padding: 4rem 0; }
   .ph-parallax { height: 55vh; }
   #ph-cart-panel { width: 100%; right: -100%; }
   .ph-hero-btns { flex-direction: column; align-items: center; gap: 0.9rem; }
-  .ph-btn { padding: 1rem 2rem; width: 100%; max-width: 260px; text-align: center; }
+  .ph-btn { padding: 1.1rem 2rem; width: 100%; max-width: 280px; text-align: center; font-size: 0.78rem; }
+  .ph-product-info h3 { font-size: 1.4rem; }
+  .ph-product-info .ph-price { font-size: 1.1rem; }
 }
-@media (max-width: 480px) {
-  .ph-products-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 520px) {
+  /* 1 column products so each card is large and clear */
+  .ph-products-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+  .ph-product-card { aspect-ratio: 4/3; }
+  .ph-product-info h3 { font-size: 1.6rem; }
+  .ph-product-info p { font-size: 0.78rem; }
+  .ph-product-info .ph-price { font-size: 1.3rem; }
+  .ph-hero-title { font-size: clamp(2.8rem, 12vw, 5rem); }
+  .ph-hero-sub { font-size: 0.85rem; letter-spacing: 0.2em; }
   .ph-footer-grid { grid-template-columns: 1fr; }
   .ph-stats { grid-template-columns: 1fr 1fr; }
   .ph-stat { padding: 1.5rem 0.75rem; }
   .ph-container { padding: 0 1rem; }
+  .ph-section-header h2 { font-size: clamp(1.6rem, 7vw, 2.5rem); }
+  .ph-why-card h3 { font-size: 1.3rem; }
+  .ph-why-card p { font-size: 0.95rem; line-height: 1.8; }
 }
 </style>
 
