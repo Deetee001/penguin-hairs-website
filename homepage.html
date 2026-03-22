@@ -442,43 +442,9 @@ html { scroll-behavior: smooth; }
         <h2 class="ph-reveal">Featured Collection</h2>
         <p class="ph-reveal">Curated luxury for the modern woman</p>
       </div>
-      <div class="ph-products-grid">
-        <div class="ph-product-card ph-reveal-left" onclick="window.location='/shop'">
-          <div class="ph-product-badge">Straight</div>
-          <video autoplay muted loop playsinline preload="auto" 
-  style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
-         transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);
-         backface-visibility:hidden;-webkit-backface-visibility:hidden;
-         perspective:1000px;-webkit-perspective:1000px;">
-  <source src="https://res.cloudinary.com/dzbzox0x8/video/upload/q_auto:eco,w_700,h_900,c_fill,br_800k,vc_auto/v1771105365/SnapInsta.to_AQPm2TBi65QmUYxOAgFkWIIrTc9gVr8TFtxSqjGTIQXEEz0YTolg_h5LxcE-U9GH_XyXH-W-o8DoCglC_tY-F9rIyySXG86tz3dXDNY_pn9go1.mp4" type="video/mp4">
-</video>
-          <div class="ph-product-overlay"></div>
-          <div class="ph-product-info">
-            <p>Straight</p>
-            <h3>Bone Straight</h3>
-            <p class="ph-price">From $289</p>
-          </div>
-        </div>
-        <div class="ph-product-card ph-reveal" onclick="window.location='/shop'">
-          <div class="ph-product-badge">Wavy</div>
-          <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG" alt="Raw Wavy">
-          <div class="ph-product-overlay"></div>
-          <div class="ph-product-info">
-            <p>Wavy</p>
-            <h3>Raw Wavy</h3>
-            <p class="ph-price">From $299</p>
-          </div>
-        </div>
-        <div class="ph-product-card ph-reveal-right" onclick="window.location='/shop'">
-          <div class="ph-product-badge">Curly</div>
-          <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ceceb112e1086ef6e/1771106638474/IMG_3445.JPG" alt="Deep Wave">
-          <div class="ph-product-overlay"></div>
-          <div class="ph-product-info">
-            <p>Curly</p>
-            <h3>Deep Wave</h3>
-            <p class="ph-price">From $329</p>
-          </div>
-        </div>
+      <div class="ph-products-grid" id="ph-featured-grid">
+        <!-- Loaded dynamically from Supabase based on featured toggle in admin -->
+        <div style="grid-column:1/-1;text-align:center;padding:3rem;color:rgba(255,255,255,0.25);font-size:0.85rem;letter-spacing:0.1em;">Loading collection...</div>
       </div>
       <div style="text-align:center; margin-top:3rem; padding-bottom:6rem;">
         <a href="/shop" class="ph-btn ph-reveal" target="_parent">View Full Collection</a>
@@ -737,6 +703,48 @@ document.getElementById('ph-overlay').addEventListener('scroll', function(){
   if(p1){const img=document.getElementById('ph-par1-img');const r=p1.getBoundingClientRect();if(img&&r.bottom>0&&r.top<window.innerHeight)img.style.transform=`translateY(${r.top*0.2}px)`;}
   if(p2){const img=document.getElementById('ph-par2-img');const r=p2.getBoundingClientRect();if(img&&r.bottom>0&&r.top<window.innerHeight)img.style.transform=`translateY(${r.top*0.2}px)`;}
 });
+
+// ---- FEATURED PRODUCTS FROM SUPABASE ----
+(function loadFeatured(){
+  const SB_URL='https://plfcipgceshrozsdcgjq.supabase.co';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
+  const grid=document.getElementById('ph-featured-grid');
+  fetch(`${SB_URL}/rest/v1/products?featured=eq.true&in_stock=eq.true&order=sort_order.asc,id.asc&select=*`,{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  })
+  .then(r=>r.json())
+  .then(products=>{
+    if(!Array.isArray(products)||!products.length){
+      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:rgba(255,255,255,0.3);letter-spacing:0.1em;font-size:0.85rem;">No featured products yet — toggle Featured in the admin to showcase products here.</div>';
+      return;
+    }
+    const animations=['ph-reveal-left','ph-reveal','ph-reveal-right'];
+    grid.innerHTML=products.map((p,i)=>{
+      const img=(p.image_urls&&p.image_urls[0])||p.image_url||'';
+      const media=p.video_url
+        ?`<video autoplay muted loop playsinline preload="auto" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;"><source src="${p.video_url}" type="video/mp4"></video>`
+        :img?`<img src="${img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;object-position:top center;">`
+        :'';
+      return `<div class="ph-product-card ${animations[i%3]}" onclick="window.top.location.href='https://www.penguinhairs.com/shop'">
+        <div class="ph-product-badge">${p.category||''}</div>
+        ${media}
+        <div class="ph-product-overlay"></div>
+        <div class="ph-product-info">
+          <p>${p.category||''}</p>
+          <h3>${p.name}</h3>
+          <p class="ph-price">From $${p.price}</p>
+        </div>
+      </div>`;
+    }).join('');
+    // Re-observe newly added elements for scroll reveal
+    grid.querySelectorAll('.ph-reveal,.ph-reveal-left,.ph-reveal-right').forEach(el=>observer.observe(el));
+    // Force autoplay on any new videos
+    grid.querySelectorAll('video').forEach(v=>{v.muted=true;v.play().catch(()=>{});});
+  })
+  .catch(()=>{
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:rgba(255,255,255,0.25);font-size:0.85rem;">Collection loading...</div>';
+  });
+})();
 
 // ---- SCROLL REVEAL ----
 const overlayRoot = document.getElementById('ph-overlay');
