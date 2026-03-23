@@ -132,6 +132,13 @@ html{scroll-behavior:smooth;}
 .ph-quick-btn:hover{background:#d4af37;color:#000;}
 .ph-no-results{text-align:center;padding:5rem 2rem;color:rgba(255,255,255,0.3);}
 .ph-no-results i{font-size:3rem;margin-bottom:1rem;display:block;}
+/* ---- Sold Out state ---- */
+.ph-card--soldout{opacity:0.65;cursor:default;}
+.ph-card--soldout:hover{transform:none!important;box-shadow:none!important;border-color:transparent!important;}
+.ph-card--soldout .ph-card-img img,.ph-card--soldout .ph-card-img video{filter:grayscale(0.6);}
+.ph-soldout-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:2;}
+.ph-soldout-overlay span{background:rgba(20,20,20,0.9);color:rgba(255,255,255,0.7);font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.45rem 1.1rem;border:1px solid rgba(255,255,255,0.18);}
+.ph-card--soldout .ph-quick-btn{opacity:0.35;cursor:not-allowed;pointer-events:none;}
 
 /* ---- Product Modal ---- */
 .ph-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:3000;display:flex;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(15px);}
@@ -184,6 +191,9 @@ html{scroll-behavior:smooth;}
 .ph-co-item-specs{font-size:0.68rem;color:rgba(255,255,255,0.35);line-height:1.5;}
 .ph-co-item-price{font-size:0.85rem;color:#d4af37;white-space:nowrap;}
 .ph-co-divider{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:1.5rem 0;}
+.ph-co-subtotal-row,.ph-co-shipping-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;}
+.ph-co-subtotal-row span,.ph-co-shipping-row span{font-size:0.75rem;color:rgba(255,255,255,0.45);}
+.ph-co-shipping-row span:last-child{color:rgba(255,255,255,0.7);}
 .ph-co-total{display:flex;justify-content:space-between;align-items:center;}
 .ph-co-total span:first-child{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);}
 .ph-co-total span:last-child{font-size:1.3rem;color:white;}
@@ -482,6 +492,15 @@ html{scroll-behavior:smooth;}
       <h3>Your Order</h3>
       <div class="ph-co-items" id="ph-co-items"></div>
       <hr class="ph-co-divider">
+      <div class="ph-co-subtotal-row">
+        <span>Subtotal</span>
+        <span id="ph-co-subtotal-amt"></span>
+      </div>
+      <div class="ph-co-shipping-row">
+        <span>Shipping</span>
+        <span id="ph-co-shipping-amt"></span>
+      </div>
+      <hr class="ph-co-divider" style="margin:0.6rem 0 1rem;">
       <div class="ph-co-total">
         <span>Total</span>
         <span id="ph-co-total-amt"></span>
@@ -509,7 +528,7 @@ html{scroll-behavior:smooth;}
         <div class="ph-co-row">
           <div class="ph-co-field"><label>Postal Code</label><input type="text" id="co-postal" placeholder="M5V 1A1"></div>
           <div class="ph-co-field"><label>Country</label>
-            <select id="co-country">
+            <select id="co-country" onchange="onCountryChange()">
               <option value="CA">Canada</option>
               <option value="US">United States</option>
               <option value="GB">United Kingdom</option>
@@ -533,6 +552,7 @@ html{scroll-behavior:smooth;}
       <div class="ph-co-success" id="ph-co-success">
         <div class="ph-co-success-icon"><i class="fas fa-check-circle"></i></div>
         <h2>Order Confirmed</h2>
+        <p id="ph-co-order-ref" style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:#d4af37;margin-bottom:0.75rem;"></p>
         <p>Thank you for your order. A confirmation will be sent to your email.<br><br>Your Penguin Hairs piece is being prepared with care.</p>
       </div>
     </div>
@@ -555,6 +575,7 @@ html{scroll-behavior:smooth;}
 // ---- SUPABASE ----
 const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
+const SHIPPING_RATES = { CA: 15, US: 20, GB: 35, AU: 35, NG: 25, GH: 25 };
 
 // ---- DATA ----
 let PRODUCTS = [];
@@ -680,10 +701,13 @@ function renderProducts(){
   if(products.length===0){grid.innerHTML='';noRes.style.display='block';return;}
   noRes.style.display='none';
   const thumb=(p)=> p.image_urls&&p.image_urls.length ? p.image_urls[0] : (p.image_url||'');
-  grid.innerHTML=products.map(p=>`
-    <div class="ph-card" onclick="openModal(${p.id})">
+  grid.innerHTML=products.map(p=>{
+    const soldOut=p.in_stock===false;
+    return `
+    <div class="ph-card${soldOut?' ph-card--soldout':''}" ${soldOut?'':`onclick="openModal(${p.id})"`}>
       <div class="ph-card-img">
         <div class="ph-card-badge">${p.category}</div>
+        ${soldOut?'<div class="ph-soldout-overlay"><span>Sold Out</span></div>':''}
         ${p.video_url
           ? `<video autoplay muted loop playsinline preload="auto" style="width:100%;height:100%;object-fit:cover;transition:transform 0.8s ease"><source src="${p.video_url}" type="video/mp4"></video>`
           : `<img src="${thumb(p)}" alt="${p.name}" loading="lazy">`
@@ -696,10 +720,11 @@ function renderProducts(){
         <p class="ph-card-desc">${p.description||''}</p>
         <div class="ph-card-footer">
           <div class="ph-card-price"><small>From </small>$${p.price}</div>
-          <button class="ph-quick-btn" onclick="event.stopPropagation();openModal(${p.id})">Customize</button>
+          <button class="ph-quick-btn" ${soldOut?'disabled':''} onclick="event.stopPropagation();${soldOut?'':` openModal(${p.id})`}">${soldOut?'Sold Out':'Customize'}</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ---- FILTER ----
@@ -933,11 +958,29 @@ async function attachExpressPayments(totalStr) {
   document.getElementById('sq-divider').style.display = hasExpress ? 'block' : 'none';
 }
 
+function getShippingCost() {
+  const country = (document.getElementById('co-country').value || 'CA');
+  return SHIPPING_RATES[country] || 15;
+}
+
+function updateCheckoutTotals() {
+  const subtotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const shipping = getShippingCost();
+  const total = subtotal + shipping;
+  sqTotalStr = '$' + total.toFixed(2);
+  document.getElementById('ph-co-subtotal-amt').textContent = '$' + subtotal.toFixed(2);
+  document.getElementById('ph-co-shipping-amt').textContent = '$' + shipping.toFixed(2);
+  document.getElementById('ph-co-total-amt').textContent = sqTotalStr;
+  const payBtn = document.getElementById('ph-co-pay-btn');
+  if (payBtn && payBtn.style.display !== 'none' && !payBtn.disabled) {
+    payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
+  }
+}
+
+window.onCountryChange = () => { updateCheckoutTotals(); };
+
 window.startCheckout = () => {
   if (cart.length === 0) return;
-
-  const total = cart.reduce((s,i) => s + i.price * i.qty, 0);
-  const totalStr = total.toFixed(2);
 
   document.getElementById('ph-co-items').innerHTML = cart.map(item => `
     <div class="ph-co-item">
@@ -948,11 +991,12 @@ window.startCheckout = () => {
       </div>
       <div class="ph-co-item-price">$${(item.price * item.qty).toFixed(2)}</div>
     </div>`).join('');
-  sqTotalStr = '$' + totalStr;
-  document.getElementById('ph-co-total-amt').textContent = sqTotalStr;
+
+  updateCheckoutTotals();
 
   document.getElementById('ph-co-error').style.display = 'none';
   document.getElementById('ph-co-success').style.display = 'none';
+  document.getElementById('ph-co-order-ref').textContent = '';
   const payBtn = document.getElementById('ph-co-pay-btn');
   payBtn.style.display = 'block';
   payBtn.disabled = false;
@@ -1002,11 +1046,13 @@ async function processPayment(token) {
     return;
   }
 
+  const shippingCost = getShippingCost();
+
   try {
     const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ cart, sourceId: token, shipping })
+      body: JSON.stringify({ cart, sourceId: token, shipping, shippingCost })
     });
     const data = await res.json();
     if (data.success) {
@@ -1014,6 +1060,9 @@ async function processPayment(token) {
       document.getElementById('ph-cart-panel').classList.remove('open');
       document.getElementById('ph-cart-overlay').style.display = 'none';
       payBtn.style.display = 'none';
+      if (data.orderRef) {
+        document.getElementById('ph-co-order-ref').textContent = 'Order #' + data.orderRef;
+      }
       document.getElementById('ph-co-success').style.display = 'flex';
     } else {
       // Parse Square error codes into friendly messages
@@ -1102,7 +1151,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();}
   const grid=document.getElementById('ph-grid');
   grid.innerHTML='<div class="ph-grid-loading"><div class="ph-grid-loading-spin"></div><p>Loading collection...</p></div>';
   try {
-    const res=await fetch(SB_URL+'/rest/v1/products?in_stock=eq.true&order=sort_order.asc,id.asc&select=*',{
+    const res=await fetch(SB_URL+'/rest/v1/products?order=sort_order.asc,id.asc&select=*',{
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
     });
     PRODUCTS=await res.json();

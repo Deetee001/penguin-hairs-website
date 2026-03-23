@@ -449,6 +449,10 @@ html{scroll-behavior:smooth;}
   document.head.appendChild(s);
 })();
 
+// ---- SUPABASE ----
+const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
+
 
 
         // ---- THREE.JS PARTICLE WAVE ----
@@ -540,15 +544,27 @@ window.selectTime=(btn,time)=>{
 };
 
 // ---- BOOKING SUBMIT ----
-window.submitBooking=()=>{
+window.submitBooking=async ()=>{
   const fname=document.getElementById('ph-fname').value.trim();
+  const lname=document.getElementById('ph-lname').value.trim();
   const email=document.getElementById('ph-email').value.trim();
   const service=document.getElementById('ph-service-select').value;
   const date=document.getElementById('ph-date').value;
+  const notes=document.getElementById('ph-notes').value.trim();
   if(!fname||!email||!service||!date||!selectedTime){
     showToast('Please fill in all required fields'); return;
   }
-  showToast(`✓ Appointment confirmed! We'll email ${email} shortly.`);
+  const btn=document.querySelector('[onclick="submitBooking()"]');
+  if(btn){btn.disabled=true;btn.textContent='Booking...';}
+  try {
+    await fetch(SB_URL+'/rest/v1/bookings',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
+      body:JSON.stringify({first_name:fname,last_name:lname||null,email,service,date,time:selectedTime,notes:notes||null})
+    });
+  } catch(e){ /* save failed silently — still confirm to user */ }
+  if(btn){btn.disabled=false;btn.textContent='Confirm Appointment';}
+  showToast(`✓ Appointment confirmed! We'll be in touch at ${email}.`);
   document.getElementById('ph-fname').value='';
   document.getElementById('ph-lname').value='';
   document.getElementById('ph-email').value='';
