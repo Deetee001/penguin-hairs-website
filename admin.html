@@ -129,12 +129,62 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-confirm-msg{font-size:14px;color:#aaa;line-height:1.6;}
 .ph-confirm-name{color:#e0e0e0;font-weight:700;}
 
+/* ---- MOBILE PRODUCT CARDS ---- */
+.ph-mob-list{display:none;flex-direction:column;border-top:1px solid #1a1a1a;}
+.ph-mob-card{background:#111;border-bottom:1px solid #1a1a1a;padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+.ph-mob-card-top{display:flex;gap:12px;align-items:flex-start;}
+.ph-mob-thumb{width:60px;height:70px;object-fit:cover;object-position:top center;border-radius:8px;flex-shrink:0;background:#1a1a1a;}
+.ph-mob-thumb-icon{width:60px;height:70px;background:#1a1a1a;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#d4af37;font-size:22px;}
+.ph-mob-info{flex:1;min-width:0;}
+.ph-mob-name{font-size:16px;font-weight:700;color:#e0e0e0;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ph-mob-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;}
+.ph-mob-price{font-size:15px;color:#d4af37;font-weight:700;}
+.ph-mob-toggles{display:flex;gap:0;border:1px solid #222;border-radius:10px;overflow:hidden;}
+.ph-mob-toggle-item{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;font-size:13px;color:#888;}
+.ph-mob-toggle-item:first-child{border-right:1px solid #222;}
+.ph-mob-toggle-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.ph-mob-actions{display:flex;gap:8px;}
+.ph-mob-actions button{flex:1;padding:12px;font-size:14px;font-weight:700;border-radius:10px;border:none;cursor:pointer;transition:opacity .2s;}
+.ph-mob-actions button:hover{opacity:.8;}
+.ph-mob-edit{background:rgba(212,175,55,.18);color:#d4af37;}
+.ph-mob-del{background:rgba(192,57,43,.18);color:#e05555;}
+.ph-mob-empty{text-align:center;padding:48px 24px;color:#444;font-size:14px;}
+
 @media(max-width:700px){
+  /* topbar */
+  .ph-topbar{padding:12px 14px;}
+  .ph-topbar h1{font-size:15px;letter-spacing:1px;}
+  .ph-status{display:none;}
+  .ph-btn{padding:10px 16px;font-size:14px;}
+
+  /* main */
+  .ph-main{padding:14px;}
+
+  /* stats — 2×2 grid */
+  .ph-stats{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+  .ph-stat{padding:14px 10px;}
+  .ph-stat-num{font-size:28px;}
+
+  /* toolbar */
+  .ph-toolbar{flex-direction:column;align-items:stretch;gap:10px;}
+  .ph-search{width:100%;font-size:16px;padding:12px 14px;}
+  .ph-filter-sel{width:100%;font-size:16px;padding:12px 14px;}
+
+  /* hide desktop table, show mobile cards */
+  .ph-table-wrap table{display:none;}
+  .ph-mob-list{display:flex;}
+
+  /* form rows go 1-col */
   .ph-form-row{grid-template-columns:1fr;}
-  .ph-main{padding:16px;}
-  .ph-topbar{padding:12px 16px;}
-  table{font-size:12px;}
-  th,td{padding:10px 10px;}
+  .ph-form-group input,.ph-form-group select,.ph-form-group textarea{font-size:16px;padding:12px 14px;}
+
+  /* modal: slides up from bottom, full width */
+  .ph-modal-bg{padding:0;align-items:flex-end;}
+  .ph-modal{border-radius:18px 18px 0 0;max-height:92vh;max-width:100%;}
+  .ph-modal-head{padding:18px 20px;}
+  .ph-modal-body{padding:16px 20px;}
+  .ph-modal-foot{padding:16px 20px;flex-direction:column-reverse;gap:10px;}
+  .ph-modal-foot .ph-btn{width:100%;padding:14px;font-size:15px;}
 }
 </style>
 </head>
@@ -176,13 +226,14 @@ tr:hover td{background:rgba(212,175,55,.04);}
       </select>
     </div>
 
-    <!-- Table -->
+    <!-- Table (desktop) + Cards (mobile) -->
     <div class="ph-table-wrap">
       <div class="ph-loading" id="ph-tbl-loading">
         <div class="ph-loading-spin"></div>
         <div>Loading products...</div>
       </div>
       <div id="ph-tbl-container" style="display:none">
+        <!-- Desktop table -->
         <table id="ph-tbl">
           <thead>
             <tr>
@@ -198,6 +249,8 @@ tr:hover td{background:rgba(212,175,55,.04);}
           </thead>
           <tbody id="ph-tbl-body"></tbody>
         </table>
+        <!-- Mobile cards -->
+        <div class="ph-mob-list" id="ph-mob-list"></div>
         <div class="ph-empty" id="ph-tbl-empty" style="display:none">No products match your search.</div>
       </div>
     </div>
@@ -370,6 +423,7 @@ async function loadProducts() {
     document.getElementById('ph-db-status').className = 'ph-status ok';
     renderStats();
     renderTable();
+    renderCards();
     document.getElementById('ph-tbl-loading').style.display = 'none';
     document.getElementById('ph-tbl-container').style.display = 'block';
   } catch(e) {
@@ -449,7 +503,64 @@ function renderTable() {
   });
 }
 
-function filterTable() { renderTable(); }
+function filterTable() { renderTable(); renderCards(); }
+
+function renderCards() {
+  const search = document.getElementById('ph-tbl-search').value.toLowerCase();
+  const cat = document.getElementById('ph-tbl-cat').value;
+  const stock = document.getElementById('ph-tbl-stock').value;
+  const list = document.getElementById('ph-mob-list');
+  if (!list) return;
+
+  let rows = allProducts.filter(p => {
+    if (cat && p.category !== cat) return false;
+    if (stock !== '' && String(p.in_stock) !== stock) return false;
+    if (search && !p.name.toLowerCase().includes(search) && !p.category.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  if (!rows.length) { list.innerHTML = '<div class="ph-mob-empty">No products match your search.</div>'; return; }
+
+  list.innerHTML = rows.map(p => {
+    const thumb = p.video_url
+      ? '<div class="ph-mob-thumb-icon">▶</div>'
+      : (p.image_urls && p.image_urls.length)
+        ? `<img class="ph-mob-thumb" src="${escHtml(p.image_urls[0])}" loading="lazy">`
+        : '<div class="ph-mob-thumb-icon">📷</div>';
+    return `<div class="ph-mob-card">
+      <div class="ph-mob-card-top">
+        ${thumb}
+        <div class="ph-mob-info">
+          <div class="ph-mob-name">${escHtml(p.name)}</div>
+          <div class="ph-mob-meta">
+            <span class="${badgeClass(p.category)}">${escHtml(p.category)}</span>
+            <span class="ph-mob-price">$${p.price}</span>
+          </div>
+        </div>
+      </div>
+      <div class="ph-mob-toggles">
+        <div class="ph-mob-toggle-item">
+          <span class="ph-mob-toggle-label">Featured</span>
+          <label class="ph-toggle">
+            <input type="checkbox" ${p.featured?'checked':''} onchange="toggleField(${p.id},'featured',this.checked)">
+            <span class="ph-toggle-slider"></span>
+          </label>
+        </div>
+        <div class="ph-mob-toggle-item">
+          <span class="ph-mob-toggle-label">In Stock</span>
+          <label class="ph-toggle">
+            <input type="checkbox" ${p.in_stock?'checked':''} onchange="toggleField(${p.id},'in_stock',this.checked)">
+            <span class="ph-toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="ph-mob-actions">
+        <button class="ph-mob-edit" onclick="openEditModal(${p.id})">✏ Edit</button>
+        <button class="ph-mob-del" onclick="openConfirm(${p.id},'${escHtml(p.name)}')">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 function escHtml(s) {
   if (!s) return '';
