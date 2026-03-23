@@ -124,6 +124,21 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-progress-bar{height:100%;background:#d4af37;border-radius:4px;transition:width .2s;width:0%;}
 .ph-upload-label{font-size:11px;color:#888;white-space:nowrap;}
 
+/* ---- PRICING TABLE ---- */
+.ph-pricing-section{margin-bottom:20px;}
+.ph-pricing-section>label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#666;display:block;margin-bottom:8px;}
+.ph-pricing-hint{font-size:11px;color:#555;margin-bottom:8px;display:block;}
+.ph-pricing-table{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.ph-pricing-row{display:flex;gap:8px;align-items:center;}
+.ph-pricing-row input[type=text]{flex:2;min-width:0;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.ph-pricing-row input[type=number]{flex:1;min-width:0;width:80px;padding:10px 12px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.ph-pricing-row input:focus{border-color:#d4af37;}
+.ph-price-prefix{color:#555;font-size:13px;flex-shrink:0;}
+.ph-rm-btn{background:rgba(192,57,43,.15);color:#e05555;border:none;border-radius:6px;padding:8px 11px;cursor:pointer;font-size:15px;flex-shrink:0;line-height:1;}
+.ph-rm-btn:hover{background:rgba(192,57,43,.3);}
+.ph-add-row-btn{width:100%;padding:10px;background:rgba(255,255,255,.03);border:1px dashed #2a2a2a;border-radius:8px;color:#555;font-family:'Lato',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;text-align:center;}
+.ph-add-row-btn:hover{border-color:#d4af37;color:#d4af37;}
+
 /* ---- CONFIRM MODAL ---- */
 #ph-confirm-modal .ph-modal{max-width:400px;}
 .ph-confirm-msg{font-size:14px;color:#aaa;line-height:1.6;}
@@ -335,27 +350,35 @@ tr:hover td{background:rgba(212,175,55,.04);}
         </div>
       </div>
       <div class="ph-form-row full">
-        <div class="ph-form-group">
-          <label>Lengths (comma-separated)</label>
-          <input type="text" id="f-lengths" placeholder='16", 18", 20", 22", 24"'>
+        <div class="ph-pricing-section">
+          <label>Lengths &amp; Base Prices</label>
+          <span class="ph-pricing-hint">Each length has its own base price. The lowest becomes the "Starting from $X" on the shop.</span>
+          <div class="ph-pricing-table" id="f-lengths-tbl"></div>
+          <button type="button" class="ph-add-row-btn" onclick="addPricingRow('lengths')">+ Add Length</button>
         </div>
       </div>
       <div class="ph-form-row full">
-        <div class="ph-form-group">
-          <label>Closures (comma-separated)</label>
-          <input type="text" id="f-closures" placeholder="4*4, 5*5, 13*4, 13*6">
+        <div class="ph-pricing-section">
+          <label>Closures &amp; Upcharges</label>
+          <span class="ph-pricing-hint">Extra cost added on top of the length price. Use $0 for no upcharge.</span>
+          <div class="ph-pricing-table" id="f-closures-tbl"></div>
+          <button type="button" class="ph-add-row-btn" onclick="addPricingRow('closures')">+ Add Closure</button>
         </div>
       </div>
       <div class="ph-form-row full">
-        <div class="ph-form-group">
-          <label>Colors (comma-separated)</label>
-          <input type="text" id="f-colors" placeholder="Natural Black, Brown, Burgundy">
+        <div class="ph-pricing-section">
+          <label>Colors &amp; Upcharges</label>
+          <span class="ph-pricing-hint">Extra cost added on top of the length price. Use $0 for no upcharge.</span>
+          <div class="ph-pricing-table" id="f-colors-tbl"></div>
+          <button type="button" class="ph-add-row-btn" onclick="addPricingRow('colors')">+ Add Color</button>
         </div>
       </div>
       <div class="ph-form-row full">
-        <div class="ph-form-group">
-          <label>Weights (comma-separated)</label>
-          <input type="text" id="f-weights" placeholder="200g, 250g, 300g">
+        <div class="ph-pricing-section">
+          <label>Weights &amp; Upcharges</label>
+          <span class="ph-pricing-hint">Extra cost added on top of the length price. Use $0 for no upcharge.</span>
+          <div class="ph-pricing-table" id="f-weights-tbl"></div>
+          <button type="button" class="ph-add-row-btn" onclick="addPricingRow('weights')">+ Add Weight</button>
         </div>
       </div>
       <div class="ph-form-row">
@@ -722,6 +745,46 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+// ---- PRICING TABLE ----
+function buildPricingUI(field, items) {
+  const tbl = document.getElementById('f-' + field + '-tbl');
+  tbl.innerHTML = '';
+  (items || []).forEach(item => {
+    const parts = String(item).split('|');
+    appendPricingRow(tbl, parts[0] || '', parts[1] !== undefined ? parts[1] : '');
+  });
+}
+
+function appendPricingRow(tbl, name, price) {
+  const row = document.createElement('div');
+  row.className = 'ph-pricing-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Option name" value="${escHtml(name)}" style="font-size:16px">
+    <span class="ph-price-prefix">$</span>
+    <input type="number" placeholder="0" value="${escHtml(price)}" min="0" step="1" style="font-size:16px">
+    <button type="button" class="ph-rm-btn" onclick="this.parentElement.remove()">✕</button>
+  `;
+  tbl.appendChild(row);
+}
+
+function addPricingRow(field) {
+  const tbl = document.getElementById('f-' + field + '-tbl');
+  appendPricingRow(tbl, '', '');
+  tbl.lastElementChild && tbl.lastElementChild.querySelector('input').focus();
+}
+
+function getPricingValues(field) {
+  const tbl = document.getElementById('f-' + field + '-tbl');
+  const result = [];
+  tbl.querySelectorAll('.ph-pricing-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    const price = inputs[1].value.trim();
+    if (name) result.push(price !== '' ? name + '|' + price : name);
+  });
+  return result;
+}
+
 // ---- EDIT MODAL ----
 function openAddModal() {
   document.getElementById('ph-modal-title').textContent = 'Add Product';
@@ -732,10 +795,10 @@ function openAddModal() {
   document.getElementById('f-sort').value = allProducts.length + 1;
   document.getElementById('f-desc').value = '';
   document.getElementById('f-video').value = '';
-  document.getElementById('f-lengths').value = '';
-  document.getElementById('f-closures').value = '';
-  document.getElementById('f-colors').value = '';
-  document.getElementById('f-weights').value = '';
+  buildPricingUI('lengths', []);
+  buildPricingUI('closures', []);
+  buildPricingUI('colors', []);
+  buildPricingUI('weights', []);
   document.getElementById('f-featured').checked = false;
   document.getElementById('f-in-stock').checked = true;
   document.getElementById('ph-save-status').textContent = '';
@@ -755,10 +818,10 @@ function openEditModal(id) {
   document.getElementById('f-sort').value = p.sort_order;
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-video').value = p.video_url || '';
-  document.getElementById('f-lengths').value = (p.lengths||[]).join(', ');
-  document.getElementById('f-closures').value = (p.closures||[]).join(', ');
-  document.getElementById('f-colors').value = (p.colors||[]).join(', ');
-  document.getElementById('f-weights').value = (p.weights||[]).join(', ');
+  buildPricingUI('lengths', p.lengths || []);
+  buildPricingUI('closures', p.closures || []);
+  buildPricingUI('colors', p.colors || []);
+  buildPricingUI('weights', p.weights || []);
   document.getElementById('f-featured').checked = !!p.featured;
   document.getElementById('f-in-stock').checked = !!p.in_stock;
   document.getElementById('ph-save-status').textContent = '';
@@ -781,7 +844,19 @@ async function saveProduct() {
   const price = parseInt(document.getElementById('f-price').value, 10);
 
   if (!name) { alert('Product name is required.'); return; }
-  if (isNaN(price) || price < 0) { alert('Enter a valid price.'); return; }
+
+  const lengths = getPricingValues('lengths');
+  const closures = getPricingValues('closures');
+  const colors = getPricingValues('colors');
+  const weights = getPricingValues('weights');
+
+  // Auto-set base price to minimum length price (if lengths defined)
+  let finalPrice = price;
+  if (lengths.length) {
+    const prices = lengths.map(v => parseInt(v.split('|')[1] || '0', 10)).filter(n => !isNaN(n));
+    if (prices.length) finalPrice = Math.min(...prices);
+  }
+  if (isNaN(finalPrice) || finalPrice < 0) finalPrice = 0;
 
   // Collect image URLs from currentImages (filter out blanks)
   const imageUrls = currentImages.filter(u => u && u.trim());
@@ -789,16 +864,16 @@ async function saveProduct() {
   const payload = {
     name,
     category: document.getElementById('f-category').value,
-    price,
+    price: finalPrice,
     sort_order: parseInt(document.getElementById('f-sort').value, 10) || 0,
     description: document.getElementById('f-desc').value.trim() || null,
     image_url: imageUrls[0] || null,   // keep legacy field in sync
     image_urls: imageUrls,
     video_url: document.getElementById('f-video').value.trim() || null,
-    lengths: parseCSV(document.getElementById('f-lengths').value),
-    closures: parseCSV(document.getElementById('f-closures').value),
-    colors: parseCSV(document.getElementById('f-colors').value),
-    weights: parseCSV(document.getElementById('f-weights').value),
+    lengths,
+    closures,
+    colors,
+    weights,
     featured: document.getElementById('f-featured').checked,
     in_stock: document.getElementById('f-in-stock').checked,
     updated_at: new Date().toISOString()

@@ -770,11 +770,15 @@ window.openModal=(id)=>{
   document.getElementById('ph-modal-cat').textContent=selectedProduct.category;
   document.getElementById('ph-modal-title').textContent=selectedProduct.name;
   document.getElementById('ph-modal-desc').textContent=selectedProduct.description||'';
-  document.getElementById('ph-modal-price').textContent='$'+selectedProduct.price;
+  // Show min length price as starting price (fallback to product.price)
+  const _minPrice=(selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;},selectedProduct.price);
+  document.getElementById('ph-modal-price').textContent='$'+_minPrice;
   document.getElementById('ph-sel-summary').style.display='none';
   document.getElementById('ph-add-btn').disabled=true;
   document.getElementById('ph-add-btn').textContent='Select All Options to Add to Bag';
-  const optBtn=(type,val)=>`<button class="ph-opt" data-type="${type}" data-val="${val.replace(/"/g,'&quot;')}" onclick="selectOpt(this.dataset.type,this.dataset.val,this)">${val}</button>`;
+  // optLabel: strip |price from display, keep full string in data-val for price calc
+  const optLabel=val=>val.includes('|')?val.split('|')[0]:val;
+  const optBtn=(type,val)=>`<button class="ph-opt" data-type="${type}" data-val="${val.replace(/"/g,'&quot;')}" onclick="selectOpt(this.dataset.type,this.dataset.val,this)">${optLabel(val)}</button>`;
   document.getElementById('ph-modal-opts').innerHTML=`
     <div class="ph-option-group"><span class="ph-option-label">Length *</span><div class="ph-options">${(selectedProduct.lengths||[]).map(l=>optBtn('length',l)).join('')}</div></div>
     <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${(selectedProduct.closures||[]).map(c=>optBtn('closure',c)).join('')}</div></div>
@@ -802,13 +806,24 @@ window.selectOpt=(type,value,btn)=>{
   btn.closest('.ph-options').querySelectorAll('.ph-opt').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   selection[type]=value;
+  // Parse helpers
+  const _name=v=>v&&v.includes('|')?v.split('|')[0]:(v||'');
+  const _base=v=>v&&v.includes('|')?parseInt(v.split('|')[1],10)||0:selectedProduct.price;
+  const _up=v=>v&&v.includes('|')?parseInt(v.split('|')[1],10)||0:0;
+  // Compute live price once length is chosen
+  if(selection.length){
+    const total=_base(selection.length)+_up(selection.closure)+_up(selection.color)+_up(selection.weight);
+    selection._price=total;
+    document.getElementById('ph-modal-price').textContent='$'+total;
+  }
   const allSelected=selection.length&&selection.closure&&selection.color&&selection.weight;
   if(allSelected){
+    const total=selection._price||selectedProduct.price;
     const sum=document.getElementById('ph-sel-summary');
     sum.style.display='block';
-    sum.innerHTML=`<strong style="color:#d4af37;display:block;margin-bottom:0.5rem">Your Selection</strong>${selection.length} · ${selection.closure} · ${selection.color} · ${selection.weight}`;
+    sum.innerHTML=`<strong style="color:#d4af37;display:block;margin-bottom:0.5rem">Your Selection</strong>${_name(selection.length)} · ${_name(selection.closure)} · ${_name(selection.color)} · ${_name(selection.weight)}`;
     document.getElementById('ph-add-btn').disabled=false;
-    document.getElementById('ph-add-btn').textContent='Add to Bag';
+    document.getElementById('ph-add-btn').textContent='Add to Bag — $'+total;
   }
 };
 // ---- CHECKOUT ----
@@ -1059,12 +1074,14 @@ window.submitPayment = async (method) => {
 
 window.addToCart=()=>{
   if(!selectedProduct) return;
-  const specs=`${selection.length} · ${selection.closure} · ${selection.color} · ${selection.weight}`;
+  const _name=v=>v&&v.includes('|')?v.split('|')[0]:(v||'');
+  const specs=`${_name(selection.length)} · ${_name(selection.closure)} · ${_name(selection.color)} · ${_name(selection.weight)}`;
+  const finalPrice=selection._price||selectedProduct.price;
   const existing=cart.find(i=>i.id===selectedProduct.id&&i.specs===specs);
   if(existing){existing.qty++;}
   else{
     const thumb = (selectedProduct.image_urls&&selectedProduct.image_urls.length) ? selectedProduct.image_urls[0] : (selectedProduct.image_url||'');
-    cart.push({id:selectedProduct.id,name:selectedProduct.name,price:selectedProduct.price,specs,qty:1,image:thumb});
+    cart.push({id:selectedProduct.id,name:selectedProduct.name,price:finalPrice,specs,qty:1,image:thumb});
   }
   updateCartUI();
   closeModalDirect();
