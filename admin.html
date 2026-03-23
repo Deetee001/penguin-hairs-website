@@ -105,7 +105,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-img-item{display:flex;align-items:center;gap:10px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;}
 .ph-img-thumb{width:52px;height:52px;object-fit:cover;border-radius:6px;background:#1a1a1a;flex-shrink:0;}
 .ph-img-thumb-placeholder{width:52px;height:52px;background:#1a1a1a;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#444;font-size:20px;}
-.ph-img-url{flex:1;padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:12px;outline:none;}
+.ph-img-url{flex:1;min-width:0;padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:6px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:12px;outline:none;overflow:hidden;text-overflow:ellipsis;}
 .ph-img-url:focus{border-color:#d4af37;}
 .ph-img-del{background:rgba(192,57,43,.15);color:#e05555;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:14px;flex-shrink:0;}
 .ph-img-del:hover{background:rgba(192,57,43,.3);}
@@ -178,13 +178,26 @@ tr:hover td{background:rgba(212,175,55,.04);}
   .ph-form-row{grid-template-columns:1fr;}
   .ph-form-group input,.ph-form-group select,.ph-form-group textarea{font-size:16px;padding:12px 14px;}
 
-  /* modal: slides up from bottom, full width */
+  /* modal: slides up from bottom, full width, no horizontal scroll */
   .ph-modal-bg{padding:0;align-items:flex-end;}
-  .ph-modal{border-radius:18px 18px 0 0;max-height:92vh;max-width:100%;}
+  .ph-modal{border-radius:18px 18px 0 0;max-height:92vh;max-width:100%;overflow-x:hidden;}
   .ph-modal-head{padding:18px 20px;}
-  .ph-modal-body{padding:16px 20px;}
+  .ph-modal-body{padding:16px 20px;overflow-x:hidden;}
   .ph-modal-foot{padding:16px 20px;flex-direction:column-reverse;gap:10px;}
   .ph-modal-foot .ph-btn{width:100%;padding:14px;font-size:15px;}
+
+  /* image gallery — prevent overflow */
+  .ph-img-item{flex-wrap:wrap;gap:8px;}
+  .ph-img-url{min-width:0;width:100%;flex-basis:100%;order:2;font-size:14px;}
+  .ph-img-thumb,.ph-img-thumb-placeholder{order:1;}
+  .ph-img-badge{order:1;}
+  .ph-img-del{order:1;margin-left:auto;}
+
+  /* add image row — URL input on top, buttons below side by side */
+  .ph-add-img-row{flex-wrap:wrap;gap:8px;}
+  .ph-add-img-row input{flex-basis:100%;width:100%;font-size:16px;}
+  .ph-add-img-btn{flex:1;text-align:center;font-size:14px;padding:12px 10px;}
+  .ph-upload-btn{flex:1;text-align:center;font-size:14px;padding:12px 10px;}
 }
 </style>
 </head>
