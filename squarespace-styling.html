@@ -557,9 +557,9 @@ window.submitBooking=async ()=>{
   const btn=document.querySelector('[onclick="submitBooking()"]');
   if(btn){btn.disabled=true;btn.textContent='Booking...';}
   try {
-    await fetch(SB_URL+'/rest/v1/bookings',{
+    await fetch(SB_URL+'/functions/v1/booking-confirm',{
       method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},
       body:JSON.stringify({first_name:fname,last_name:lname||null,email,service,date,time:selectedTime,notes:notes||null})
     });
   } catch(e){ /* save failed silently — still confirm to user */ }
