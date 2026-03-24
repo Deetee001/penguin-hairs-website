@@ -93,63 +93,50 @@ function customerEmailHtml(name: string, service: string, date: string, time: st
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px;">
+<body style="margin:0;padding:0;background:#f5f0e8;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0e8;padding:40px 20px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
 
         <!-- Header -->
-        <tr><td style="text-align:center;padding-bottom:32px;">
-          <p style="margin:0;font-size:13px;letter-spacing:0.3em;text-transform:uppercase;color:#d4af37;">🐧 PENGUIN HAIRS</p>
+        <tr><td style="text-align:center;padding-bottom:28px;">
+          <p style="margin:0 0 4px;font-size:22px;">🐧</p>
+          <p style="margin:0;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#b8932a;font-weight:600;">PENGUIN HAIRS</p>
         </td></tr>
 
         <!-- Main card -->
-        <tr><td style="background:#111;border:1px solid rgba(212,175,55,0.25);padding:40px 36px;">
+        <tr><td style="background:#ffffff;border-top:3px solid #c9a048;padding:40px 40px 36px;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
+          <h1 style="margin:0 0 8px;font-size:26px;font-weight:300;color:#1a1a1a;letter-spacing:0.03em;">Appointment Confirmed</h1>
+          <p style="margin:0 0 28px;font-size:14px;color:#777;line-height:1.7;">Hi ${name}, we're looking forward to seeing you.</p>
 
-          <h1 style="margin:0 0 8px;font-size:28px;font-weight:300;color:#ffffff;letter-spacing:0.05em;">Appointment Confirmed</h1>
-          <p style="margin:0 0 32px;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6;">Hi ${name}, we're looking forward to seeing you.</p>
+          <div style="border-top:1px solid #ede8df;margin-bottom:24px;"></div>
 
-          <!-- Divider -->
-          <div style="border-top:1px solid rgba(212,175,55,0.2);margin-bottom:28px;"></div>
-
-          <!-- Details -->
           <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-                <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Service</span>
-                <p style="margin:4px 0 0;font-size:15px;color:#ffffff;">${service}</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-                <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Date</span>
-                <p style="margin:4px 0 0;font-size:15px;color:#ffffff;">${date}</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:10px 0;${notes ? 'border-bottom:1px solid rgba(255,255,255,0.06);' : ''}">
-                <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Time</span>
-                <p style="margin:4px 0 0;font-size:15px;color:#ffffff;">${time}</p>
-              </td>
-            </tr>
-            ${notes ? `<tr><td style="padding:10px 0;">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Your Notes</span>
-              <p style="margin:4px 0 0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">${notes}</p>
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f0ebe2;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Service</span>
+              <p style="margin:5px 0 0;font-size:15px;color:#1a1a1a;font-weight:500;">${service}</p>
+            </td></tr>
+            <tr><td style="padding:12px 0;border-bottom:1px solid #f0ebe2;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Date</span>
+              <p style="margin:5px 0 0;font-size:15px;color:#1a1a1a;">${date}</p>
+            </td></tr>
+            <tr><td style="padding:12px 0;${notes ? 'border-bottom:1px solid #f0ebe2;' : ''}">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Time</span>
+              <p style="margin:5px 0 0;font-size:15px;color:#1a1a1a;">${time}</p>
+            </td></tr>
+            ${notes ? `<tr><td style="padding:12px 0;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Your Notes</span>
+              <p style="margin:5px 0 0;font-size:14px;color:#555;line-height:1.7;">${notes}</p>
             </td></tr>` : ''}
           </table>
 
-          <!-- Divider -->
-          <div style="border-top:1px solid rgba(212,175,55,0.2);margin:28px 0;"></div>
-
-          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.4);line-height:1.8;">
-            If you need to reschedule or have any questions, reply to this email or reach us at
-            <a href="mailto:styling@penguinhairs.com" style="color:#d4af37;text-decoration:none;">styling@penguinhairs.com</a>.
-          </p>
+          <div style="border-top:1px solid #ede8df;margin:28px 0 24px;"></div>
+          <p style="margin:0;font-size:13px;color:#888;line-height:1.8;">Need to reschedule? Reply to this email or contact us at <a href="mailto:styling@penguinhairs.com" style="color:#c9a048;text-decoration:none;">styling@penguinhairs.com</a>.</p>
         </td></tr>
 
         <!-- Footer -->
-        <tr><td style="text-align:center;padding-top:28px;">
-          <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:0.1em;">© 2026 PENGUIN HAIRS · Premium Luxury Wigs & Styling</p>
+        <tr><td style="text-align:center;padding-top:24px;">
+          <p style="margin:0;font-size:11px;color:#b0a898;letter-spacing:0.1em;">© 2026 PENGUIN HAIRS · Premium Luxury Wigs & Styling</p>
         </td></tr>
 
       </table>
@@ -163,35 +150,36 @@ function ownerEmailHtml(name: string, email: string, service: string, date: stri
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px;">
+<body style="margin:0;padding:0;background:#f5f0e8;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0e8;padding:40px 20px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
         <tr><td style="text-align:center;padding-bottom:24px;">
-          <p style="margin:0;font-size:13px;letter-spacing:0.3em;text-transform:uppercase;color:#d4af37;">🐧 NEW BOOKING</p>
+          <p style="margin:0 0 4px;font-size:20px;">🐧</p>
+          <p style="margin:0;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#b8932a;font-weight:600;">NEW BOOKING</p>
         </td></tr>
-        <tr><td style="background:#111;border:1px solid rgba(212,175,55,0.25);padding:36px;">
-          <h2 style="margin:0 0 24px;font-size:22px;font-weight:300;color:#ffffff;">New Appointment Request</h2>
+        <tr><td style="background:#ffffff;border-top:3px solid #c9a048;padding:36px 40px;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
+          <h2 style="margin:0 0 24px;font-size:20px;font-weight:400;color:#1a1a1a;">New Appointment Request</h2>
           <table width="100%" cellpadding="0" cellspacing="0">
-            <tr><td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Client</span>
-              <p style="margin:4px 0 0;font-size:15px;color:#ffffff;">${name}</p>
+            <tr><td style="padding:10px 0;border-bottom:1px solid #f0ebe2;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Client</span>
+              <p style="margin:5px 0 0;font-size:15px;color:#1a1a1a;font-weight:500;">${name}</p>
             </td></tr>
-            <tr><td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Email</span>
-              <p style="margin:4px 0 0;font-size:15px;color:#d4af37;"><a href="mailto:${email}" style="color:#d4af37;text-decoration:none;">${email}</a></p>
+            <tr><td style="padding:10px 0;border-bottom:1px solid #f0ebe2;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Email</span>
+              <p style="margin:5px 0 0;font-size:15px;"><a href="mailto:${email}" style="color:#c9a048;text-decoration:none;">${email}</a></p>
             </td></tr>
-            <tr><td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Service</span>
-              <p style="margin:4px 0 0;font-size:15px;color:#ffffff;">${service}</p>
+            <tr><td style="padding:10px 0;border-bottom:1px solid #f0ebe2;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Service</span>
+              <p style="margin:5px 0 0;font-size:15px;color:#1a1a1a;">${service}</p>
             </td></tr>
-            <tr><td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Date & Time</span>
-              <p style="margin:4px 0 0;font-size:15px;color:#ffffff;">${date} at ${time}</p>
+            <tr><td style="padding:10px 0;${notes ? 'border-bottom:1px solid #f0ebe2;' : ''}">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Date & Time</span>
+              <p style="margin:5px 0 0;font-size:15px;color:#1a1a1a;">${date} at ${time}</p>
             </td></tr>
-            ${notes ? `<tr><td style="padding:8px 0;">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Client Notes</span>
-              <p style="margin:4px 0 0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">${notes}</p>
+            ${notes ? `<tr><td style="padding:10px 0;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Client Notes</span>
+              <p style="margin:5px 0 0;font-size:14px;color:#555;line-height:1.7;">${notes}</p>
             </td></tr>` : ''}
           </table>
         </td></tr>

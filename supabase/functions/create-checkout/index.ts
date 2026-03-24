@@ -188,45 +188,46 @@ serve(async (req) => {
 
 function orderConfirmHtml(shipping: any, cart: any[], subtotal: number, shippingCost: number, total: number, orderRef: string) {
   const itemRows = cart.map((item: any) => `
-    <tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <tr><td style="padding:10px 0;border-bottom:1px solid #f0ebe2;">
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
-          <td><p style="margin:0;font-size:14px;color:#ffffff;">${item.name} <span style="color:rgba(255,255,255,0.4)">×${item.qty}</span></p>
-              <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">${item.specs}</p></td>
-          <td align="right"><p style="margin:0;font-size:14px;color:#d4af37;">$${(item.price * item.qty).toFixed(2)}</p></td>
+          <td><p style="margin:0;font-size:14px;color:#1a1a1a;">${item.name} <span style="color:#999">×${item.qty}</span></p>
+              <p style="margin:3px 0 0;font-size:11px;color:#aaa;">${item.specs}</p></td>
+          <td align="right"><p style="margin:0;font-size:14px;color:#b8932a;font-weight:500;">$${(item.price * item.qty).toFixed(2)}</p></td>
         </tr>
       </table>
     </td></tr>`).join('');
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px;">
+<body style="margin:0;padding:0;background:#f5f0e8;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0e8;padding:40px 20px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
-        <tr><td style="text-align:center;padding-bottom:32px;">
-          <p style="margin:0;font-size:13px;letter-spacing:0.3em;text-transform:uppercase;color:#d4af37;">🐧 PENGUIN HAIRS</p>
+        <tr><td style="text-align:center;padding-bottom:28px;">
+          <p style="margin:0 0 4px;font-size:22px;">🐧</p>
+          <p style="margin:0;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#b8932a;font-weight:600;">PENGUIN HAIRS</p>
         </td></tr>
-        <tr><td style="background:#111;border:1px solid rgba(212,175,55,0.25);padding:40px 36px;">
-          <h1 style="margin:0 0 4px;font-size:28px;font-weight:300;color:#ffffff;">Order Confirmed</h1>
-          <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#d4af37;">Order #${orderRef}</p>
-          <p style="margin:0 0 32px;font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6;">Hi ${shipping.firstName}, thank you for your order. Your Penguin Hairs piece is being prepared with care.</p>
-          <div style="border-top:1px solid rgba(212,175,55,0.2);margin-bottom:24px;"></div>
-          <p style="margin:0 0 16px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Order Summary</p>
+        <tr><td style="background:#ffffff;border-top:3px solid #c9a048;padding:40px 40px 36px;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
+          <h1 style="margin:0 0 4px;font-size:26px;font-weight:300;color:#1a1a1a;">Order Confirmed</h1>
+          <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#b8932a;">Order #${orderRef}</p>
+          <p style="margin:0 0 28px;font-size:14px;color:#777;line-height:1.7;">Hi ${shipping.firstName}, thank you for your order. Your Penguin Hairs piece is being prepared with care.</p>
+          <div style="border-top:1px solid #ede8df;margin-bottom:20px;"></div>
+          <p style="margin:0 0 14px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Order Summary</p>
           <table width="100%" cellpadding="0" cellspacing="0">${itemRows}</table>
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
-            <tr><td style="padding:6px 0;"><span style="font-size:13px;color:rgba(255,255,255,0.45);">Subtotal</span></td><td align="right"><span style="font-size:13px;color:rgba(255,255,255,0.45);">$${subtotal.toFixed(2)}</span></td></tr>
-            <tr><td style="padding:6px 0;"><span style="font-size:13px;color:rgba(255,255,255,0.45);">Shipping</span></td><td align="right"><span style="font-size:13px;color:rgba(255,255,255,0.45);">$${shippingCost.toFixed(2)}</span></td></tr>
-            <tr><td style="padding:10px 0 0;border-top:1px solid rgba(255,255,255,0.08);"><span style="font-size:15px;color:#ffffff;font-weight:600;">Total</span></td><td align="right" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;"><span style="font-size:15px;color:#d4af37;font-weight:600;">$${total.toFixed(2)} CAD</span></td></tr>
+            <tr><td style="padding:6px 0;"><span style="font-size:13px;color:#888;">Subtotal</span></td><td align="right"><span style="font-size:13px;color:#888;">$${subtotal.toFixed(2)}</span></td></tr>
+            <tr><td style="padding:6px 0;"><span style="font-size:13px;color:#888;">Shipping</span></td><td align="right"><span style="font-size:13px;color:#888;">$${shippingCost.toFixed(2)}</span></td></tr>
+            <tr><td style="padding:10px 0 0;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#1a1a1a;font-weight:600;">Total</span></td><td align="right" style="border-top:1px solid #ede8df;padding-top:10px;"><span style="font-size:15px;color:#b8932a;font-weight:600;">$${total.toFixed(2)} CAD</span></td></tr>
           </table>
-          <div style="border-top:1px solid rgba(212,175,55,0.2);margin:28px 0;"></div>
-          <p style="margin:0 0 12px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Shipping To</p>
-          <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.8;">${shipping.firstName} ${shipping.lastName}<br>${shipping.address}<br>${shipping.city}, ${shipping.province} ${shipping.postal}<br>${shipping.country}</p>
-          <div style="border-top:1px solid rgba(212,175,55,0.2);margin:28px 0;"></div>
-          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.4);line-height:1.8;">Questions about your order? Reply to this email or contact us at <a href="mailto:orders@penguinhairs.com" style="color:#d4af37;text-decoration:none;">orders@penguinhairs.com</a>.</p>
+          <div style="border-top:1px solid #ede8df;margin:24px 0;"></div>
+          <p style="margin:0 0 10px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Shipping To</p>
+          <p style="margin:0;font-size:14px;color:#555;line-height:1.9;">${shipping.firstName} ${shipping.lastName}<br>${shipping.address}<br>${shipping.city}, ${shipping.province} ${shipping.postal}<br>${shipping.country}</p>
+          <div style="border-top:1px solid #ede8df;margin:24px 0;"></div>
+          <p style="margin:0;font-size:13px;color:#888;line-height:1.8;">Questions? Reply to this email or contact us at <a href="mailto:orders@penguinhairs.com" style="color:#c9a048;text-decoration:none;">orders@penguinhairs.com</a>.</p>
         </td></tr>
-        <tr><td style="text-align:center;padding-top:28px;">
-          <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:0.1em;">© 2026 PENGUIN HAIRS · Premium Luxury Wigs & Styling</p>
+        <tr><td style="text-align:center;padding-top:24px;">
+          <p style="margin:0;font-size:11px;color:#b0a898;letter-spacing:0.1em;">© 2026 PENGUIN HAIRS · Premium Luxury Wigs & Styling</p>
         </td></tr>
       </table>
     </td></tr>
@@ -236,42 +237,43 @@ function orderConfirmHtml(shipping: any, cart: any[], subtotal: number, shipping
 
 function ownerOrderHtml(shipping: any, cart: any[], subtotal: number, shippingCost: number, total: number, orderRef: string) {
   const itemRows = cart.map((item: any) => `
-    <tr><td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-      <p style="margin:0;font-size:14px;color:#ffffff;">${item.name} ×${item.qty} — <span style="color:#d4af37;">$${(item.price * item.qty).toFixed(2)}</span></p>
-      <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">${item.specs}</p>
+    <tr><td style="padding:8px 0;border-bottom:1px solid #f0ebe2;">
+      <p style="margin:0;font-size:14px;color:#1a1a1a;">${item.name} ×${item.qty} — <span style="color:#b8932a;">$${(item.price * item.qty).toFixed(2)}</span></p>
+      <p style="margin:3px 0 0;font-size:11px;color:#aaa;">${item.specs}</p>
     </td></tr>`).join('');
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px;">
+<body style="margin:0;padding:0;background:#f5f0e8;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0e8;padding:40px 20px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
         <tr><td style="text-align:center;padding-bottom:24px;">
-          <p style="margin:0;font-size:13px;letter-spacing:0.3em;text-transform:uppercase;color:#d4af37;">🐧 NEW ORDER #${orderRef}</p>
+          <p style="margin:0 0 4px;font-size:20px;">🐧</p>
+          <p style="margin:0;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#b8932a;font-weight:600;">NEW ORDER #${orderRef}</p>
         </td></tr>
-        <tr><td style="background:#111;border:1px solid rgba(212,175,55,0.25);padding:36px;">
-          <h2 style="margin:0 0 24px;font-size:22px;font-weight:300;color:#ffffff;">New Order Received — $${total.toFixed(2)} CAD</h2>
+        <tr><td style="background:#ffffff;border-top:3px solid #c9a048;padding:36px 40px;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
+          <h2 style="margin:0 0 24px;font-size:20px;font-weight:400;color:#1a1a1a;">New Order — $${total.toFixed(2)} CAD</h2>
           <table width="100%" cellpadding="0" cellspacing="0">
-            <tr><td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Customer</span>
-              <p style="margin:4px 0 0;font-size:15px;color:#ffffff;">${shipping.firstName} ${shipping.lastName}</p>
+            <tr><td style="padding:10px 0;border-bottom:1px solid #f0ebe2;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Customer</span>
+              <p style="margin:5px 0 0;font-size:15px;color:#1a1a1a;font-weight:500;">${shipping.firstName} ${shipping.lastName}</p>
             </td></tr>
-            <tr><td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Email</span>
-              <p style="margin:4px 0 0;font-size:15px;color:#d4af37;"><a href="mailto:${shipping.email}" style="color:#d4af37;text-decoration:none;">${shipping.email}</a></p>
+            <tr><td style="padding:10px 0;border-bottom:1px solid #f0ebe2;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Email</span>
+              <p style="margin:5px 0 0;font-size:15px;"><a href="mailto:${shipping.email}" style="color:#c9a048;text-decoration:none;">${shipping.email}</a></p>
             </td></tr>
-            <tr><td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Ship To</span>
-              <p style="margin:4px 0 0;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;">${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}, ${shipping.country}</p>
+            <tr><td style="padding:10px 0;border-bottom:1px solid #f0ebe2;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Ship To</span>
+              <p style="margin:5px 0 0;font-size:14px;color:#555;line-height:1.7;">${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}, ${shipping.country}</p>
             </td></tr>
-            <tr><td style="padding:8px 0;">
-              <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Items</span>
+            <tr><td style="padding:10px 0;">
+              <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Items</span>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">${itemRows}</table>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
-                <tr><td><span style="font-size:13px;color:rgba(255,255,255,0.4);">Subtotal</span></td><td align="right"><span style="font-size:13px;color:rgba(255,255,255,0.4);">$${subtotal.toFixed(2)}</span></td></tr>
-                <tr><td><span style="font-size:13px;color:rgba(255,255,255,0.4);">Shipping</span></td><td align="right"><span style="font-size:13px;color:rgba(255,255,255,0.4);">$${shippingCost.toFixed(2)}</span></td></tr>
-                <tr><td style="padding-top:8px;"><span style="font-size:15px;color:#ffffff;font-weight:600;">Total</span></td><td align="right" style="padding-top:8px;"><span style="font-size:15px;color:#d4af37;font-weight:600;">$${total.toFixed(2)} CAD</span></td></tr>
+                <tr><td><span style="font-size:13px;color:#888;">Subtotal</span></td><td align="right"><span style="font-size:13px;color:#888;">$${subtotal.toFixed(2)}</span></td></tr>
+                <tr><td><span style="font-size:13px;color:#888;">Shipping</span></td><td align="right"><span style="font-size:13px;color:#888;">$${shippingCost.toFixed(2)}</span></td></tr>
+                <tr><td style="padding-top:8px;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#1a1a1a;font-weight:600;">Total</span></td><td align="right" style="padding-top:8px;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#b8932a;font-weight:600;">$${total.toFixed(2)} CAD</span></td></tr>
               </table>
             </td></tr>
           </table>

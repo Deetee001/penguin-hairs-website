@@ -131,6 +131,9 @@ html{scroll-behavior:smooth;}
 .ph-form-label{display:block;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:0.75rem;}
 .ph-form-input,.ph-form-select,.ph-form-textarea{width:100%;padding:1rem 1.25rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:white;font-size:0.9rem;font-family:'Lato',sans-serif;transition:all 0.3s;outline:none;}
 .ph-form-input:focus,.ph-form-select:focus,.ph-form-textarea:focus{border-color:#d4af37;background:rgba(212,175,55,0.04);}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:0.6;cursor:pointer;width:18px;height:18px;}
+input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;}
+input[type="date"]{cursor:pointer;}
 .ph-form-select option{background:#1a1a1a;color:white;}
 .ph-form-textarea{min-height:100px;resize:vertical;}
 .ph-form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
