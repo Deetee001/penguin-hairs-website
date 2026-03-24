@@ -115,8 +115,25 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-sbadge-completed{background:rgba(100,160,255,.15);color:#6aa0ff;}
 
 /* ---- ORDERS / APPTS OVERFLOW ---- */
-.ph-scroll-table{overflow-x:auto;}
+.ph-scroll-table{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .ph-scroll-table table{min-width:700px;}
+
+/* ---- APPT MOBILE CARDS ---- */
+.ph-appt-mob-list{display:none;flex-direction:column;}
+.ph-appt-mob-card{background:#111;border-bottom:1px solid #1a1a1a;padding:14px 16px;}
+.ph-appt-mob-card.is-past{opacity:.45;}
+.ph-appt-mob-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:4px;}
+.ph-appt-mob-name{font-size:15px;font-weight:700;color:#e0e0e0;}
+.ph-appt-mob-service{font-size:12px;color:#888;margin-top:2px;}
+.ph-appt-mob-meta{display:flex;gap:14px;font-size:12px;color:#aaa;margin:6px 0;}
+.ph-appt-mob-email{font-size:12px;color:#666;margin-bottom:10px;}
+.ph-appt-mob-notes{font-size:12px;color:#555;font-style:italic;margin-bottom:12px;}
+.ph-appt-mob-manage{width:100%;padding:11px;background:rgba(212,175,55,.15);color:#d4af37;border:1px solid rgba(212,175,55,.3);border-radius:8px;font-family:'Lato',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s;}
+.ph-appt-mob-manage:hover{background:rgba(212,175,55,.25);}
+@media(max-width:700px){
+  #tab-appointments .ph-scroll-table{display:none;}
+  .ph-appt-mob-list{display:flex;}
+}
 
 /* ---- IMAGE GALLERY MANAGER ---- */
 .ph-img-gallery{display:flex;flex-direction:column;gap:10px;}
@@ -357,11 +374,13 @@ tr:hover td{background:rgba(212,175,55,.04);}
                   <th>Service</th>
                   <th>Notes</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="ph-appts-body"></tbody>
             </table>
           </div>
+          <div class="ph-appt-mob-list" id="ph-appts-mob-list"></div>
           <div class="ph-empty" id="ph-appts-empty" style="display:none">No appointments yet.</div>
         </div>
       </div>
@@ -487,6 +506,58 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <span class="ph-save-status" id="ph-save-status"></span>
       <button class="ph-btn ph-btn-outline" onclick="closeEditModal()">Cancel</button>
       <button class="ph-btn ph-btn-gold" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Appointment Manage Modal -->
+<div class="ph-modal-bg" id="ph-appt-modal">
+  <div class="ph-modal">
+    <div class="ph-modal-head">
+      <h2>Manage Appointment</h2>
+      <button class="ph-modal-close" onclick="closeApptModal()">&times;</button>
+    </div>
+    <div class="ph-modal-body">
+      <input type="hidden" id="am-id">
+      <div style="background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:14px 16px;margin-bottom:20px;">
+        <div id="am-client-info" style="font-size:14px;color:#aaa;line-height:1.9;"></div>
+      </div>
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label>Date</label>
+          <input type="date" id="am-date">
+        </div>
+        <div class="ph-form-group">
+          <label>Time</label>
+          <input type="text" id="am-time" placeholder="e.g. 2:00 PM">
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Status</label>
+          <select id="am-status">
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Message to Client <span style="color:#555;font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optional — included in notification email)</span></label>
+          <textarea id="am-reason" placeholder="e.g. We need to reschedule due to a scheduling conflict. Please reply to this email to arrange a new time." style="min-height:90px;"></textarea>
+        </div>
+      </div>
+      <label class="ph-form-check" style="padding:4px 0;">
+        <input type="checkbox" id="am-notify" checked>
+        Send notification email to client
+      </label>
+    </div>
+    <div class="ph-modal-foot">
+      <span class="ph-save-status" id="ph-appt-save-status"></span>
+      <button class="ph-btn ph-btn-outline" onclick="closeApptModal()">Cancel</button>
+      <button class="ph-btn ph-btn-gold" onclick="saveApptChanges()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -1015,9 +1086,84 @@ async function confirmDelete() {
   }
 }
 
+// ---- APPOINTMENT MANAGEMENT ----
+let currentApptId = null;
+
+function openManageAppt(id) {
+  const a = allAppointments.find(x => x.id === id);
+  if (!a) return;
+  currentApptId = id;
+  const fullName = [a.first_name, a.last_name].filter(Boolean).join(' ');
+  const serviceLabel = APPT_SERVICE_LABELS[a.service] || a.service || '—';
+  const formattedDate = a.date ? new Date(a.date + 'T12:00:00').toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '—';
+  document.getElementById('am-client-info').innerHTML =
+    `<strong style="color:#e0e0e0;font-size:15px;">${escHtml(fullName)}</strong><br>` +
+    `${escHtml(a.email || '')}<br>` +
+    `<span style="color:#d4af37;">${escHtml(serviceLabel)}</span> &mdash; ${escHtml(formattedDate)} at ${escHtml(a.time || '—')}`;
+  document.getElementById('am-date').value = a.date || '';
+  document.getElementById('am-time').value = a.time || '';
+  document.getElementById('am-status').value = a.status || 'pending';
+  document.getElementById('am-reason').value = '';
+  document.getElementById('am-notify').checked = true;
+  document.getElementById('ph-appt-save-status').textContent = '';
+  document.getElementById('ph-appt-modal').classList.add('open');
+}
+
+function closeApptModal() {
+  document.getElementById('ph-appt-modal').classList.remove('open');
+  currentApptId = null;
+}
+
+async function saveApptChanges() {
+  const a = allAppointments.find(x => x.id === currentApptId);
+  if (!a) return;
+  const newDate = document.getElementById('am-date').value;
+  const newTime = document.getElementById('am-time').value.trim();
+  const newStatus = document.getElementById('am-status').value;
+  const reason = document.getElementById('am-reason').value.trim();
+  const notify = document.getElementById('am-notify').checked;
+  const statusEl = document.getElementById('ph-appt-save-status');
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'ph-save-status saving';
+  try {
+    // Send to edge function — it updates Supabase and sends email
+    const res = await fetch(SUPABASE_URL + '/functions/v1/booking-update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        booking_id: currentApptId,
+        customer_name: [a.first_name, a.last_name].filter(Boolean).join(' '),
+        customer_email: a.email,
+        service: a.service,
+        old_date: a.date,
+        old_time: a.time,
+        new_date: newDate,
+        new_time: newTime,
+        new_status: newStatus,
+        reason: reason || null,
+        send_notification: notify,
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    statusEl.textContent = 'Saved!';
+    statusEl.className = 'ph-save-status saved';
+    apptsLoaded = false; // force reload
+    await loadAppointments();
+    setTimeout(closeApptModal, 700);
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + (e.message || 'Unknown');
+    statusEl.className = 'ph-save-status error';
+    console.error(e);
+  }
+}
+
 // Close modals on background click
 document.getElementById('ph-edit-modal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
 document.getElementById('ph-confirm-modal').addEventListener('click', function(e){ if(e.target===this) closeConfirm(); });
+document.getElementById('ph-appt-modal').addEventListener('click', function(e){ if(e.target===this) closeApptModal(); });
 
 // ---- TABS ----
 const TAB_NAMES = ['products','orders','appointments'];
@@ -1106,8 +1252,10 @@ async function loadAppointments() {
 
 function renderAppointments() {
   const tbody = document.getElementById('ph-appts-body');
+  const mobList = document.getElementById('ph-appts-mob-list');
   const empty = document.getElementById('ph-appts-empty');
   tbody.innerHTML = '';
+  if (mobList) mobList.innerHTML = '';
   empty.style.display = allAppointments.length ? 'none' : 'block';
   const today = new Date().toISOString().split('T')[0];
   allAppointments.forEach(a => {
@@ -1116,6 +1264,7 @@ function renderAppointments() {
     const serviceLabel = APPT_SERVICE_LABELS[a.service] || a.service || '—';
     const fullName = [a.first_name, a.last_name].filter(Boolean).join(' ');
     const status = a.status || 'pending';
+    // Desktop row
     const tr = document.createElement('tr');
     if (isPast) tr.style.opacity = '0.45';
     tr.innerHTML = `
@@ -1126,8 +1275,31 @@ function renderAppointments() {
       <td>${escHtml(serviceLabel)}</td>
       <td style="font-size:12px;color:#666;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(a.notes||'')}">${escHtml(a.notes || '—')}</td>
       <td><span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span></td>
+      <td><button class="ph-btn-sm ph-edit-btn" onclick="openManageAppt(${a.id})">Manage</button></td>
     `;
     tbody.appendChild(tr);
+    // Mobile card
+    if (mobList) {
+      const card = document.createElement('div');
+      card.className = 'ph-appt-mob-card' + (isPast ? ' is-past' : '');
+      card.innerHTML = `
+        <div class="ph-appt-mob-top">
+          <div>
+            <div class="ph-appt-mob-name">${escHtml(fullName)}</div>
+            <div class="ph-appt-mob-service">${escHtml(serviceLabel)}</div>
+          </div>
+          <span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span>
+        </div>
+        <div class="ph-appt-mob-meta">
+          <span>&#128197; ${escHtml(date)}</span>
+          <span>&#128336; ${escHtml(a.time || '—')}</span>
+        </div>
+        <div class="ph-appt-mob-email">${escHtml(a.email || '—')}</div>
+        ${a.notes ? `<div class="ph-appt-mob-notes">${escHtml(a.notes)}</div>` : ''}
+        <button class="ph-appt-mob-manage" onclick="openManageAppt(${a.id})">Manage Appointment</button>
+      `;
+      mobList.appendChild(card);
+    }
   });
 }
 

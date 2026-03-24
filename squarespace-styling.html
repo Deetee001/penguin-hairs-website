@@ -141,8 +141,10 @@ input[type="date"]{cursor:pointer;}
 /* Time Slots */
 .ph-time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;}
 .ph-time-slot{padding:0.6rem;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.5);font-size:0.75rem;font-family:'Lato',sans-serif;cursor:pointer;transition:all 0.3s;text-align:center;}
-.ph-time-slot:hover{border-color:rgba(212,175,55,0.4);color:white;}
+.ph-time-slot:hover:not(:disabled){border-color:rgba(212,175,55,0.4);color:white;}
 .ph-time-slot.selected{border-color:#d4af37;background:rgba(212,175,55,0.15);color:#d4af37;}
+.ph-time-slot.booked{opacity:0.3;cursor:not-allowed;text-decoration:line-through;color:rgba(255,255,255,0.3);}
+.ph-time-slot:disabled{cursor:not-allowed;}
 
 .ph-submit-btn{width:100%;margin-top:1.5rem;padding:1.1rem;font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;border:1px solid #d4af37;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;transition:all 0.3s;}
 .ph-submit-btn:hover{background:transparent;color:white;}
@@ -362,15 +364,15 @@ input[type="date"]{cursor:pointer;}
           <div class="ph-form-group">
             <label class="ph-form-label">Preferred Time</label>
             <div class="ph-time-grid" id="ph-time-grid">
-              <button class="ph-time-slot" onclick="selectTime(this,'9:00 AM')">9:00 AM</button>
-              <button class="ph-time-slot" onclick="selectTime(this,'10:00 AM')">10:00 AM</button>
-              <button class="ph-time-slot" onclick="selectTime(this,'11:00 AM')">11:00 AM</button>
-              <button class="ph-time-slot" onclick="selectTime(this,'12:00 PM')">12:00 PM</button>
-              <button class="ph-time-slot" onclick="selectTime(this,'1:00 PM')">1:00 PM</button>
-              <button class="ph-time-slot" onclick="selectTime(this,'2:00 PM')">2:00 PM</button>
-              <button class="ph-time-slot" onclick="selectTime(this,'3:00 PM')">3:00 PM</button>
-              <button class="ph-time-slot" onclick="selectTime(this,'4:00 PM')">4:00 PM</button>
-              <button class="ph-time-slot" onclick="selectTime(this,'5:00 PM')">5:00 PM</button>
+              <button class="ph-time-slot" data-time="9:00 AM" onclick="selectTime(this,'9:00 AM')">9:00 AM</button>
+              <button class="ph-time-slot" data-time="10:00 AM" onclick="selectTime(this,'10:00 AM')">10:00 AM</button>
+              <button class="ph-time-slot" data-time="11:00 AM" onclick="selectTime(this,'11:00 AM')">11:00 AM</button>
+              <button class="ph-time-slot" data-time="12:00 PM" onclick="selectTime(this,'12:00 PM')">12:00 PM</button>
+              <button class="ph-time-slot" data-time="1:00 PM" onclick="selectTime(this,'1:00 PM')">1:00 PM</button>
+              <button class="ph-time-slot" data-time="2:00 PM" onclick="selectTime(this,'2:00 PM')">2:00 PM</button>
+              <button class="ph-time-slot" data-time="3:00 PM" onclick="selectTime(this,'3:00 PM')">3:00 PM</button>
+              <button class="ph-time-slot" data-time="4:00 PM" onclick="selectTime(this,'4:00 PM')">4:00 PM</button>
+              <button class="ph-time-slot" data-time="5:00 PM" onclick="selectTime(this,'5:00 PM')">5:00 PM</button>
             </div>
           </div>
           <div class="ph-form-group">
@@ -539,9 +541,40 @@ setTimeout(()=>{document.querySelectorAll('.ph-reveal,.ph-reveal-left,.ph-reveal
 const dateInput=document.getElementById('ph-date');
 if(dateInput){const today=new Date();const yyyy=today.getFullYear();const mm=String(today.getMonth()+1).padStart(2,'0');const dd=String(today.getDate()).padStart(2,'0');dateInput.min=`${yyyy}-${mm}-${dd}`;}
 
-// ---- TIME SLOT ----
+// ---- TIME SLOT AVAILABILITY ----
 let selectedTime='';
+
+async function refreshAvailability(date){
+  // Reset all slots
+  document.querySelectorAll('.ph-time-slot').forEach(btn=>{
+    btn.classList.remove('booked','selected');
+    btn.disabled=false;
+    btn.title='';
+  });
+  selectedTime='';
+  if(!date) return;
+  try {
+    const res=await fetch(SB_URL+'/rest/v1/bookings?date=eq.'+date+'&status=neq.cancelled&select=time',{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    const booked=await res.json();
+    const bookedTimes=new Set(booked.map(b=>b.time));
+    document.querySelectorAll('.ph-time-slot').forEach(btn=>{
+      if(bookedTimes.has(btn.dataset.time)){
+        btn.classList.add('booked');
+        btn.disabled=true;
+        btn.title='This time is already booked';
+      }
+    });
+  } catch(e){ /* fail silently — don't block the form */ }
+}
+
+if(dateInput){
+  dateInput.addEventListener('change',function(){ refreshAvailability(this.value); });
+}
+
 window.selectTime=(btn,time)=>{
+  if(btn.disabled||btn.classList.contains('booked')) return;
   document.querySelectorAll('.ph-time-slot').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected'); selectedTime=time;
 };
@@ -558,7 +591,21 @@ window.submitBooking=async ()=>{
     showToast('Please fill in all required fields'); return;
   }
   const btn=document.querySelector('[onclick="submitBooking()"]');
-  if(btn){btn.disabled=true;btn.textContent='Booking...';}
+  if(btn){btn.disabled=true;btn.textContent='Checking availability...';}
+  // Final availability check before submitting
+  try {
+    const checkRes=await fetch(SB_URL+'/rest/v1/bookings?date=eq.'+date+'&time=eq.'+encodeURIComponent(selectedTime)+'&status=neq.cancelled&select=id',{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    const existing=await checkRes.json();
+    if(existing.length>0){
+      showToast('Sorry, that time slot was just booked. Please choose another.');
+      if(btn){btn.disabled=false;btn.textContent='Confirm Appointment';}
+      await refreshAvailability(date);
+      return;
+    }
+  } catch(e){ /* if check fails, proceed anyway */ }
+  if(btn) btn.textContent='Booking...';
   try {
     await fetch(SB_URL+'/functions/v1/booking-confirm',{
       method:'POST',
@@ -574,7 +621,7 @@ window.submitBooking=async ()=>{
   document.getElementById('ph-service-select').value='';
   document.getElementById('ph-date').value='';
   document.getElementById('ph-notes').value='';
-  document.querySelectorAll('.ph-time-slot').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.ph-time-slot').forEach(b=>b.classList.remove('selected','booked'));
   selectedTime='';
 };
 
