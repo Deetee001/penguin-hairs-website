@@ -50,7 +50,9 @@ serve(async (req) => {
 
     // Build ICS calendar attachment
     const icsContent = buildICS(fullName, email, serviceLabel, date, time);
-    const icsBase64 = btoa(icsContent);
+    // Use TextEncoder so non-ASCII chars don't break btoa
+    const icsBytes = new TextEncoder().encode(icsContent);
+    const icsBase64 = btoa(Array.from(icsBytes, b => String.fromCharCode(b)).join(""));
     const icsAttachment = [{
       filename: "appointment.ics",
       content: icsBase64,
@@ -190,7 +192,7 @@ function buildICS(name: string, email: string, service: string, date: string, ti
     `DTSTAMP:${dtstamp}`,
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,
-    `SUMMARY:Penguin Hairs \u2013 ${service}`,
+    `SUMMARY:Penguin Hairs - ${service}`,
     `DESCRIPTION:Appointment with Penguin Hairs\\nService: ${service}\\nDate: ${date}\\nTime: ${time}`,
     "ORGANIZER;CN=Penguin Hairs:mailto:styling@penguinhairs.com",
     `ATTENDEE;CN=${name};RSVP=TRUE:mailto:${email}`,
