@@ -67,8 +67,9 @@ html{scroll-behavior:smooth;}
 
 /* ---- Shop Hero ---- */
 #ph-shop-hero{position:relative;height:55vh;min-height:360px;display:flex;align-items:center;justify-content:center;z-index:2;background:#0a0a0a;overflow:hidden;margin-top:0;}
-.ph-hero-slide{position:absolute;inset:0;background-size:cover;background-position:center top;opacity:0;transition:opacity 1.4s ease;filter:brightness(0.55);}
+.ph-hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.4s ease;will-change:opacity;transform:translateZ(0);}
 .ph-hero-slide.active{opacity:1;}
+.ph-hero-slide img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;filter:brightness(0.6);}
 #ph-shop-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,rgba(0,0,0,0.15) 50%,rgba(0,0,0,0.45) 100%);z-index:1;}
 .ph-shop-hero-content{position:relative;z-index:2;text-align:center;padding:2rem;background:rgba(255,255,255,0.06);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);border:1px solid rgba(255,255,255,0.1);border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.1);padding:2.5rem 3.5rem;}
 .ph-shop-hero-content h1{font-size:clamp(3rem,7vw,6rem);font-weight:300;letter-spacing:0.08em;background:linear-gradient(135deg,#fff 30%,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1rem;opacity:0;animation:phFadeUp 1s ease forwards 0.3s;}
@@ -1207,7 +1208,11 @@ function initHeroSlideshow(products){
   pool.forEach((src,i)=>{
     const el=document.createElement('div');
     el.className='ph-hero-slide'+(i===0?' active':'');
-    el.style.backgroundImage=`url(${src})`;
+    const img=document.createElement('img');
+    img.src=src;
+    img.alt='';
+    img.setAttribute('loading','eager');
+    el.appendChild(img);
     hero.insertBefore(el,hero.firstChild);
   });
 
