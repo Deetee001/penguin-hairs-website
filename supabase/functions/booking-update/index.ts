@@ -57,7 +57,6 @@ serve(async (req) => {
         date: new_date,
         time: new_time,
         status: new_status,
-        updated_at: new Date().toISOString(),
       }),
     });
 
