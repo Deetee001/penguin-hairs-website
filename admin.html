@@ -100,6 +100,24 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-save-status.saved{color:#4caf50;}
 .ph-save-status.error{color:#e05555;}
 
+/* ---- TABS ---- */
+.ph-tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid #222;}
+.ph-tab{padding:11px 22px;background:none;border:none;border-bottom:2px solid transparent;color:#666;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all .2s;margin-bottom:-1px;}
+.ph-tab:hover{color:#d4af37;}
+.ph-tab.active{color:#d4af37;border-bottom-color:#d4af37;}
+@media(max-width:700px){.ph-tab{padding:10px 12px;font-size:11px;letter-spacing:.5px;}}
+
+/* ---- STATUS BADGES ---- */
+.ph-sbadge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.ph-sbadge-pending{background:rgba(212,175,55,.15);color:#d4af37;}
+.ph-sbadge-confirmed{background:rgba(76,175,80,.15);color:#4caf50;}
+.ph-sbadge-cancelled{background:rgba(224,85,85,.15);color:#e05555;}
+.ph-sbadge-completed{background:rgba(100,160,255,.15);color:#6aa0ff;}
+
+/* ---- ORDERS / APPTS OVERFLOW ---- */
+.ph-scroll-table{overflow-x:auto;}
+.ph-scroll-table table{min-width:700px;}
+
 /* ---- IMAGE GALLERY MANAGER ---- */
 .ph-img-gallery{display:flex;flex-direction:column;gap:10px;}
 .ph-img-item{display:flex;align-items:center;gap:10px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;}
@@ -235,53 +253,120 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <div class="ph-stat"><div class="ph-stat-num" id="stat-in-stock">—</div><div class="ph-stat-label">In Stock</div></div>
       <div class="ph-stat"><div class="ph-stat-num" id="stat-featured">—</div><div class="ph-stat-label">Featured</div></div>
       <div class="ph-stat"><div class="ph-stat-num" id="stat-categories">—</div><div class="ph-stat-label">Categories</div></div>
+      <div class="ph-stat"><div class="ph-stat-num" id="stat-orders">—</div><div class="ph-stat-label">Total Orders</div></div>
+      <div class="ph-stat"><div class="ph-stat-num" id="stat-upcoming">—</div><div class="ph-stat-label">Upcoming Appts</div></div>
     </div>
 
-    <!-- Toolbar -->
-    <div class="ph-toolbar">
-      <input class="ph-search" type="text" placeholder="Search products..." oninput="filterTable()" id="ph-tbl-search">
-      <select class="ph-filter-sel" onchange="filterTable()" id="ph-tbl-cat">
-        <option value="">All Categories</option>
-        <option>Straight</option>
-        <option>Wavy</option>
-        <option>Curly</option>
-        <option>Short</option>
-      </select>
-      <select class="ph-filter-sel" onchange="filterTable()" id="ph-tbl-stock">
-        <option value="">All Stock</option>
-        <option value="true">In Stock</option>
-        <option value="false">Out of Stock</option>
-      </select>
+    <!-- Tabs -->
+    <div class="ph-tabs">
+      <button class="ph-tab active" onclick="switchTab('products')">Products</button>
+      <button class="ph-tab" onclick="switchTab('orders')">Orders</button>
+      <button class="ph-tab" onclick="switchTab('appointments')">Appointments</button>
     </div>
 
-    <!-- Table (desktop) + Cards (mobile) -->
-    <div class="ph-table-wrap">
-      <div class="ph-loading" id="ph-tbl-loading">
-        <div class="ph-loading-spin"></div>
-        <div>Loading products...</div>
+    <!-- Products Tab -->
+    <div id="tab-products">
+      <div class="ph-toolbar">
+        <input class="ph-search" type="text" placeholder="Search products..." oninput="filterTable()" id="ph-tbl-search">
+        <select class="ph-filter-sel" onchange="filterTable()" id="ph-tbl-cat">
+          <option value="">All Categories</option>
+          <option>Straight</option>
+          <option>Wavy</option>
+          <option>Curly</option>
+          <option>Short</option>
+        </select>
+        <select class="ph-filter-sel" onchange="filterTable()" id="ph-tbl-stock">
+          <option value="">All Stock</option>
+          <option value="true">In Stock</option>
+          <option value="false">Out of Stock</option>
+        </select>
       </div>
-      <div id="ph-tbl-container" style="display:none">
-        <!-- Desktop table -->
-        <table id="ph-tbl">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Options</th>
-              <th>Featured</th>
-              <th>In Stock</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="ph-tbl-body"></tbody>
-        </table>
-        <!-- Mobile cards -->
-        <div class="ph-mob-list" id="ph-mob-list"></div>
-        <div class="ph-empty" id="ph-tbl-empty" style="display:none">No products match your search.</div>
+      <div class="ph-table-wrap">
+        <div class="ph-loading" id="ph-tbl-loading">
+          <div class="ph-loading-spin"></div>
+          <div>Loading products...</div>
+        </div>
+        <div id="ph-tbl-container" style="display:none">
+          <table id="ph-tbl">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Options</th>
+                <th>Featured</th>
+                <th>In Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ph-tbl-body"></tbody>
+          </table>
+          <div class="ph-mob-list" id="ph-mob-list"></div>
+          <div class="ph-empty" id="ph-tbl-empty" style="display:none">No products match your search.</div>
+        </div>
       </div>
     </div>
+
+    <!-- Orders Tab -->
+    <div id="tab-orders" style="display:none">
+      <div class="ph-table-wrap">
+        <div class="ph-loading" id="ph-orders-loading">
+          <div class="ph-loading-spin"></div>
+          <div>Loading orders...</div>
+        </div>
+        <div id="ph-orders-container" style="display:none">
+          <div class="ph-scroll-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Order Ref</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Subtotal</th>
+                  <th>Shipping</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="ph-orders-body"></tbody>
+            </table>
+          </div>
+          <div class="ph-empty" id="ph-orders-empty" style="display:none">No orders yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointments Tab -->
+    <div id="tab-appointments" style="display:none">
+      <div class="ph-table-wrap">
+        <div class="ph-loading" id="ph-appts-loading">
+          <div class="ph-loading-spin"></div>
+          <div>Loading appointments...</div>
+        </div>
+        <div id="ph-appts-container" style="display:none">
+          <div class="ph-scroll-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Client</th>
+                  <th>Email</th>
+                  <th>Service</th>
+                  <th>Notes</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="ph-appts-body"></tbody>
+            </table>
+          </div>
+          <div class="ph-empty" id="ph-appts-empty" style="display:none">No appointments yet.</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -934,8 +1019,133 @@ async function confirmDelete() {
 document.getElementById('ph-edit-modal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
 document.getElementById('ph-confirm-modal').addEventListener('click', function(e){ if(e.target===this) closeConfirm(); });
 
+// ---- TABS ----
+const TAB_NAMES = ['products','orders','appointments'];
+function switchTab(tab) {
+  TAB_NAMES.forEach((t, i) => {
+    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+    document.querySelectorAll('.ph-tab')[i].classList.toggle('active', t === tab);
+  });
+  if (tab === 'orders' && !ordersLoaded) loadOrders();
+  if (tab === 'appointments' && !apptsLoaded) loadAppointments();
+}
+
+// ---- ORDERS ----
+let ordersLoaded = false;
+let allOrders = [];
+
+async function loadOrders() {
+  try {
+    allOrders = await sbFetch('orders?order=created_at.desc&select=*');
+    ordersLoaded = true;
+    document.getElementById('stat-orders').textContent = allOrders.length;
+    renderOrders();
+    document.getElementById('ph-orders-loading').style.display = 'none';
+    document.getElementById('ph-orders-container').style.display = 'block';
+  } catch(e) {
+    document.getElementById('ph-orders-loading').innerHTML = '<p style="color:#e05555;padding:20px">Failed to load orders. Check console.</p>';
+    console.error(e);
+  }
+}
+
+function renderOrders() {
+  const tbody = document.getElementById('ph-orders-body');
+  const empty = document.getElementById('ph-orders-empty');
+  tbody.innerHTML = '';
+  empty.style.display = allOrders.length ? 'none' : 'block';
+  allOrders.forEach(o => {
+    const date = new Date(o.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
+    const ref = o.square_order_id ? o.square_order_id.slice(-8).toUpperCase() : '—';
+    const items = Array.isArray(o.items) ? o.items.map(i => `${i.name||''}${(i.quantity||1)>1?' ×'+i.quantity:''}`).join(', ') : '—';
+    const ship = o.shipping_address ? (o.shipping_address.country || '') : '';
+    const status = o.status || 'pending';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="white-space:nowrap">${escHtml(date)}</td>
+      <td><code style="font-size:12px;color:#d4af37">#${escHtml(ref)}</code></td>
+      <td>
+        <div style="font-weight:600;font-size:13px">${escHtml(o.customer_name || '—')}</div>
+        <div style="font-size:11px;color:#666">${escHtml(o.customer_email || '')}</div>
+      </td>
+      <td style="font-size:12px;color:#aaa;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(items)}">${escHtml(items)}</td>
+      <td>$${o.subtotal || 0}</td>
+      <td>$${o.shipping_cost || 0}${ship ? ' <span style="font-size:10px;color:#555">('+escHtml(ship)+')</span>' : ''}</td>
+      <td style="font-weight:700;color:#d4af37">$${o.total || 0}</td>
+      <td><span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- APPOINTMENTS ----
+let apptsLoaded = false;
+let allAppointments = [];
+
+const APPT_SERVICE_LABELS = {
+  installation: 'Wig Installation',
+  custom_cut: 'Custom Cut & Style',
+  styling_color: 'Styling & Color',
+  maintenance: 'Maintenance & Care',
+};
+
+async function loadAppointments() {
+  try {
+    allAppointments = await sbFetch('bookings?order=date.desc,time.asc&select=*');
+    apptsLoaded = true;
+    const today = new Date().toISOString().split('T')[0];
+    const upcoming = allAppointments.filter(a => a.date >= today && a.status !== 'cancelled').length;
+    document.getElementById('stat-upcoming').textContent = upcoming;
+    renderAppointments();
+    document.getElementById('ph-appts-loading').style.display = 'none';
+    document.getElementById('ph-appts-container').style.display = 'block';
+  } catch(e) {
+    document.getElementById('ph-appts-loading').innerHTML = '<p style="color:#e05555;padding:20px">Failed to load appointments. Check console.</p>';
+    console.error(e);
+  }
+}
+
+function renderAppointments() {
+  const tbody = document.getElementById('ph-appts-body');
+  const empty = document.getElementById('ph-appts-empty');
+  tbody.innerHTML = '';
+  empty.style.display = allAppointments.length ? 'none' : 'block';
+  const today = new Date().toISOString().split('T')[0];
+  allAppointments.forEach(a => {
+    const date = new Date(a.date + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    const isPast = a.date < today;
+    const serviceLabel = APPT_SERVICE_LABELS[a.service] || a.service || '—';
+    const fullName = [a.first_name, a.last_name].filter(Boolean).join(' ');
+    const status = a.status || 'pending';
+    const tr = document.createElement('tr');
+    if (isPast) tr.style.opacity = '0.45';
+    tr.innerHTML = `
+      <td style="white-space:nowrap">${escHtml(date)}</td>
+      <td style="white-space:nowrap">${escHtml(a.time || '—')}</td>
+      <td style="font-weight:600">${escHtml(fullName)}</td>
+      <td style="font-size:12px;color:#888">${escHtml(a.email || '—')}</td>
+      <td>${escHtml(serviceLabel)}</td>
+      <td style="font-size:12px;color:#666;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(a.notes||'')}">${escHtml(a.notes || '—')}</td>
+      <td><span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Pre-load order + appointment counts on page start
+function prefetchCounts() {
+  sbFetch('orders?select=id').then(r => {
+    document.getElementById('stat-orders').textContent = r.length;
+  }).catch(()=>{});
+  sbFetch('bookings?select=id,date,status').then(r => {
+    const today = new Date().toISOString().split('T')[0];
+    const upcoming = r.filter(a => a.date >= today && a.status !== 'cancelled').length;
+    document.getElementById('stat-upcoming').textContent = upcoming;
+  }).catch(()=>{});
+}
+
 // Load products on page start
 loadProducts();
+prefetchCounts();
 </script>
 </body>
 </html>

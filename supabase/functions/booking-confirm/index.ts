@@ -48,7 +48,16 @@ serve(async (req) => {
       body: JSON.stringify({ first_name, last_name: last_name || null, email, service, date, time, notes: notes || null }),
     });
 
-    // Send confirmation to customer
+    // Build ICS calendar attachment
+    const icsContent = buildICS(fullName, email, serviceLabel, date, time);
+    const icsBase64 = btoa(icsContent);
+    const icsAttachment = [{
+      filename: "appointment.ics",
+      content: icsBase64,
+      content_type: "text/calendar; method=REQUEST",
+    }];
+
+    // Send confirmation to customer (with ICS attachment)
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -60,10 +69,11 @@ serve(async (req) => {
         to: [email],
         subject: "Your Appointment is Confirmed — Penguin Hairs",
         html: customerEmailHtml(fullName, serviceLabel, formattedDate, time, notes),
+        attachments: icsAttachment,
       }),
     });
 
-    // Send notification to owner
+    // Send notification to owner (with ICS attachment)
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -75,6 +85,7 @@ serve(async (req) => {
         to: [OWNER_EMAIL],
         subject: `New Booking: ${fullName} — ${serviceLabel} on ${formattedDate}`,
         html: ownerEmailHtml(fullName, email, serviceLabel, formattedDate, time, notes),
+        attachments: icsAttachment,
       }),
     });
 
@@ -144,6 +155,49 @@ function customerEmailHtml(name: string, service: string, date: string, time: st
   </table>
 </body>
 </html>`;
+}
+
+// ---- ICS CALENDAR ----
+function parseTime(timeStr: string): { hours: number; minutes: number } {
+  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!match) return { hours: 10, minutes: 0 };
+  let hours = parseInt(match[1]);
+  const minutes = parseInt(match[2]);
+  const ampm = match[3].toUpperCase();
+  if (ampm === "PM" && hours !== 12) hours += 12;
+  if (ampm === "AM" && hours === 12) hours = 0;
+  return { hours, minutes };
+}
+
+function buildICS(name: string, email: string, service: string, date: string, time: string): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const { hours, minutes } = parseTime(time);
+  const [year, month, day] = date.split("-").map(Number);
+  const dtStart = `${year}${pad(month)}${pad(day)}T${pad(hours)}${pad(minutes)}00`;
+  const endHours = hours + 1 >= 24 ? 23 : hours + 1;
+  const dtEnd = `${year}${pad(month)}${pad(day)}T${pad(endHours)}${pad(minutes)}00`;
+  const uid = `ph-${Date.now()}@penguinhairs.com`;
+  const dtstamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Penguin Hairs//Booking//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${dtstamp}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:Penguin Hairs \u2013 ${service}`,
+    `DESCRIPTION:Appointment with Penguin Hairs\\nService: ${service}\\nDate: ${date}\\nTime: ${time}`,
+    "ORGANIZER;CN=Penguin Hairs:mailto:styling@penguinhairs.com",
+    `ATTENDEE;CN=${name};RSVP=TRUE:mailto:${email}`,
+    "STATUS:CONFIRMED",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
 }
 
 function ownerEmailHtml(name: string, email: string, service: string, date: string, time: string, notes: string) {
