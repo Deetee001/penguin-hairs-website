@@ -238,33 +238,42 @@ html { scroll-behavior: smooth; }
   letter-spacing: 0.15em; text-transform: uppercase; z-index: 2; border-radius: 6px;
 }
 
-/* ---- Parallax ---- */
-.ph-parallax {
-  position: relative; height: 80vh; overflow: hidden;
-  display: flex; align-items: center; justify-content: center; z-index: 2;
+/* ---- Editorial Split (Effortless Beauty / Uncompromising Quality) ---- */
+.ph-editorial-wrap { padding: 4rem 2rem; position: relative; z-index: 2; }
+.ph-editorial {
+  display: grid; grid-template-columns: 1fr 1fr; min-height: 540px;
+  border-radius: 24px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 8px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
 }
-.ph-parallax img {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  object-fit: cover; object-position: top center; filter: brightness(0.45); will-change: transform;
+.ph-editorial-content {
+  display: flex; flex-direction: column; justify-content: center; padding: 5rem;
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-right: 1px solid rgba(255,255,255,0.1);
 }
-.ph-parallax-content { position: relative; z-index: 5; text-align: center; padding: 2rem; }
-.ph-parallax-content h2 {
-  font-size: clamp(2.5rem, 7vw, 7rem); font-weight: 300; letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #fff, #d4af37);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  margin-bottom: 1rem;
-}
-.ph-parallax-content p { font-size: clamp(1rem, 2vw, 1.4rem); letter-spacing: 0.25em; color: rgba(255,255,255,0.75); }
+.ph-editorial-content h2 { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 300; color: white; margin-bottom: 1.5rem; }
+.ph-editorial-content p { color: rgba(255,255,255,0.55); line-height: 1.9; font-size: 1rem; }
+.ph-editorial-img { position: relative; overflow: hidden; }
+.ph-editorial-img img { width: 100%; height: 100%; object-fit: cover; object-position: top center; filter: brightness(0.78); transition: transform 0.8s ease; }
+.ph-editorial:hover .ph-editorial-img img { transform: scale(1.05); }
 
 /* ---- Split ---- */
-.ph-split { display: grid; grid-template-columns: 1fr 1fr; min-height: 600px; position: relative; z-index: 2; }
+.ph-split-wrap { padding: 0 2rem 4rem; position: relative; z-index: 2; }
+.ph-split {
+  display: grid; grid-template-columns: 1fr 1fr; min-height: 600px;
+  border-radius: 24px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 8px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+}
 .ph-split-img { position: relative; overflow: hidden; }
 .ph-split-img img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.65); transition: transform 0.8s ease; }
 .ph-split:hover .ph-split-img img { transform: scale(1.05); }
 .ph-split-content {
   display: flex; flex-direction: column; justify-content: center;
   padding: 5rem;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.07);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-left: 1px solid rgba(255,255,255,0.1);
@@ -359,7 +368,13 @@ html { scroll-behavior: smooth; }
   .ph-products-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
   .ph-section-header h2 { font-size: clamp(1.8rem, 6vw, 3rem); }
   /* Keep split side-by-side on mobile — portrait image fits naturally */
-  .ph-split { grid-template-columns: 42% 58%; min-height: 0; }
+  .ph-editorial-wrap { padding: 2rem 1rem; }
+  .ph-editorial { grid-template-columns: 58% 42%; min-height: 0; border-radius: 16px; }
+  .ph-editorial-content { padding: 1.75rem 1.25rem; }
+  .ph-editorial-content h2 { font-size: clamp(1.2rem, 4vw, 1.6rem); margin-bottom: 0.75rem; }
+  .ph-editorial-content p { font-size: 0.78rem; line-height: 1.65; }
+  .ph-split-wrap { padding: 0 1rem 2rem; }
+  .ph-split { grid-template-columns: 42% 58%; min-height: 0; border-radius: 16px; }
   .ph-split-img { min-height: 260px; }
   .ph-split-content { padding: 1.75rem 1.25rem; justify-content: center; }
   .ph-split-content h2 { font-size: clamp(1.2rem, 4vw, 1.6rem); margin-bottom: 0.75rem; }
@@ -373,7 +388,6 @@ html { scroll-behavior: smooth; }
   .ph-footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
   .ph-section-header { padding-top: 3rem; margin-bottom: 2.5rem; }
   #ph-why { padding: 4rem 0; }
-  .ph-parallax { height: 55vh; }
   #ph-cart-panel { width: 100%; right: -100%; }
   .ph-hero-btns { flex-direction: column; align-items: center; gap: 0.9rem; }
   .ph-btn { padding: 1.1rem 2rem; width: 100%; max-width: 280px; text-align: center; font-size: 0.78rem; }
@@ -473,36 +487,48 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- Parallax 1 -->
-  <section class="ph-parallax" id="ph-par1">
-    <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG" alt="Effortless Beauty" id="ph-par1-img">
-    <div class="ph-parallax-content">
-      <h2 class="ph-reveal">Effortless Beauty</h2>
-      <p class="ph-reveal">Handcrafted perfection in every texture</p>
+  <!-- Editorial 1 — Effortless Beauty -->
+  <div class="ph-editorial-wrap">
+    <div class="ph-editorial">
+      <div class="ph-editorial-content ph-reveal-left">
+        <div class="ph-gold-line" style="margin: 0 0 2rem 0;"></div>
+        <h2>Effortless Beauty</h2>
+        <p>Handcrafted perfection in every texture. Our artisans source only the finest raw donor hair, ensuring each piece moves, feels, and flows exactly like your own.</p>
+      </div>
+      <div class="ph-editorial-img">
+        <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG" alt="Effortless Beauty">
+      </div>
     </div>
-  </section>
+  </div>
 
   <!-- Split - Peng Hair Styling -->
-  <section class="ph-split ph-section">
-    <div class="ph-split-img">
-      <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG" alt="Styling">
+  <div class="ph-split-wrap">
+    <div class="ph-split">
+      <div class="ph-split-img">
+        <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG" alt="Styling">
+      </div>
+      <div class="ph-split-content">
+        <div class="ph-gold-line" style="margin: 0 0 2rem 0;"></div>
+        <h2 class="ph-reveal">Peng Hair Styling</h2>
+        <p class="ph-reveal">Professional installation and styling services by master artisans. Experience personalized care that brings your vision to life with precision and artistry.</p>
+        <a href="/styling" class="ph-btn ph-reveal" style="align-self:flex-start" target="_parent">View Services</a>
+      </div>
     </div>
-    <div class="ph-split-content">
-      <div class="ph-gold-line" style="margin: 0 0 2rem 0;"></div>
-      <h2 class="ph-reveal">Peng Hair Styling</h2>
-      <p class="ph-reveal">Professional installation and styling services by master artisans. Experience personalized care that brings your vision to life with precision and artistry.</p>
-      <a href="/styling" class="ph-btn ph-reveal" style="align-self:flex-start" target="_parent">View Services</a>
-    </div>
-  </section>
+  </div>
 
-  <!-- Parallax 2 -->
-  <section class="ph-parallax" id="ph-par2">
-    <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ceceb112e1086ef6e/1771106638474/IMG_3445.JPG" alt="Quality" id="ph-par2-img">
-    <div class="ph-parallax-content">
-      <h2 class="ph-reveal">Uncompromising Quality</h2>
-      <p class="ph-reveal">100% Raw Donor Hair</p>
+  <!-- Editorial 2 — Uncompromising Quality -->
+  <div class="ph-editorial-wrap" style="padding-top:0;">
+    <div class="ph-editorial">
+      <div class="ph-editorial-content ph-reveal-left">
+        <div class="ph-gold-line" style="margin: 0 0 2rem 0;"></div>
+        <h2>Uncompromising Quality</h2>
+        <p>100% raw donor hair, ethically sourced and double-drawn for maximum fullness from root to tip. Every wig is a commitment to excellence you can see and feel.</p>
+      </div>
+      <div class="ph-editorial-img">
+        <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ceceb112e1086ef6e/1771106638474/IMG_3445.JPG" alt="Uncompromising Quality">
+      </div>
     </div>
-  </section>
+  </div>
 
   <!-- Why Section -->
   <section class="ph-section ph-dark" id="ph-why">
@@ -716,14 +742,6 @@ window.toggleCart = function(){
 };
 updateCartUI();
 
-// ---- PARALLAX ----
-document.getElementById('ph-overlay').addEventListener('scroll', function(){
-  const scrollY = (document.getElementById('ph-overlay')||window).scrollTop||window.scrollY;
-  const p1 = document.getElementById('ph-par1');
-  const p2 = document.getElementById('ph-par2');
-  if(p1){const img=document.getElementById('ph-par1-img');const r=p1.getBoundingClientRect();if(img&&r.bottom>0&&r.top<window.innerHeight)img.style.transform=`translateY(${r.top*0.2}px)`;}
-  if(p2){const img=document.getElementById('ph-par2-img');const r=p2.getBoundingClientRect();if(img&&r.bottom>0&&r.top<window.innerHeight)img.style.transform=`translateY(${r.top*0.2}px)`;}
-});
 
 // ---- FEATURED PRODUCTS FROM SUPABASE ----
 (function loadFeatured(){
