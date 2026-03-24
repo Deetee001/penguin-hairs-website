@@ -66,9 +66,11 @@ html{scroll-behavior:smooth;}
 .ph-close-menu{position:absolute;top:2rem;right:2rem;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;}
 
 /* ---- Shop Hero ---- */
-#ph-shop-hero{position:relative;height:45vh;min-height:300px;display:flex;align-items:center;justify-content:center;z-index:2;background:rgba(0,0,0,0.4);overflow:hidden;margin-top:0;}
-#ph-shop-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.7),rgba(0,0,0,0.5));}
-.ph-shop-hero-content{position:relative;z-index:2;text-align:center;padding:2rem;}
+#ph-shop-hero{position:relative;height:55vh;min-height:360px;display:flex;align-items:center;justify-content:center;z-index:2;background:#0a0a0a;overflow:hidden;margin-top:0;}
+.ph-hero-slide{position:absolute;inset:0;background-size:cover;background-position:center top;opacity:0;transition:opacity 1.4s ease;filter:brightness(0.55);}
+.ph-hero-slide.active{opacity:1;}
+#ph-shop-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,rgba(0,0,0,0.15) 50%,rgba(0,0,0,0.45) 100%);z-index:1;}
+.ph-shop-hero-content{position:relative;z-index:2;text-align:center;padding:2rem;background:rgba(255,255,255,0.06);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);border:1px solid rgba(255,255,255,0.1);border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.1);padding:2.5rem 3.5rem;}
 .ph-shop-hero-content h1{font-size:clamp(3rem,7vw,6rem);font-weight:300;letter-spacing:0.08em;background:linear-gradient(135deg,#fff 30%,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1rem;opacity:0;animation:phFadeUp 1s ease forwards 0.3s;}
 .ph-shop-hero-content p{font-size:1rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.6);opacity:0;animation:phFadeUp 1s ease forwards 0.6s;}
 
@@ -356,8 +358,9 @@ html{scroll-behavior:smooth;}
   .ph-card-price{font-size:1.05rem;font-weight:700;}
   .ph-card-footer{flex-direction:column;align-items:stretch;gap:0.5rem;}
   .ph-quick-btn{width:100%;padding:0.75rem;font-size:0.72rem;text-align:center;}
-  .ph-shop-hero-content h1{font-size:clamp(2.2rem,9vw,3.5rem);}
-  .ph-shop-hero-content p{font-size:0.9rem;letter-spacing:0.18em;}
+  .ph-shop-hero-content h1{font-size:clamp(2rem,8vw,3.2rem);}
+  .ph-shop-hero-content p{font-size:0.85rem;letter-spacing:0.18em;}
+  .ph-shop-hero-content{padding:1.8rem 2rem;}
   #ph-filters{top:60px;}
   .ph-filter-btn{padding:0.65rem 1rem;font-size:0.76rem;}
   /* modal / checkout */
@@ -1173,12 +1176,50 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();}
     PRODUCTS=await res.json();
     filteredProducts=[...PRODUCTS];
     document.getElementById('ph-count').textContent=`Showing all ${PRODUCTS.length} styles`;
+    initHeroSlideshow(PRODUCTS);
     renderProducts();
   } catch(e){
     grid.innerHTML='<div class="ph-grid-loading"><p style="color:rgba(255,255,255,0.3)">Failed to load collection. Please refresh.</p></div>';
     console.error(e);
   }
 })();
+
+function initHeroSlideshow(products){
+  const hero=document.getElementById('ph-shop-hero');
+  // Collect one image per product (skip videos)
+  const images=[];
+  products.forEach(p=>{
+    let urls=[];
+    try{ urls=Array.isArray(p.image_urls)?p.image_urls:JSON.parse(p.image_urls||'[]'); }catch(e){}
+    const first=urls.find(u=>u&&!u.match(/\.(mp4|mov|webm)$/i));
+    if(first) images.push(first);
+  });
+  if(images.length<2) return; // not enough images, keep static fallback
+
+  // Shuffle so it feels fresh each visit
+  for(let i=images.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [images[i],images[j]]=[images[j],images[i]];
+  }
+
+  // Create slide elements (preload up to 8)
+  const pool=images.slice(0,8);
+  pool.forEach((src,i)=>{
+    const el=document.createElement('div');
+    el.className='ph-hero-slide'+(i===0?' active':'');
+    el.style.backgroundImage=`url(${src})`;
+    hero.insertBefore(el,hero.firstChild);
+  });
+
+  // Crossfade cycle
+  let current=0;
+  const slides=hero.querySelectorAll('.ph-hero-slide');
+  setInterval(()=>{
+    slides[current].classList.remove('active');
+    current=(current+1)%slides.length;
+    slides[current].classList.add('active');
+  },4200);
+}
 
 })();
 
