@@ -435,8 +435,8 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <!-- Date filter -->
       <div class="ph-toolbar" style="justify-content:flex-start;gap:10px;flex-wrap:wrap;">
         <span style="color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;align-self:center;">Period:</span>
-        <button class="ph-btn ph-analytics-period active" data-days="1" onclick="setAnalyticsPeriod(1,this)">Today</button>
-        <button class="ph-btn ph-analytics-period" data-days="7" onclick="setAnalyticsPeriod(7,this)">7 Days</button>
+        <button class="ph-btn ph-analytics-period" data-days="1" onclick="setAnalyticsPeriod(1,this)">Today</button>
+        <button class="ph-btn ph-analytics-period active" data-days="7" onclick="setAnalyticsPeriod(7,this)">7 Days</button>
         <button class="ph-btn ph-analytics-period" data-days="30" onclick="setAnalyticsPeriod(30,this)">30 Days</button>
         <button class="ph-btn ph-analytics-period" data-days="0" onclick="setAnalyticsPeriod(0,this)">All Time</button>
       </div>
@@ -1698,7 +1698,7 @@ function prefetchCounts() {
 }
 
 // ---- ANALYTICS ----
-let analyticsDays = 1;
+let analyticsDays = 7;
 
 function setAnalyticsPeriod(days, btn) {
   analyticsDays = days;

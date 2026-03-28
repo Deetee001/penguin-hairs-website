@@ -407,6 +407,10 @@ html{scroll-behavior:smooth;}
 
   <!-- Shop Hero -->
   <section id="ph-shop-hero">
+    <!-- Fallback image shown while product slideshow loads -->
+    <div class="ph-hero-slide active" id="ph-hero-fallback">
+      <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG" alt="">
+    </div>
     <div class="ph-shop-hero-content">
       <h1>The Collection</h1>
       <p id="ph-hero-subtitle">Premium styles · 100% raw donor hair</p>
@@ -738,7 +742,7 @@ function renderProducts(){
         <div class="ph-card-overlay"></div>
       </div>
       <div class="ph-card-body">
-        <p>${p.category}</p>
+        <p style="display:flex;align-items:center;justify-content:space-between;">${p.category}${soldOut?'<span style="font-size:0.6rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#888;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);padding:0.2rem 0.5rem;border-radius:4px;">Sold Out</span>':''}</p>
         <h3>${p.name}</h3>
         <p class="ph-card-desc">${p.description||''}</p>
         <div class="ph-card-footer">
@@ -1228,6 +1232,9 @@ function initHeroSlideshow(products){
     const first=urls.find(u=>u&&!u.match(/\.(mp4|mov|webm)$/i));
     if(first) images.push(first);
   });
+  // Remove fallback once we have real images
+  const fallback=document.getElementById('ph-hero-fallback');
+  if(fallback) fallback.remove();
   if(images.length<2) return; // not enough images, keep static fallback
 
   // Shuffle so it feels fresh each visit
