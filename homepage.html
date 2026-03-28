@@ -509,7 +509,7 @@ html { scroll-behavior: smooth; }
   <div class="ph-split-wrap">
     <div class="ph-split">
       <div class="ph-split-img">
-        <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14c6e5607185c61481f/1771106639143/IMG_3448.JPG" alt="Styling">
+        <img src="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG" alt="Styling">
       </div>
       <div class="ph-split-content">
         <div class="ph-gold-line" style="margin: 0 0 2rem 0;"></div>
@@ -578,14 +578,14 @@ html { scroll-behavior: smooth; }
         </div>
         <div class="ph-footer-col">
           <h4>Support</h4>
-          <p>Shipping & Returns</p>
-          <p>Care Guide</p>
-          <p>FAQ</p>
+          <a href="mailto:info@penguinhairs.com">Shipping & Returns</a>
+          <a href="mailto:info@penguinhairs.com">Care Guide</a>
+          <a href="mailto:info@penguinhairs.com">FAQ</a>
         </div>
         <div class="ph-footer-col">
           <h4>Contact</h4>
-          <p>info@penguinhairs.com</p>
-          <p>Instagram: @penguinhairs</p>
+          <a href="mailto:info@penguinhairs.com">info@penguinhairs.com</a>
+          <a href="https://instagram.com/penguinhairs" target="_blank" rel="noopener">@penguinhairs</a>
         </div>
       </div>
       <div class="ph-footer-bottom">
@@ -613,7 +613,7 @@ html { scroll-behavior: smooth; }
       <span>Total</span>
       <span id="ph-cart-total">$0.00</span>
     </div>
-    <button class="ph-btn ph-btn-gold" style="width:100%" onclick="alert('Checkout integration coming soon!')">Proceed to Checkout</button>
+    <button class="ph-btn ph-btn-gold" style="width:100%" onclick="goToShopCheckout()">Proceed to Checkout</button>
   </div>
 </div>
 </div><!-- end ph-overlay -->
@@ -743,6 +743,10 @@ function updateCartUI(){
 window.toggleCart = function(){
   document.getElementById('ph-cart-panel').classList.toggle('open');
   document.getElementById('ph-cart-overlay').style.display = document.getElementById('ph-cart-panel').classList.contains('open') ? 'block' : 'none';
+};
+window.goToShopCheckout = function(){
+  try { window.top.location.href = 'https://www.penguinhairs.com/shop'; }
+  catch(e) { window.parent.location.href = 'https://www.penguinhairs.com/shop'; }
 };
 updateCartUI();
 

@@ -409,7 +409,7 @@ html{scroll-behavior:smooth;}
   <section id="ph-shop-hero">
     <div class="ph-shop-hero-content">
       <h1>The Collection</h1>
-      <p>12 premium styles · 100% raw donor hair</p>
+      <p id="ph-hero-subtitle">Premium styles · 100% raw donor hair</p>
     </div>
   </section>
 
@@ -1194,6 +1194,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();}
     PRODUCTS=await res.json();
     filteredProducts=[...PRODUCTS];
     document.getElementById('ph-count').textContent=`Showing all ${PRODUCTS.length} styles`;
+    document.getElementById('ph-hero-subtitle').textContent=`${PRODUCTS.length} premium styles · 100% raw donor hair`;
     initHeroSlideshow(PRODUCTS);
     renderProducts();
   } catch(e){
