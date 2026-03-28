@@ -785,7 +785,7 @@ window.carouselStep=(dir)=>{
 window.openModal=(id)=>{
   selectedProduct=PRODUCTS.find(p=>p.id===id);
   if(!selectedProduct) return;
-  trackEvent({ event_type: 'product_view', page: 'shop', product_id: String(selectedProduct.id), product_name: selectedProduct.name });
+  try { trackEvent({ event_type: 'product_view', page: 'shop', product_id: String(selectedProduct.id), product_name: selectedProduct.name }); } catch(e) {}
   selection={length:'',closure:'',color:'',weight:''};
   const modalMedia=document.getElementById('ph-modal-media');
   const prevBtn=document.getElementById('ph-carousel-prev');
@@ -1229,21 +1229,6 @@ function initHeroSlideshow(products){
   },4200);
 }
 
-})();
-
-// Navigate parent Squarespace window for internal links
-document.querySelectorAll('a[target="_parent"]').forEach(function(link) {
-  link.addEventListener('click', function(e) {
-    e.preventDefault();
-    var href = 'https://www.penguinhairs.com' + this.getAttribute('href');
-    try {
-      window.top.location.href = href;
-    } catch(err) {
-      window.parent.location.href = href;
-    }
-  });
-});
-
 // ---- ANALYTICS ----
 const SB_ANALYTICS_URL = 'https://plfcipgceshrozsdcgjq.supabase.co/rest/v1/analytics_events';
 const SB_ANALYTICS_HEADERS = {
@@ -1269,4 +1254,19 @@ function trackEvent(payload) {
   localStorage.setItem(key, Date.now());
   trackEvent({ event_type: 'page_view', page: 'shop' });
 })();
+
+})();
+
+// Navigate parent Squarespace window for internal links
+document.querySelectorAll('a[target="_parent"]').forEach(function(link) {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    var href = 'https://www.penguinhairs.com' + this.getAttribute('href');
+    try {
+      window.top.location.href = href;
+    } catch(err) {
+      window.parent.location.href = href;
+    }
+  });
+});
 </script>
