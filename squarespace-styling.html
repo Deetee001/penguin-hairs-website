@@ -239,7 +239,7 @@ input[type="date"]{cursor:pointer;}
         <h2 class="ph-reveal">Our Services</h2>
         <p class="ph-reveal">Professional care from master artisans</p>
       </div>
-      <div class="ph-services-grid" style="padding-bottom:5rem;">
+      <div class="ph-services-grid" id="ph-svcs-grid" style="padding-bottom:5rem;">
         <div class="ph-service-card ph-reveal-left">
           <div class="ph-service-icon"><i class="fas fa-crown"></i></div>
           <h3>Wig Installation</h3>
@@ -627,6 +627,49 @@ window.submitBooking=async ()=>{
 
 // ---- TOAST ----
 function showToast(msg){const t=document.getElementById('ph-toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
+
+// ---- DYNAMIC SERVICES (from Supabase) ----
+function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+async function loadServicesFromDB(){
+  try {
+    const res = await fetch(SB_URL+'/rest/v1/services?active=eq.true&order=sort_order.asc&select=*',{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    const services = await res.json();
+    if (!Array.isArray(services)||!services.length) return;
+
+    // Render service cards
+    const grid = document.getElementById('ph-svcs-grid');
+    const revealClasses = ['ph-reveal-left','ph-reveal-right'];
+    grid.innerHTML = services.map((s,i)=>{
+      const bv = escHtml(s.booking_value||s.name);
+      return `<div class="ph-service-card ${revealClasses[i%2]}">
+        <div class="ph-service-icon"><i class="${escHtml(s.icon||'fas fa-star')}"></i></div>
+        <h3>${escHtml(s.name)}</h3>
+        <div class="ph-service-meta">
+          <span class="ph-duration"><i class="far fa-clock"></i> ${escHtml(s.duration||'')}</span>
+          <span class="ph-price-tag">From $${s.price_from||0}</span>
+        </div>
+        <p>${escHtml(s.description||'')}</p>
+        <button class="ph-book-btn" data-bv="${bv}" onclick="document.getElementById('ph-booking').scrollIntoView({behavior:'smooth'});document.getElementById('ph-service-select').value=this.dataset.bv">Book This Service</button>
+      </div>`;
+    }).join('');
+
+    // Re-run scroll reveal on dynamically added cards
+    setTimeout(()=>{
+      grid.querySelectorAll('.ph-reveal-left,.ph-reveal-right').forEach(el=>el.classList.add('ph-active'));
+    },100);
+
+    // Populate booking select
+    const sel = document.getElementById('ph-service-select');
+    sel.innerHTML = '<option value="">Choose a service...</option>' +
+      services.map(s=>`<option value="${escHtml(s.booking_value||s.name)}">${escHtml(s.name)} \u2014 from $${s.price_from||0}</option>`).join('');
+
+  } catch(e){ /* fail silently \u2014 hardcoded fallback stays visible */ }
+}
+
+loadServicesFromDB();
 
 })();
 

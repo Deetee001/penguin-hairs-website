@@ -179,6 +179,10 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-confirm-msg{font-size:14px;color:#aaa;line-height:1.6;}
 .ph-confirm-name{color:#e0e0e0;font-weight:700;}
 
+/* ---- SERVICES ---- */
+.ph-svc-icon{width:40px;height:40px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#d4af37;font-size:16px;}
+.ph-icon-preview{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:#1a1a1a;border-radius:8px;color:#d4af37;font-size:20px;margin-top:6px;}
+
 /* ---- MOBILE PRODUCT CARDS ---- */
 .ph-mob-list{display:none;flex-direction:column;border-top:1px solid #1a1a1a;}
 .ph-mob-card{background:#111;border-bottom:1px solid #1a1a1a;padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
@@ -272,6 +276,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <div class="ph-stat"><div class="ph-stat-num" id="stat-categories">—</div><div class="ph-stat-label">Categories</div></div>
       <div class="ph-stat"><div class="ph-stat-num" id="stat-orders">—</div><div class="ph-stat-label">Total Orders</div></div>
       <div class="ph-stat"><div class="ph-stat-num" id="stat-upcoming">—</div><div class="ph-stat-label">Upcoming Appts</div></div>
+      <div class="ph-stat"><div class="ph-stat-num" id="stat-services">—</div><div class="ph-stat-label">Active Services</div></div>
     </div>
 
     <!-- Tabs -->
@@ -279,6 +284,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <button class="ph-tab active" onclick="switchTab('products')">Products</button>
       <button class="ph-tab" onclick="switchTab('orders')">Orders</button>
       <button class="ph-tab" onclick="switchTab('appointments')">Appointments</button>
+      <button class="ph-tab" onclick="switchTab('services')">Services</button>
     </div>
 
     <!-- Products Tab -->
@@ -382,6 +388,37 @@ tr:hover td{background:rgba(212,175,55,.04);}
           </div>
           <div class="ph-appt-mob-list" id="ph-appts-mob-list"></div>
           <div class="ph-empty" id="ph-appts-empty" style="display:none">No appointments yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services Tab -->
+    <div id="tab-services" style="display:none">
+      <div class="ph-toolbar" style="justify-content:flex-end;">
+        <button class="ph-btn ph-btn-gold" onclick="openAddServiceModal()">+ Add Service</button>
+      </div>
+      <div class="ph-table-wrap">
+        <div class="ph-loading" id="ph-svcs-loading">
+          <div class="ph-loading-spin"></div>
+          <div>Loading services...</div>
+        </div>
+        <div id="ph-svcs-container" style="display:none">
+          <table>
+            <thead>
+              <tr>
+                <th>Icon</th>
+                <th>Name</th>
+                <th>Duration</th>
+                <th>From</th>
+                <th>Active</th>
+                <th>Sort</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ph-svcs-body"></tbody>
+          </table>
+          <div class="ph-mob-list" id="ph-svcs-mob-list"></div>
+          <div class="ph-empty" id="ph-svcs-empty" style="display:none">No services found.</div>
         </div>
       </div>
     </div>
@@ -558,6 +595,89 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <span class="ph-save-status" id="ph-appt-save-status"></span>
       <button class="ph-btn ph-btn-outline" onclick="closeApptModal()">Cancel</button>
       <button class="ph-btn ph-btn-gold" onclick="saveApptChanges()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Service Edit / Add Modal -->
+<div class="ph-modal-bg" id="ph-svc-modal">
+  <div class="ph-modal">
+    <div class="ph-modal-head">
+      <h2 id="ph-svc-modal-title">Add Service</h2>
+      <button class="ph-modal-close" onclick="closeServiceModal()">&times;</button>
+    </div>
+    <div class="ph-modal-body">
+      <input type="hidden" id="fs-id">
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label>Service Name</label>
+          <input type="text" id="fs-name" placeholder="e.g. Wig Installation">
+        </div>
+        <div class="ph-form-group">
+          <label>Duration</label>
+          <input type="text" id="fs-duration" placeholder="e.g. 2 hours">
+        </div>
+      </div>
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label>Price From (USD)</label>
+          <input type="number" id="fs-price" placeholder="150" min="0">
+        </div>
+        <div class="ph-form-group">
+          <label>Sort Order</label>
+          <input type="number" id="fs-sort" placeholder="1" min="0">
+        </div>
+      </div>
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label>Icon (Font Awesome class)</label>
+          <input type="text" id="fs-icon" placeholder="fas fa-crown" oninput="updateIconPreview()">
+          <span class="ph-hint">e.g. fas fa-crown &nbsp;|&nbsp; fas fa-cut &nbsp;|&nbsp; fas fa-palette &nbsp;|&nbsp; fas fa-spa</span>
+          <div class="ph-icon-preview" id="fs-icon-preview"><i class="fas fa-star"></i></div>
+        </div>
+        <div class="ph-form-group">
+          <label>Booking Value</label>
+          <input type="text" id="fs-booking-value" placeholder="Wig Installation">
+          <span class="ph-hint">Value stored when a client books this service. Usually same as the service name.</span>
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
+          <label>Description</label>
+          <textarea id="fs-desc" placeholder="Service description shown on the styling page..."></textarea>
+        </div>
+      </div>
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label style="margin-bottom:10px;">Visibility</label>
+          <label class="ph-form-check">
+            <input type="checkbox" id="fs-active" checked>
+            Show on styling page
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="ph-modal-foot">
+      <span class="ph-save-status" id="ph-svc-save-status"></span>
+      <button class="ph-btn ph-btn-outline" onclick="closeServiceModal()">Cancel</button>
+      <button class="ph-btn ph-btn-gold" onclick="saveService()">Save Service</button>
+    </div>
+  </div>
+</div>
+
+<!-- Service Delete Confirm Modal -->
+<div class="ph-modal-bg" id="ph-svc-confirm-modal">
+  <div class="ph-modal" style="max-width:400px;">
+    <div class="ph-modal-head">
+      <h2>Delete Service</h2>
+      <button class="ph-modal-close" onclick="closeSvcConfirm()">&times;</button>
+    </div>
+    <div class="ph-modal-body">
+      <p class="ph-confirm-msg">Are you sure you want to delete <span class="ph-confirm-name" id="ph-svc-confirm-name"></span>? This cannot be undone.</p>
+    </div>
+    <div class="ph-modal-foot">
+      <button class="ph-btn ph-btn-outline" onclick="closeSvcConfirm()">Cancel</button>
+      <button class="ph-btn ph-btn-danger" onclick="confirmDeleteService()">Delete</button>
     </div>
   </div>
 </div>
@@ -1166,7 +1286,7 @@ document.getElementById('ph-confirm-modal').addEventListener('click', function(e
 document.getElementById('ph-appt-modal').addEventListener('click', function(e){ if(e.target===this) closeApptModal(); });
 
 // ---- TABS ----
-const TAB_NAMES = ['products','orders','appointments'];
+const TAB_NAMES = ['products','orders','appointments','services'];
 function switchTab(tab) {
   TAB_NAMES.forEach((t, i) => {
     document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
@@ -1174,6 +1294,7 @@ function switchTab(tab) {
   });
   if (tab === 'orders' && !ordersLoaded) loadOrders();
   if (tab === 'appointments' && !apptsLoaded) loadAppointments();
+  if (tab === 'services' && !servicesLoaded) loadServices();
 }
 
 // ---- ORDERS ----
@@ -1303,6 +1424,213 @@ function renderAppointments() {
   });
 }
 
+// ---- SERVICES ----
+let allServices = [];
+let servicesLoaded = false;
+let deleteSvcTargetId = null;
+
+async function loadServices() {
+  try {
+    allServices = await sbFetch('services?order=sort_order.asc,id.asc&select=*');
+    servicesLoaded = true;
+    document.getElementById('stat-services').textContent = allServices.filter(s=>s.active).length;
+    renderServicesTable();
+    renderServicesCards();
+    document.getElementById('ph-svcs-loading').style.display = 'none';
+    document.getElementById('ph-svcs-container').style.display = 'block';
+  } catch(e) {
+    document.getElementById('ph-svcs-loading').innerHTML = '<p style="color:#e05555;padding:20px">Failed to load services. Check console.</p>';
+    console.error(e);
+  }
+}
+
+function renderServicesTable() {
+  const tbody = document.getElementById('ph-svcs-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  document.getElementById('ph-svcs-empty').style.display = allServices.length ? 'none' : 'block';
+  allServices.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="ph-svc-icon"><i class="${escHtml(s.icon||'fas fa-star')}"></i></div></td>
+      <td><strong>${escHtml(s.name)}</strong></td>
+      <td style="color:#888">${escHtml(s.duration||'—')}</td>
+      <td style="color:#d4af37">$${s.price_from||0}</td>
+      <td>
+        <label class="ph-toggle">
+          <input type="checkbox" ${s.active?'checked':''} onchange="toggleSvcField(${s.id},'active',this.checked)">
+          <span class="ph-toggle-slider"></span>
+        </label>
+      </td>
+      <td style="color:#666">${s.sort_order||0}</td>
+      <td>
+        <div class="ph-actions">
+          <button class="ph-btn-sm ph-edit-btn" onclick="openEditServiceModal(${s.id})">Edit</button>
+          <button class="ph-btn-sm ph-del-btn" onclick="openConfirmDeleteService(${s.id},'${escHtml(s.name)}')">Delete</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderServicesCards() {
+  const list = document.getElementById('ph-svcs-mob-list');
+  if (!list) return;
+  if (!allServices.length) { list.innerHTML = '<div class="ph-mob-empty">No services found.</div>'; return; }
+  list.innerHTML = allServices.map(s => `<div class="ph-mob-card">
+    <div class="ph-mob-card-top">
+      <div class="ph-mob-thumb-icon" style="font-size:18px"><i class="${escHtml(s.icon||'fas fa-star')}"></i></div>
+      <div class="ph-mob-info">
+        <div class="ph-mob-name">${escHtml(s.name)}</div>
+        <div class="ph-mob-meta">
+          <span style="color:#888;font-size:12px">${escHtml(s.duration||'')}</span>
+          <span class="ph-mob-price">$${s.price_from||0}</span>
+        </div>
+      </div>
+    </div>
+    <div class="ph-mob-toggles">
+      <div class="ph-mob-toggle-item" style="border-right:none">
+        <span class="ph-mob-toggle-label">Active</span>
+        <label class="ph-toggle">
+          <input type="checkbox" ${s.active?'checked':''} onchange="toggleSvcField(${s.id},'active',this.checked)">
+          <span class="ph-toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="ph-mob-actions">
+      <button class="ph-mob-edit" onclick="openEditServiceModal(${s.id})">✏ Edit</button>
+      <button class="ph-mob-del" onclick="openConfirmDeleteService(${s.id},'${escHtml(s.name)}')">🗑 Delete</button>
+    </div>
+  </div>`).join('');
+}
+
+async function toggleSvcField(id, field, value) {
+  try {
+    await sbFetch(`services?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({[field]: value, updated_at: new Date().toISOString()})
+    });
+    const s = allServices.find(x=>x.id===id);
+    if (s) { s[field] = value; document.getElementById('stat-services').textContent = allServices.filter(x=>x.active).length; }
+  } catch(e) {
+    console.error('Toggle failed', e);
+    alert('Failed to update. Please try again.');
+    loadServices();
+  }
+}
+
+function openAddServiceModal() {
+  document.getElementById('ph-svc-modal-title').textContent = 'Add Service';
+  document.getElementById('fs-id').value = '';
+  document.getElementById('fs-name').value = '';
+  document.getElementById('fs-duration').value = '';
+  document.getElementById('fs-price').value = '';
+  document.getElementById('fs-sort').value = allServices.length + 1;
+  document.getElementById('fs-icon').value = '';
+  document.getElementById('fs-booking-value').value = '';
+  document.getElementById('fs-desc').value = '';
+  document.getElementById('fs-active').checked = true;
+  document.getElementById('ph-svc-save-status').textContent = '';
+  updateIconPreview();
+  document.getElementById('ph-svc-modal').classList.add('open');
+}
+
+function openEditServiceModal(id) {
+  const s = allServices.find(x=>x.id===id);
+  if (!s) return;
+  document.getElementById('ph-svc-modal-title').textContent = 'Edit Service';
+  document.getElementById('fs-id').value = s.id;
+  document.getElementById('fs-name').value = s.name;
+  document.getElementById('fs-duration').value = s.duration || '';
+  document.getElementById('fs-price').value = s.price_from || '';
+  document.getElementById('fs-sort').value = s.sort_order || 0;
+  document.getElementById('fs-icon').value = s.icon || '';
+  document.getElementById('fs-booking-value').value = s.booking_value || '';
+  document.getElementById('fs-desc').value = s.description || '';
+  document.getElementById('fs-active').checked = !!s.active;
+  document.getElementById('ph-svc-save-status').textContent = '';
+  updateIconPreview();
+  document.getElementById('ph-svc-modal').classList.add('open');
+}
+
+function closeServiceModal() {
+  document.getElementById('ph-svc-modal').classList.remove('open');
+}
+
+function updateIconPreview() {
+  const cls = document.getElementById('fs-icon').value.trim() || 'fas fa-star';
+  document.getElementById('fs-icon-preview').innerHTML = `<i class="${escHtml(cls)}"></i>`;
+}
+
+async function saveService() {
+  const id = document.getElementById('fs-id').value;
+  const name = document.getElementById('fs-name').value.trim();
+  if (!name) { alert('Service name is required.'); return; }
+
+  const payload = {
+    name,
+    duration: document.getElementById('fs-duration').value.trim() || null,
+    price_from: parseInt(document.getElementById('fs-price').value, 10) || 0,
+    sort_order: parseInt(document.getElementById('fs-sort').value, 10) || 0,
+    icon: document.getElementById('fs-icon').value.trim() || null,
+    booking_value: document.getElementById('fs-booking-value').value.trim() || name,
+    description: document.getElementById('fs-desc').value.trim() || null,
+    active: document.getElementById('fs-active').checked,
+    updated_at: new Date().toISOString()
+  };
+
+  const statusEl = document.getElementById('ph-svc-save-status');
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'ph-save-status saving';
+
+  try {
+    if (id) {
+      await sbFetch(`services?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+    } else {
+      await sbFetch('services', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    statusEl.textContent = 'Saved!';
+    statusEl.className = 'ph-save-status saved';
+    servicesLoaded = false;
+    await loadServices();
+    setTimeout(closeServiceModal, 800);
+  } catch(e) {
+    let msg = e.message || 'Unknown error';
+    try { const p = JSON.parse(msg); msg = p.message || p.details || p.hint || msg; } catch(_) {}
+    statusEl.textContent = 'Error: ' + msg;
+    statusEl.className = 'ph-save-status error';
+    console.error(e);
+  }
+}
+
+function openConfirmDeleteService(id, name) {
+  deleteSvcTargetId = id;
+  document.getElementById('ph-svc-confirm-name').textContent = name;
+  document.getElementById('ph-svc-confirm-modal').classList.add('open');
+}
+
+function closeSvcConfirm() {
+  deleteSvcTargetId = null;
+  document.getElementById('ph-svc-confirm-modal').classList.remove('open');
+}
+
+async function confirmDeleteService() {
+  if (!deleteSvcTargetId) return;
+  try {
+    await sbFetch(`services?id=eq.${deleteSvcTargetId}`, { method: 'DELETE' });
+    closeSvcConfirm();
+    servicesLoaded = false;
+    await loadServices();
+  } catch(e) {
+    alert('Failed to delete. Check console.');
+    console.error(e);
+  }
+}
+
+document.getElementById('ph-svc-modal').addEventListener('click', function(e){ if(e.target===this) closeServiceModal(); });
+document.getElementById('ph-svc-confirm-modal').addEventListener('click', function(e){ if(e.target===this) closeSvcConfirm(); });
+
 // Pre-load order + appointment counts on page start
 function prefetchCounts() {
   sbFetch('orders?select=id').then(r => {
@@ -1312,6 +1640,9 @@ function prefetchCounts() {
     const today = new Date().toISOString().split('T')[0];
     const upcoming = r.filter(a => a.date >= today && a.status !== 'cancelled').length;
     document.getElementById('stat-upcoming').textContent = upcoming;
+  }).catch(()=>{});
+  sbFetch('services?select=id,active').then(r => {
+    document.getElementById('stat-services').textContent = r.filter(s=>s.active).length;
   }).catch(()=>{});
 }
 
