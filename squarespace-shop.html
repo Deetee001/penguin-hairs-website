@@ -603,6 +603,7 @@ const SHIPPING_RATES = { CA: 15, US: 20, GB: 35, AU: 35, NG: 25, GH: 25 };
 let PRODUCTS = [];
 let filteredProducts = [];
 let currentFilter = 'All';
+let currentClosure = 'All';
 let currentSearch = '';
 let currentSort = 'default';
 let selectedProduct = null;
@@ -756,13 +757,20 @@ window.filterProducts=(type,value,btn)=>{
   currentFilter=value;
   applyFilters();
 };
+window.filterClosure=(value,btn)=>{
+  document.querySelectorAll('.ph-closure-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentClosure=value;
+  applyFilters();
+};
 window.searchProducts=(val)=>{currentSearch=val.toLowerCase();applyFilters();};
 window.sortProducts=(val)=>{currentSort=val;renderProducts();};
 function applyFilters(){
   filteredProducts=PRODUCTS.filter(p=>{
     const catOk=currentFilter==='All'||p.category===currentFilter;
+    const closureOk=currentClosure==='All'||(p.closures||[]).some(c=>c.split('|')[0]===currentClosure);
     const searchOk=!currentSearch||p.name.toLowerCase().includes(currentSearch)||p.category.toLowerCase().includes(currentSearch);
-    return catOk&&searchOk;
+    return catOk&&closureOk&&searchOk;
   });
   renderProducts();
 }
@@ -1079,6 +1087,12 @@ async function processPayment(token) {
     });
     const data = await res.json();
     if (data.success) {
+      // Track purchase event for each item before clearing cart
+      try {
+        cart.forEach(item => {
+          trackEvent({ event_type: 'purchase', page: 'shop', product_id: String(item.id), product_name: item.name, amount: Math.round(item.price * item.qty * 100) });
+        });
+      } catch(e) {}
       cart = []; saveCart(); updateCartUI();
       document.getElementById('ph-cart-panel').classList.remove('open');
       document.getElementById('ph-cart-overlay').style.display = 'none';
