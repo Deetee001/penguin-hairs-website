@@ -785,6 +785,7 @@ window.carouselStep=(dir)=>{
 window.openModal=(id)=>{
   selectedProduct=PRODUCTS.find(p=>p.id===id);
   if(!selectedProduct) return;
+  trackEvent({ event_type: 'product_view', page: 'shop', product_id: String(selectedProduct.id), product_name: selectedProduct.name });
   selection={length:'',closure:'',color:'',weight:''};
   const modalMedia=document.getElementById('ph-modal-media');
   const prevBtn=document.getElementById('ph-carousel-prev');
@@ -1242,4 +1243,30 @@ document.querySelectorAll('a[target="_parent"]').forEach(function(link) {
     }
   });
 });
+
+// ---- ANALYTICS ----
+const SB_ANALYTICS_URL = 'https://plfcipgceshrozsdcgjq.supabase.co/rest/v1/analytics_events';
+const SB_ANALYTICS_HEADERS = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=minimal'
+};
+
+function trackEvent(payload) {
+  fetch(SB_ANALYTICS_URL, {
+    method: 'POST',
+    headers: SB_ANALYTICS_HEADERS,
+    body: JSON.stringify(payload)
+  }).catch(function(){});
+}
+
+// Page view (throttled 30 min)
+(function() {
+  var key = 'ph_pv_shop';
+  var last = parseInt(localStorage.getItem(key) || '0', 10);
+  if (Date.now() - last < 30 * 60 * 1000) return;
+  localStorage.setItem(key, Date.now());
+  trackEvent({ event_type: 'page_view', page: 'shop' });
+})();
 </script>

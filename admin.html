@@ -23,6 +23,8 @@ body{font-family:'Lato',sans-serif;background:#0a0a0a;color:#e0e0e0;min-height:1
 .ph-btn-outline{background:transparent;border:1px solid #444;color:#aaa;}
 .ph-btn-outline:hover{border-color:#d4af37;color:#d4af37;}
 .ph-btn-danger{background:#c0392b;color:#fff;}
+.ph-analytics-period{background:transparent;border:1px solid #333;color:#888;}
+.ph-analytics-period.active{background:#d4af37;border-color:#d4af37;color:#0a0a0a;}
 
 .ph-main{padding:32px;max-width:1400px;margin:0 auto;}
 
@@ -285,6 +287,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <button class="ph-tab" onclick="switchTab('orders')">Orders</button>
       <button class="ph-tab" onclick="switchTab('appointments')">Appointments</button>
       <button class="ph-tab" onclick="switchTab('services')">Services</button>
+      <button class="ph-tab" onclick="switchTab('analytics')">Analytics</button>
     </div>
 
     <!-- Products Tab -->
@@ -419,6 +422,49 @@ tr:hover td{background:rgba(212,175,55,.04);}
           </table>
           <div class="ph-mob-list" id="ph-svcs-mob-list"></div>
           <div class="ph-empty" id="ph-svcs-empty" style="display:none">No services found.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="tab-analytics" style="display:none">
+      <!-- Date filter -->
+      <div class="ph-toolbar" style="justify-content:flex-start;gap:10px;flex-wrap:wrap;">
+        <span style="color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;align-self:center;">Period:</span>
+        <button class="ph-btn ph-analytics-period active" data-days="1" onclick="setAnalyticsPeriod(1,this)">Today</button>
+        <button class="ph-btn ph-analytics-period" data-days="7" onclick="setAnalyticsPeriod(7,this)">7 Days</button>
+        <button class="ph-btn ph-analytics-period" data-days="30" onclick="setAnalyticsPeriod(30,this)">30 Days</button>
+        <button class="ph-btn ph-analytics-period" data-days="0" onclick="setAnalyticsPeriod(0,this)">All Time</button>
+      </div>
+
+      <!-- Page views -->
+      <h3 style="color:#d4af37;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0 0 14px;">Page Views</h3>
+      <div class="ph-stats" style="margin-bottom:28px;">
+        <div class="ph-stat"><div class="ph-stat-num" id="an-pv-homepage">—</div><div class="ph-stat-label">Homepage</div></div>
+        <div class="ph-stat"><div class="ph-stat-num" id="an-pv-shop">—</div><div class="ph-stat-label">Shop</div></div>
+        <div class="ph-stat"><div class="ph-stat-num" id="an-pv-styling">—</div><div class="ph-stat-label">Styling</div></div>
+        <div class="ph-stat"><div class="ph-stat-num" id="an-pv-total">—</div><div class="ph-stat-label">Total</div></div>
+      </div>
+
+      <!-- Top products -->
+      <h3 style="color:#d4af37;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0 0 14px;">Product Interest</h3>
+      <div class="ph-table-wrap">
+        <div class="ph-loading" id="ph-an-loading"><div class="ph-loading-spin"></div><div>Loading analytics...</div></div>
+        <div id="ph-an-container" style="display:none">
+          <div class="ph-scroll-table">
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Product</th>
+                  <th>Views</th>
+                  <th>Purchases</th>
+                  <th>Conversion</th>
+                </tr>
+              </thead>
+              <tbody id="ph-an-body"></tbody>
+            </table>
+          </div>
+          <div class="ph-empty" id="ph-an-empty" style="display:none">No data yet for this period.</div>
         </div>
       </div>
     </div>
@@ -1286,7 +1332,7 @@ document.getElementById('ph-confirm-modal').addEventListener('click', function(e
 document.getElementById('ph-appt-modal').addEventListener('click', function(e){ if(e.target===this) closeApptModal(); });
 
 // ---- TABS ----
-const TAB_NAMES = ['products','orders','appointments','services'];
+const TAB_NAMES = ['products','orders','appointments','services','analytics'];
 function switchTab(tab) {
   TAB_NAMES.forEach((t, i) => {
     document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
@@ -1295,6 +1341,7 @@ function switchTab(tab) {
   if (tab === 'orders' && !ordersLoaded) loadOrders();
   if (tab === 'appointments' && !apptsLoaded) loadAppointments();
   if (tab === 'services' && !servicesLoaded) loadServices();
+  if (tab === 'analytics') loadAnalytics();
 }
 
 // ---- ORDERS ----
@@ -1644,6 +1691,82 @@ function prefetchCounts() {
   sbFetch('services?select=id,active').then(r => {
     document.getElementById('stat-services').textContent = r.filter(s=>s.active).length;
   }).catch(()=>{});
+}
+
+// ---- ANALYTICS ----
+let analyticsDays = 1;
+
+function setAnalyticsPeriod(days, btn) {
+  analyticsDays = days;
+  document.querySelectorAll('.ph-analytics-period').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAnalytics();
+}
+
+async function loadAnalytics() {
+  document.getElementById('ph-an-loading').style.display = 'flex';
+  document.getElementById('ph-an-container').style.display = 'none';
+
+  // Build date filter
+  let dateFilter = '';
+  if (analyticsDays > 0) {
+    const since = new Date(Date.now() - analyticsDays * 86400000).toISOString();
+    dateFilter = `&created_at=gte.${since}`;
+  }
+
+  try {
+    const events = await sbFetch(`analytics_events?select=event_type,page,product_id,product_name,amount${dateFilter}&order=created_at.desc`);
+
+    // Page views
+    const pageViews = events.filter(e => e.event_type === 'page_view');
+    document.getElementById('an-pv-homepage').textContent = pageViews.filter(e => e.page === 'homepage').length;
+    document.getElementById('an-pv-shop').textContent     = pageViews.filter(e => e.page === 'shop').length;
+    document.getElementById('an-pv-styling').textContent  = pageViews.filter(e => e.page === 'styling').length;
+    document.getElementById('an-pv-total').textContent    = pageViews.length;
+
+    // Product views and purchases — group by product_id
+    const productViews    = events.filter(e => e.event_type === 'product_view');
+    const productPurchases = events.filter(e => e.event_type === 'purchase');
+
+    // Aggregate
+    const map = {};
+    productViews.forEach(e => {
+      if (!map[e.product_id]) map[e.product_id] = { name: e.product_name, views: 0, purchases: 0 };
+      map[e.product_id].views++;
+    });
+    productPurchases.forEach(e => {
+      if (!map[e.product_id]) map[e.product_id] = { name: e.product_name, views: 0, purchases: 0 };
+      map[e.product_id].purchases++;
+    });
+
+    const rows = Object.values(map).sort((a, b) => b.views - a.views);
+    const tbody = document.getElementById('ph-an-body');
+    tbody.innerHTML = '';
+
+    if (rows.length === 0) {
+      document.getElementById('ph-an-empty').style.display = 'block';
+    } else {
+      document.getElementById('ph-an-empty').style.display = 'none';
+      rows.forEach(r => {
+        const conv = r.views > 0 && r.purchases > 0
+          ? ((r.purchases / r.views) * 100).toFixed(1) + '%'
+          : '—';
+        tbody.innerHTML += `<tr>
+          <td style="text-align:left;">${r.name || '—'}</td>
+          <td style="text-align:center;">${r.views}</td>
+          <td style="text-align:center;">${r.purchases}</td>
+          <td style="text-align:center;">${conv}</td>
+        </tr>`;
+      });
+    }
+
+    document.getElementById('ph-an-loading').style.display = 'none';
+    document.getElementById('ph-an-container').style.display = 'block';
+  } catch(e) {
+    document.getElementById('ph-an-loading').style.display = 'none';
+    document.getElementById('ph-an-container').style.display = 'block';
+    document.getElementById('ph-an-empty').style.display = 'block';
+  }
 }
 
 // Load products on page start

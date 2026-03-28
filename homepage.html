@@ -814,4 +814,23 @@ document.querySelectorAll('a[target="_parent"]').forEach(function(link) {
     }
   });
 });
+
+// ---- ANALYTICS ----
+(function() {
+  var THROTTLE_MS = 30 * 60 * 1000; // 30 minutes
+  var key = 'ph_pv_homepage';
+  var last = parseInt(localStorage.getItem(key) || '0', 10);
+  if (Date.now() - last < THROTTLE_MS) return;
+  localStorage.setItem(key, Date.now());
+  fetch('https://plfcipgceshrozsdcgjq.supabase.co/rest/v1/analytics_events', {
+    method: 'POST',
+    headers: {
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU',
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ event_type: 'page_view', page: 'homepage' })
+  }).catch(function(){});
+})();
 </script>
