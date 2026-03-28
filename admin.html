@@ -750,6 +750,22 @@ tr:hover td{background:rgba(212,175,55,.04);}
 </div>
 
 <script>
+// ---- ADMIN PASSWORD GATE ----
+(function(){
+  var ADMIN_PW = 'PenguinAdmin2025'; // Change this password as needed
+  var stored = sessionStorage.getItem('ph_admin_auth');
+  if(stored === ADMIN_PW) return; // already authenticated this session
+  var entered = prompt('Penguin Hairs Admin\nEnter password to continue:');
+  if(entered !== ADMIN_PW) {
+    document.body.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;font-family:Lato,sans-serif;">'
+      +'<p style="font-family:Cormorant Garamond,serif;font-size:2rem;color:#d4af37;letter-spacing:0.15em;margin-bottom:1rem;">Access Denied</p>'
+      +'<p style="color:rgba(255,255,255,0.4);font-size:0.85rem;">Incorrect password.</p>'
+      +'</div>';
+    return;
+  }
+  sessionStorage.setItem('ph_admin_auth', ADMIN_PW);
+})();
+
 // ---- CONFIG ----
 const SUPABASE_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';

@@ -508,6 +508,19 @@ html{scroll-behavior:smooth;}
 </div><!-- end ph-overlay -->
 <div id="ph-cart-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1999;display:none" onclick="toggleCart()"></div>
 
+<!-- Back to top -->
+<button id="ph-back-top" title="Back to top" onclick="document.getElementById('ph-overlay').scrollTo({top:0,behavior:'smooth'})" style="position:fixed;bottom:168px;right:20px;z-index:9999990;width:44px;height:44px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:16px;cursor:pointer;display:none;align-items:center;justify-content:center;transition:all 0.3s;backdrop-filter:blur(8px);"><i class="fas fa-chevron-up"></i></button>
+
+<!-- WhatsApp -->
+<a href="https://wa.me/YOURPHONENUMBER" target="_blank" rel="noopener" id="ph-whatsapp-btn" title="Chat on WhatsApp" style="position:fixed;bottom:104px;right:20px;z-index:9999990;width:52px;height:52px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,0.35);text-decoration:none;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fab fa-whatsapp" style="color:white;font-size:24px;"></i></a>
+
+<!-- Cookie consent -->
+<div id="ph-cookie" style="position:fixed;bottom:0;left:0;right:0;z-index:9999993;background:rgba(10,10,10,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(212,175,55,0.18);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+  <p style="flex:1;font-size:0.82rem;color:rgba(255,255,255,0.6);min-width:200px;line-height:1.5;">We use cookies to enhance your experience and analyse site traffic. <a href="mailto:info@penguinhairs.com" style="color:#d4af37;text-decoration:none;">Privacy Policy</a></p>
+  <button onclick="phCookieAccept()" style="background:#d4af37;color:#000;border:none;padding:0.5rem 1.5rem;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-radius:2px;font-family:'Lato',sans-serif;">Accept</button>
+  <button onclick="phCookieDecline()" style="background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.18);padding:0.5rem 1rem;font-size:0.75rem;cursor:pointer;border-radius:2px;font-family:'Lato',sans-serif;">Decline</button>
+</div>
+
 <!-- Checkout Modal -->
 <div id="ph-co-modal">
   <div class="ph-co-panel">
@@ -1306,4 +1319,26 @@ document.querySelectorAll('a[target="_parent"]').forEach(function(link) {
     }
   });
 });
+
+// ---- BACK TO TOP ----
+(function(){
+  var overlay = document.getElementById('ph-overlay');
+  var btn = document.getElementById('ph-back-top');
+  overlay.addEventListener('scroll', function(){
+    btn.style.display = overlay.scrollTop > 400 ? 'flex' : 'none';
+  });
+})();
+
+// ---- COOKIE CONSENT ----
+(function(){
+  if(localStorage.getItem('ph_cookies')) document.getElementById('ph-cookie').style.display='none';
+})();
+window.phCookieAccept = function(){
+  localStorage.setItem('ph_cookies','accepted');
+  document.getElementById('ph-cookie').style.display='none';
+};
+window.phCookieDecline = function(){
+  localStorage.setItem('ph_cookies','declined');
+  document.getElementById('ph-cookie').style.display='none';
+};
 </script>
