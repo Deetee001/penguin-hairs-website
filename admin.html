@@ -103,8 +103,9 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-save-status.error{color:#e05555;}
 
 /* ---- TABS ---- */
-.ph-tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid #222;}
-.ph-tab{padding:11px 22px;background:none;border:none;border-bottom:2px solid transparent;color:#666;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all .2s;margin-bottom:-1px;}
+.ph-tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid #222;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.ph-tabs::-webkit-scrollbar{display:none;}
+.ph-tab{padding:11px 22px;background:none;border:none;border-bottom:2px solid transparent;color:#666;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all .2s;margin-bottom:-1px;white-space:nowrap;flex-shrink:0;}
 .ph-tab:hover{color:#d4af37;}
 .ph-tab.active{color:#d4af37;border-bottom-color:#d4af37;}
 @media(max-width:700px){.ph-tab{padding:10px 12px;font-size:11px;letter-spacing:.5px;}}
@@ -229,6 +230,9 @@ tr:hover td{background:rgba(212,175,55,.04);}
   /* hide desktop table, show mobile cards */
   .ph-table-wrap table{display:none;}
   .ph-mob-list{display:flex;}
+  /* analytics table — no mob-list fallback, keep it visible and scrollable */
+  #tab-analytics .ph-table-wrap table{display:table;}
+  #tab-analytics .ph-scroll-table table{min-width:360px;}
 
   /* form rows go 1-col */
   .ph-form-row{grid-template-columns:1fr;}
