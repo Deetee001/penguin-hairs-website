@@ -59,8 +59,8 @@ html{scroll-behavior:smooth;}
 .ph-cart-count{position:absolute;top:-5px;right:-5px;background:#d4af37;color:#000;font-size:0.65rem;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
 .ph-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:0.5rem;}
 .ph-hamburger span{display:block;width:24px;height:1px;background:white;transition:all 0.3s;}
-.ph-mobile-menu{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.98);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
-.ph-mobile-menu.open{display:flex;}
+.ph-mobile-menu{display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.98);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:2rem;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
+.ph-mobile-menu.open{opacity:1;pointer-events:all;}
 .ph-mobile-menu a{color:white;text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;letter-spacing:0.1em;transition:color 0.3s;}
 .ph-mobile-menu a:hover{color:#d4af37;}
 .ph-close-menu{position:absolute;top:2rem;right:2rem;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;}
@@ -843,6 +843,17 @@ window.openModal=(id)=>{
   document.getElementById('ph-modal').style.display='flex';
   document.body.style.overflow='hidden';
 
+  // Touch swipe on carousel image panel
+  const modalImg=document.querySelector('.ph-modal-img');
+  let _swipeX=null;
+  modalImg.ontouchstart=e=>{ _swipeX=e.touches[0].clientX; };
+  modalImg.ontouchend=e=>{
+    if(_swipeX===null||carouselImages.length<2) return;
+    const diff=_swipeX-e.changedTouches[0].clientX;
+    if(Math.abs(diff)>40) carouselStep(diff>0?1:-1);
+    _swipeX=null;
+  };
+
   // Mobile: shrink image as user scrolls the form panel
   if(window.innerWidth<=768){
     const imgPanel=document.querySelector('.ph-modal-img');
@@ -866,20 +877,24 @@ window.selectOpt=(type,value,btn)=>{
   const _name=v=>v&&v.includes('|')?v.split('|')[0]:(v||'');
   const _base=v=>v&&v.includes('|')?parseInt(v.split('|')[1],10)||0:selectedProduct.price;
   const _up=v=>v&&v.includes('|')?parseInt(v.split('|')[1],10)||0:0;
-  // Compute live price once length is chosen
-  if(selection.length){
-    const total=_base(selection.length)+_up(selection.closure)+_up(selection.color)+_up(selection.weight);
-    selection._price=total;
-    document.getElementById('ph-modal-price').textContent='$'+total;
-  }
+  // Always compute and show live price
+  const base=selection.length?_base(selection.length):selectedProduct.price;
+  const total=base+_up(selection.closure)+_up(selection.color)+_up(selection.weight);
+  selection._price=total;
+  document.getElementById('ph-modal-price').textContent='$'+total;
+  const addBtn=document.getElementById('ph-add-btn');
+  const sum=document.getElementById('ph-sel-summary');
   const allSelected=selection.length&&selection.closure&&selection.color&&selection.weight;
   if(allSelected){
-    const total=selection._price||selectedProduct.price;
-    const sum=document.getElementById('ph-sel-summary');
     sum.style.display='block';
     sum.innerHTML=`<strong style="color:#d4af37;display:block;margin-bottom:0.5rem">Your Selection</strong>${_name(selection.length)} · ${_name(selection.closure)} · ${_name(selection.color)} · ${_name(selection.weight)}`;
-    document.getElementById('ph-add-btn').disabled=false;
-    document.getElementById('ph-add-btn').textContent='Add to Bag — $'+total;
+    addBtn.disabled=false;
+    addBtn.textContent='Add to Bag — $'+total;
+  } else {
+    sum.style.display='none';
+    addBtn.disabled=true;
+    const missing=!selection.length?'Length':!selection.closure?'Closure':!selection.color?'Color':'Weight';
+    addBtn.textContent='Select a '+missing+' to continue';
   }
 };
 // ---- CHECKOUT ----
