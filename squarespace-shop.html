@@ -58,7 +58,7 @@ html{scroll-behavior:smooth;}
 @media(max-width:768px){#ph-canvas{display:none;}}
 
 /* ---- Nav ---- */
-#ph-nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.5rem 3rem;display:flex;align-items:center;justify-content:space-between;transition:all 0.5s ease;}
+#ph-nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.5rem 3rem;display:flex;align-items:center;justify-content:space-between;transition:background 0.5s ease,padding 0.5s ease,border-color 0.5s ease;}
 #ph-nav.scrolled{background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,175,55,0.15);padding:1rem 3rem;}
 .ph-logo{display:flex;align-items:center;gap:0.75rem;text-decoration:none;}
 .ph-logo span{font-size:1.5rem;}
@@ -80,7 +80,7 @@ html{scroll-behavior:smooth;}
 
 /* ---- Shop Hero ---- */
 #ph-shop-hero{position:relative;height:55vh;min-height:360px;display:flex;align-items:center;justify-content:center;z-index:2;background:#0a0a0a;overflow:hidden;margin-top:0;}
-.ph-hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.4s ease;will-change:opacity;transform:translateZ(0);}
+.ph-hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.4s ease;transform:translateZ(0);}
 .ph-hero-slide.active{opacity:1;}
 .ph-hero-slide img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;filter:brightness(0.6);}
 #ph-shop-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,rgba(0,0,0,0.15) 50%,rgba(0,0,0,0.45) 100%);z-index:1;}
@@ -114,7 +114,7 @@ html{scroll-behavior:smooth;}
 .ph-sort-select option{background:#1a1a1a;}
 
 .ph-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;}
-.ph-card{position:relative;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.1);transition:all 0.5s ease;}
+.ph-card{position:relative;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.1);transition:border-color 0.4s ease,box-shadow 0.4s ease,transform 0.4s ease;}
 /* No overflow:hidden on .ph-card — Chrome Android flickers when backdrop-filter child is inside overflow:hidden parent */
 .ph-card:hover{border-color:rgba(212,175,55,0.45);transform:translateY(-8px);box-shadow:0 25px 60px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.12);}
 .ph-card-img{aspect-ratio:3/4;height:auto;overflow:hidden;position:relative;border-radius:12px 12px 0 0;}
@@ -315,10 +315,12 @@ html{scroll-behavior:smooth;}
 
 /* ---- No hover effects on touch devices (prevents bounce/flicker on tap) ---- */
 @media(hover:none){
+  .ph-card{transition:none;}
   .ph-card:hover{transform:none;box-shadow:none;border-color:transparent;}
   .ph-card:active{border-color:rgba(212,175,55,0.3);}
   .ph-card:hover .ph-card-img img,.ph-card:hover .ph-card-img video{transform:none;}
   .ph-card-overlay{display:none;}
+  .ph-card-img img,.ph-card-img video{transition:none;}
 }
 
 /* ---- Responsive ---- */
