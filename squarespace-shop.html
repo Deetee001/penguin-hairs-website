@@ -35,6 +35,7 @@ html, body { overflow: hidden !important; }
   background: #0a0a0a !important;
   scroll-behavior: smooth;
   overscroll-behavior-y: none; /* prevent Chrome Android pull-to-refresh */
+  isolation: isolate; /* guarantee stacking context so Chrome always composites overlay above canvas */
 }
 #ph-overlay::-webkit-scrollbar { width: 6px; }
 #ph-overlay::-webkit-scrollbar-track { background: #111; }
@@ -53,7 +54,7 @@ html{scroll-behavior:smooth;}
 ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:#111;} ::-webkit-scrollbar-thumb{background:#d4af37;border-radius:3px;}
 
 /* ---- Canvas ---- */
-#ph-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;will-change:transform;transform:translateZ(0);}
+#ph-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;}
 /* Canvas visible on mobile — confirmed not the flicker cause */
 
 /* ---- Nav ---- */
@@ -158,7 +159,8 @@ html{scroll-behavior:smooth;}
 .ph-card--soldout .ph-quick-btn{opacity:0.35;cursor:not-allowed;pointer-events:none;}
 
 /* ---- Product Modal ---- */
-.ph-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:3000;display:flex;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(15px);}
+.ph-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:3000;display:flex;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(15px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.22s ease,visibility 0.22s ease;}
+.ph-modal-bg.ph-modal-open{opacity:1;visibility:visible;pointer-events:auto;}
 .ph-modal{
   background:rgba(18,18,18,0.85);
   backdrop-filter:blur(30px) saturate(160%);
@@ -548,7 +550,7 @@ html{scroll-behavior:smooth;}
 </div>
 
 <!-- Modal -->
-<div class="ph-modal-bg" id="ph-modal" style="display:none" onclick="closeModal(event)">
+<div class="ph-modal-bg" id="ph-modal" onclick="closeModal(event)">
   <div class="ph-modal" id="ph-modal-inner">
     <div class="ph-modal-img">
       <div id="ph-modal-media" style="width:100%;height:100%;"></div>
@@ -1054,7 +1056,7 @@ window.openModal=(id)=>{
     <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${(selectedProduct.closures||[]).map(c=>optBtn('closure',c)).join('')}</div></div>
     <div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${(selectedProduct.colors||[]).map(c=>optBtn('color',c)).join('')}</div></div>
     <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${(selectedProduct.weights||[]).map(w=>optBtn('weight',w)).join('')}</div></div>`;
-  document.getElementById('ph-modal').style.display='flex';
+  document.getElementById('ph-modal').classList.add('ph-modal-open');
   document.body.style.overflow='hidden';
 
   // Load reviews and reset form
@@ -1079,17 +1081,19 @@ window.openModal=(id)=>{
     _swipeX=null;
   };
 
-  // Mobile: shrink image as user scrolls the form panel
+  // Mobile: shrink image as user scrolls the form panel (transform only — no height/layout writes)
   if(window.innerWidth<=768){
     const imgPanel=document.querySelector('.ph-modal-img');
     const bodyPanel=document.querySelector('.ph-modal-body');
     imgPanel.style.height='44vh';
+    imgPanel.style.willChange='clip-path';
+    imgPanel.style.transformOrigin='top center';
     bodyPanel._shrinkHandler && bodyPanel.removeEventListener('scroll',bodyPanel._shrinkHandler);
     bodyPanel._shrinkHandler=function(){
-      const scrolled=Math.min(bodyPanel.scrollTop,140);
-      const pct=scrolled/140;
-      const h=44-(pct*20); // 44vh → 24vh
-      imgPanel.style.height=h+'vh';
+      var scrolled=Math.min(bodyPanel.scrollTop,140);
+      var pct=scrolled/140;
+      // Clip bottom of image (compositor-only, no layout reflow)
+      imgPanel.style.clipPath='inset(0 0 '+(pct*45)+'% 0)';
     };
     bodyPanel.addEventListener('scroll',bodyPanel._shrinkHandler,{passive:true});
   }
@@ -1490,11 +1494,13 @@ window.addToCart=()=>{
 };
 window.closeModal=(e)=>{if(e.target.id==='ph-modal')closeModalDirect();};
 window.closeModalDirect=()=>{
-  document.getElementById('ph-modal').style.display='none';
+  document.getElementById('ph-modal').classList.remove('ph-modal-open');
   document.body.style.overflow='';
-  // Reset image height for next open
+  // Reset image panel for next open
   const imgPanel=document.querySelector('.ph-modal-img');
-  if(imgPanel) imgPanel.style.height='';
+  if(imgPanel){ imgPanel.style.height=''; imgPanel.style.clipPath=''; imgPanel.style.willChange=''; }
+  var bodyPanel=document.querySelector('.ph-modal-body');
+  if(bodyPanel && bodyPanel._shrinkHandler){ bodyPanel.removeEventListener('scroll',bodyPanel._shrinkHandler); bodyPanel._shrinkHandler=null; }
   // Clean up swipe listeners
   var modalInner = document.getElementById('ph-modal-inner');
   if(modalInner._touchHandler) modalInner.removeEventListener('touchstart', modalInner._touchHandler);
