@@ -36,7 +36,6 @@ html, body { overflow: hidden !important; }
   scroll-behavior: smooth;
   overscroll-behavior-y: none; /* prevent Chrome Android pull-to-refresh */
   isolation: isolate; /* explicit stacking context above canvas */
-  transform: translate3d(0,0,0); /* force GPU compositor layer — always above WebGL canvas */
 }
 #ph-overlay::-webkit-scrollbar { width: 6px; }
 #ph-overlay::-webkit-scrollbar-track { background: #111; }
