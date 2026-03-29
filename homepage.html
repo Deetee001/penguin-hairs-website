@@ -7,6 +7,16 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta name="description" content="Penguin Hairs — 100% raw donor wigs &amp; luxury hair extensions. Double drawn quality, natural shine, lasts 2–5 years. Shop premium styles in Toronto.">
+<meta property="og:title" content="Penguin Hairs | Premium Raw Donor Wigs">
+<meta property="og:description" content="100% raw donor hair wigs. Double drawn quality, fully customisable. Shop the collection.">
+<meta property="og:image" content="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG">
+<meta property="og:url" content="https://www.penguinhairs.com/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Penguin Hairs | Premium Raw Donor Wigs">
+<meta name="twitter:description" content="100% raw donor hair wigs. Double drawn quality, fully customisable.">
+<meta name="twitter:image" content="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG">
 
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -641,6 +651,9 @@ html { scroll-behavior: smooth; }
   <button onclick="phCookieDecline()" style="background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.18);padding:0.5rem 1rem;font-size:0.75rem;cursor:pointer;border-radius:2px;font-family:'Lato',sans-serif;">Decline</button>
 </div>
 
+<!-- Scroll progress -->
+<div id="ph-scroll-progress" style="position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,#d4af37,#f4d03f);z-index:9999999;pointer-events:none;transition:width 0.08s linear;"></div>
+
 <!-- Scripts -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -888,4 +901,14 @@ window.phGoToProduct = function(productId){
   try { window.top.location.href = 'https://www.penguinhairs.com/shop'; }
   catch(e) { window.parent.location.href = 'https://www.penguinhairs.com/shop'; }
 };
+
+// ---- SCROLL PROGRESS ----
+(function(){
+  var bar = document.getElementById('ph-scroll-progress');
+  var overlay = document.getElementById('ph-overlay');
+  overlay.addEventListener('scroll', function(){
+    var max = overlay.scrollHeight - overlay.clientHeight;
+    if(max > 0) bar.style.width = (overlay.scrollTop / max * 100) + '%';
+  });
+})();
 </script>
