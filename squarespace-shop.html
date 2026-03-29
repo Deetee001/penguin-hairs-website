@@ -54,11 +54,10 @@ html{scroll-behavior:smooth;}
 
 /* ---- Canvas ---- */
 #ph-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;will-change:transform;transform:translateZ(0);}
-/* TEMP TEST: hide canvas on mobile to isolate flicker cause */
-@media(max-width:768px){#ph-canvas{display:none;}}
+/* Canvas visible on mobile — confirmed not the flicker cause */
 
 /* ---- Nav ---- */
-#ph-nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.5rem 3rem;display:flex;align-items:center;justify-content:space-between;transition:background 0.5s ease,padding 0.5s ease,border-color 0.5s ease;}
+#ph-nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.5rem 3rem;display:flex;align-items:center;justify-content:space-between;transition:background 0.5s ease,padding 0.5s ease,border-color 0.5s ease;transform:translateZ(0);}
 #ph-nav.scrolled{background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,175,55,0.15);padding:1rem 3rem;}
 .ph-logo{display:flex;align-items:center;gap:0.75rem;text-decoration:none;}
 .ph-logo span{font-size:1.5rem;}
@@ -418,6 +417,11 @@ html{scroll-behavior:smooth;}
   #ph-cart-panel { background: #0d0d0d !important; }
   .ph-modal-bg { background: rgba(0,0,0,0.92) !important; }
   #ph-co-modal { background: rgba(0,0,0,0.95) !important; }
+  /* Simplify card shadow — inset box-shadow forces GPU repaint on every composite */
+  .ph-card { box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important; }
+  .ph-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important; }
+  /* Contain card paint to its own layer */
+  .ph-card { contain: layout style paint; }
 }
 
 /* ---- Mobile Filter Drawer ---- */
@@ -833,8 +837,34 @@ let cart = JSON.parse(localStorage.getItem('ph-cart')||'[]');
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-// ---- NAV ----
-document.getElementById('ph-overlay').addEventListener('scroll',()=>document.getElementById('ph-nav').classList.toggle('scrolled',(document.getElementById('ph-overlay')||window).scrollTop||window.scrollY>80));
+// ---- SCROLL HANDLER (consolidated, RAF-throttled) ----
+(function(){
+  var overlay = document.getElementById('ph-overlay');
+  var nav = document.getElementById('ph-nav');
+  var bar, btn;
+  var ticking = false;
+  function onScroll(){
+    if(!ticking){
+      requestAnimationFrame(function(){
+        var st = overlay.scrollTop;
+        // nav scrolled class
+        nav.classList.toggle('scrolled', st > 80);
+        // back-to-top
+        if(!btn) btn = document.getElementById('ph-back-top');
+        if(btn) btn.style.display = st > 400 ? 'flex' : 'none';
+        // scroll progress
+        if(!bar) bar = document.getElementById('ph-scroll-progress');
+        if(bar){
+          var max = overlay.scrollHeight - overlay.clientHeight;
+          if(max > 0) bar.style.width = (st / max * 100) + '%';
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+  overlay.addEventListener('scroll', onScroll, {passive:true});
+})();
 window.toggleMenu=()=>document.getElementById('ph-mobile-menu').classList.toggle('open');
 
 // ---- CART ----
@@ -1674,24 +1704,7 @@ document.querySelectorAll('a[target="_parent"]').forEach(function(link) {
   });
 });
 
-// ---- BACK TO TOP ----
-(function(){
-  var overlay = document.getElementById('ph-overlay');
-  var btn = document.getElementById('ph-back-top');
-  overlay.addEventListener('scroll', function(){
-    btn.style.display = overlay.scrollTop > 400 ? 'flex' : 'none';
-  });
-})();
-
-// ---- SCROLL PROGRESS ----
-(function(){
-  var bar = document.getElementById('ph-scroll-progress');
-  var overlay = document.getElementById('ph-overlay');
-  overlay.addEventListener('scroll', function(){
-    var max = overlay.scrollHeight - overlay.clientHeight;
-    if(max > 0) bar.style.width = (overlay.scrollTop / max * 100) + '%';
-  });
-})();
+// (back-to-top + scroll progress merged into consolidated scroll handler above)
 
 // ---- COOKIE CONSENT ----
 (function(){
