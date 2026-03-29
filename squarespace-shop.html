@@ -35,7 +35,8 @@ html, body { overflow: hidden !important; }
   background: #0a0a0a !important;
   scroll-behavior: smooth;
   overscroll-behavior-y: none; /* prevent Chrome Android pull-to-refresh */
-  isolation: isolate; /* guarantee stacking context so Chrome always composites overlay above canvas */
+  isolation: isolate; /* explicit stacking context above canvas */
+  transform: translate3d(0,0,0); /* force GPU compositor layer — always above WebGL canvas */
 }
 #ph-overlay::-webkit-scrollbar { width: 6px; }
 #ph-overlay::-webkit-scrollbar-track { background: #111; }
@@ -169,6 +170,7 @@ html{scroll-behavior:smooth;}
   border-radius:20px;
   max-width:950px;width:100%;max-height:90vh;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;animation:phSlideUp 0.4s ease;
   box-shadow:0 24px 60px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.08);
+  contain: layout; /* isolate reflows so imgPanel height changes don't repaint the full page */
 }
 .ph-modal-img{position:relative;min-height:500px;overflow:hidden;border-radius:20px 0 0 20px;}
 .ph-modal-img img{width:100%;height:100%;object-fit:cover;}
@@ -1081,19 +1083,23 @@ window.openModal=(id)=>{
     _swipeX=null;
   };
 
-  // Mobile: shrink image as user scrolls the form panel (transform only — no height/layout writes)
+  // Mobile: shrink image panel as user scrolls the form (RAF-throttled, reflow contained by .ph-modal contain:layout)
   if(window.innerWidth<=768){
     const imgPanel=document.querySelector('.ph-modal-img');
     const bodyPanel=document.querySelector('.ph-modal-body');
     imgPanel.style.height='44vh';
-    imgPanel.style.willChange='clip-path';
-    imgPanel.style.transformOrigin='top center';
+    var _shrinkTicking=false;
     bodyPanel._shrinkHandler && bodyPanel.removeEventListener('scroll',bodyPanel._shrinkHandler);
     bodyPanel._shrinkHandler=function(){
-      var scrolled=Math.min(bodyPanel.scrollTop,140);
-      var pct=scrolled/140;
-      // Clip bottom of image (compositor-only, no layout reflow)
-      imgPanel.style.clipPath='inset(0 0 '+(pct*45)+'% 0)';
+      if(!_shrinkTicking){
+        requestAnimationFrame(function(){
+          var scrolled=Math.min(bodyPanel.scrollTop,140);
+          var h=44-((scrolled/140)*20); // 44vh → 24vh
+          imgPanel.style.height=h+'vh';
+          _shrinkTicking=false;
+        });
+        _shrinkTicking=true;
+      }
     };
     bodyPanel.addEventListener('scroll',bodyPanel._shrinkHandler,{passive:true});
   }
@@ -1498,7 +1504,7 @@ window.closeModalDirect=()=>{
   document.body.style.overflow='';
   // Reset image panel for next open
   const imgPanel=document.querySelector('.ph-modal-img');
-  if(imgPanel){ imgPanel.style.height=''; imgPanel.style.clipPath=''; imgPanel.style.willChange=''; }
+  if(imgPanel){ imgPanel.style.height=''; }
   var bodyPanel=document.querySelector('.ph-modal-body');
   if(bodyPanel && bodyPanel._shrinkHandler){ bodyPanel.removeEventListener('scroll',bodyPanel._shrinkHandler); bodyPanel._shrinkHandler=null; }
   // Clean up swipe listeners
