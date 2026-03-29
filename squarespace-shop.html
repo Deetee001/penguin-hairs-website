@@ -398,6 +398,21 @@ html{scroll-behavior:smooth;}
 @media(max-width:768px){
   .ph-add-sticky{position:sticky;bottom:0;background:rgba(10,10,10,0.97);padding:1rem 0 0.5rem;border-top:1px solid rgba(212,175,55,0.15);margin-top:auto;}
 }
+
+/* ---- Mobile Filter Drawer ---- */
+@media(max-width:768px){
+  .ph-filters-mobile-hidden { display:none !important; }
+  #ph-filter-btn-wrap { display:flex; justify-content:space-between; align-items:center; padding:0.6rem 1rem; border-bottom:1px solid rgba(255,255,255,0.06); }
+  #ph-filter-drawer { position:fixed; bottom:-100%; left:0; right:0; z-index:4000; background:rgba(10,10,10,0.98); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:20px 20px 0 0; border-top:1px solid rgba(212,175,55,0.2); padding:1.5rem 1.25rem 2rem; transition:bottom 0.4s cubic-bezier(0.22,1,0.36,1); max-height:85vh; overflow-y:auto; }
+  #ph-filter-drawer.open { bottom:0; }
+  #ph-filter-drawer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3999; }
+  #ph-filter-drawer-overlay.open { display:block; }
+}
+@media(min-width:769px){
+  #ph-filter-btn-wrap { display:none; }
+  #ph-filter-drawer { display:contents; }
+  .ph-drawer-header-only, .ph-drawer-footer-only { display:none !important; }
+}
 </style>
 
 <div id="ph-overlay">
@@ -442,33 +457,48 @@ html{scroll-behavior:smooth;}
 
   <!-- Filters -->
   <div id="ph-filters">
-    <div class="ph-filters-inner">
-      <div class="ph-filter-row">
-        <div class="ph-filter-group">
-          <span class="ph-filter-label">Category</span>
-          <button class="ph-filter-btn active" onclick="filterProducts('category','All',this)">All</button>
-          <button class="ph-filter-btn" onclick="filterProducts('category','Straight',this)">Straight</button>
-          <button class="ph-filter-btn" onclick="filterProducts('category','Wavy',this)">Wavy</button>
-          <button class="ph-filter-btn" onclick="filterProducts('category','Curly',this)">Curly</button>
-          <button class="ph-filter-btn" onclick="filterProducts('category','Short',this)">Short</button>
+    <!-- Mobile filter toggle button (hidden on desktop) -->
+    <div id="ph-filter-btn-wrap">
+      <button id="ph-filter-open-btn" onclick="openFilterDrawer()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:0.55rem 1.1rem;border-radius:6px;font-size:0.78rem;letter-spacing:0.1em;cursor:pointer;font-family:'Lato',sans-serif;display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-sliders-h"></i> Filters <span id="ph-filter-active-count" style="display:none;background:#d4af37;color:#000;border-radius:50%;width:18px;height:18px;font-size:0.65rem;font-weight:700;align-items:center;justify-content:center;"></span></button>
+      <span id="ph-count-mobile" style="font-size:0.75rem;color:rgba(255,255,255,0.35);"></span>
+    </div>
+    <!-- Drawer overlay -->
+    <div id="ph-filter-drawer-overlay" onclick="closeFilterDrawer()"></div>
+    <!-- Filter drawer (bottom sheet on mobile, normal on desktop) -->
+    <div id="ph-filter-drawer">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;" class="ph-drawer-header-only">
+        <span style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);">Filters</span>
+        <button onclick="closeFilterDrawer()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;">&times;</button>
+      </div>
+      <div class="ph-filters-inner">
+        <div class="ph-filter-row">
+          <div class="ph-filter-group">
+            <span class="ph-filter-label">Category</span>
+            <button class="ph-filter-btn active" onclick="filterProducts('category','All',this)">All</button>
+            <button class="ph-filter-btn" onclick="filterProducts('category','Straight',this)">Straight</button>
+            <button class="ph-filter-btn" onclick="filterProducts('category','Wavy',this)">Wavy</button>
+            <button class="ph-filter-btn" onclick="filterProducts('category','Curly',this)">Curly</button>
+            <button class="ph-filter-btn" onclick="filterProducts('category','Short',this)">Short</button>
+          </div>
+        </div>
+        <div class="ph-filter-row">
+          <div class="ph-filter-group">
+            <span class="ph-filter-label">Closure</span>
+            <button class="ph-closure-btn active" onclick="filterClosure('All',this)">All</button>
+            <button class="ph-closure-btn" onclick="filterClosure('2*4',this)">2*4</button>
+            <button class="ph-closure-btn" onclick="filterClosure('4*4',this)">4*4</button>
+            <button class="ph-closure-btn" onclick="filterClosure('5*5',this)">5*5</button>
+            <button class="ph-closure-btn" onclick="filterClosure('13*4',this)">13*4</button>
+            <button class="ph-closure-btn" onclick="filterClosure('13*6',this)">13*6</button>
+            <button class="ph-closure-btn" onclick="filterClosure('Fringe',this)">Fringe</button>
+          </div>
+        </div>
+        <div class="ph-search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search styles..." oninput="searchProducts(this.value)" id="ph-search">
         </div>
       </div>
-      <div class="ph-filter-row">
-        <div class="ph-filter-group">
-          <span class="ph-filter-label">Closure</span>
-          <button class="ph-closure-btn active" onclick="filterClosure('All',this)">All</button>
-          <button class="ph-closure-btn" onclick="filterClosure('2*4',this)">2*4</button>
-          <button class="ph-closure-btn" onclick="filterClosure('4*4',this)">4*4</button>
-          <button class="ph-closure-btn" onclick="filterClosure('5*5',this)">5*5</button>
-          <button class="ph-closure-btn" onclick="filterClosure('13*4',this)">13*4</button>
-          <button class="ph-closure-btn" onclick="filterClosure('13*6',this)">13*6</button>
-          <button class="ph-closure-btn" onclick="filterClosure('Fringe',this)">Fringe</button>
-        </div>
-      </div>
-      <div class="ph-search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="Search styles..." oninput="searchProducts(this.value)" id="ph-search">
-      </div>
+      <button onclick="clearAllFilters();closeFilterDrawer();" style="width:100%;margin-top:1.25rem;padding:0.75rem;background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-radius:6px;font-family:'Lato',sans-serif;" class="ph-drawer-footer-only">Clear All Filters</button>
     </div>
   </div>
 
@@ -511,6 +541,36 @@ html{scroll-behavior:smooth;}
       <div class="ph-selection-summary" id="ph-sel-summary" style="display:none"></div>
       <div class="ph-add-sticky">
         <button class="ph-add-btn" id="ph-add-btn" onclick="addToCart()" disabled>Select All Options to Add to Bag</button>
+      </div>
+      <!-- Reviews section -->
+      <div id="ph-reviews-section" style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:300;color:#fff;">Customer Reviews</h4>
+          <div id="ph-reviews-avg" style="display:none;text-align:right;">
+            <div id="ph-reviews-stars" style="color:#d4af37;font-size:0.9rem;letter-spacing:2px;"></div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);" id="ph-reviews-count"></div>
+          </div>
+        </div>
+        <div id="ph-reviews-list" style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;">
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.3);font-style:italic;">Loading reviews...</p>
+        </div>
+        <!-- Leave a review form (collapsed by default) -->
+        <details style="border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.75rem 1rem;">
+          <summary style="font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);cursor:pointer;list-style:none;display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-pen" style="font-size:0.7rem;"></i> Write a Review</summary>
+          <div style="margin-top:1rem;display:flex;flex-direction:column;gap:0.75rem;">
+            <input id="ph-rev-name" type="text" placeholder="Your name" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:0.6rem 0.8rem;border-radius:4px;font-size:0.85rem;font-family:'Lato',sans-serif;outline:none;">
+            <div id="ph-rev-stars-input" style="display:flex;gap:4px;font-size:1.4rem;">
+              <span data-val="1" onclick="phSetRating(1)" style="cursor:pointer;color:rgba(255,255,255,0.2);">&#9733;</span>
+              <span data-val="2" onclick="phSetRating(2)" style="cursor:pointer;color:rgba(255,255,255,0.2);">&#9733;</span>
+              <span data-val="3" onclick="phSetRating(3)" style="cursor:pointer;color:rgba(255,255,255,0.2);">&#9733;</span>
+              <span data-val="4" onclick="phSetRating(4)" style="cursor:pointer;color:rgba(255,255,255,0.2);">&#9733;</span>
+              <span data-val="5" onclick="phSetRating(5)" style="cursor:pointer;color:rgba(255,255,255,0.2);">&#9733;</span>
+            </div>
+            <textarea id="ph-rev-text" placeholder="Share your experience..." rows="3" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:0.6rem 0.8rem;border-radius:4px;font-size:0.85rem;font-family:'Lato',sans-serif;resize:vertical;outline:none;"></textarea>
+            <button onclick="phSubmitReview()" style="background:#d4af37;color:#000;border:none;padding:0.65rem 1.5rem;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-radius:4px;font-family:'Lato',sans-serif;font-weight:700;align-self:flex-start;">Submit Review</button>
+            <p id="ph-rev-msg" style="font-size:0.78rem;color:#d4af37;min-height:1rem;"></p>
+          </div>
+        </details>
       </div>
     </div>
   </div>
@@ -562,9 +622,19 @@ html{scroll-behavior:smooth;}
       <h3>Your Order</h3>
       <div class="ph-co-items" id="ph-co-items"></div>
       <hr class="ph-co-divider">
+      <!-- Promo code -->
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+        <input id="ph-promo-input" type="text" placeholder="Promo code" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:0.6rem 0.8rem;font-size:0.82rem;font-family:'Lato',sans-serif;border-radius:4px;outline:none;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <button onclick="applyPromo()" style="background:transparent;border:1px solid rgba(212,175,55,0.4);color:#d4af37;padding:0.6rem 1rem;font-size:0.75rem;letter-spacing:0.1em;cursor:pointer;border-radius:4px;font-family:'Lato',sans-serif;white-space:nowrap;">Apply</button>
+      </div>
+      <p id="ph-promo-msg" style="font-size:0.78rem;min-height:1rem;margin-bottom:0.5rem;"></p>
       <div class="ph-co-subtotal-row">
         <span>Subtotal</span>
         <span id="ph-co-subtotal-amt"></span>
+      </div>
+      <div class="ph-co-shipping-row" id="ph-co-discount-row" style="display:none;">
+        <span style="color:#d4af37;">Discount</span>
+        <span id="ph-co-discount-amt" style="color:#d4af37;"></span>
       </div>
       <div class="ph-co-shipping-row">
         <span>Shipping</span>
@@ -837,7 +907,35 @@ function applyFilters(){
     return catOk&&closureOk&&searchOk;
   });
   renderProducts();
+  // Update active filter count badge
+  var activeCount=(currentFilter!=='All'?1:0)+(currentClosure!=='All'?1:0)+(currentSearch?1:0);
+  var badge=document.getElementById('ph-filter-active-count');
+  if(badge){ badge.textContent=activeCount; badge.style.display=activeCount>0?'flex':'none'; }
+  // Sync count to mobile wrap
+  var mobileCount=document.getElementById('ph-count-mobile');
+  if(mobileCount){ var cnt=document.getElementById('ph-count'); if(cnt) mobileCount.textContent=cnt.textContent; }
 }
+
+// ---- FILTER DRAWER ----
+window.openFilterDrawer=function(){
+  document.getElementById('ph-filter-drawer').classList.add('open');
+  document.getElementById('ph-filter-drawer-overlay').classList.add('open');
+  document.getElementById('ph-overlay').style.overflow='hidden';
+};
+window.closeFilterDrawer=function(){
+  document.getElementById('ph-filter-drawer').classList.remove('open');
+  document.getElementById('ph-filter-drawer-overlay').classList.remove('open');
+  document.getElementById('ph-overlay').style.overflow='scroll';
+};
+window.clearAllFilters=function(){
+  currentFilter='All'; currentClosure='All'; currentSearch='';
+  document.querySelectorAll('.ph-filter-btn,.ph-closure-btn').forEach(function(b){
+    b.classList.toggle('active', b.textContent.trim()==='All');
+  });
+  var si=document.querySelector('.ph-search-box input');
+  if(si) si.value='';
+  applyFilters();
+};
 
 // ---- CAROUSEL ----
 let carouselImages=[];
@@ -906,6 +1004,17 @@ window.openModal=(id)=>{
     <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${(selectedProduct.weights||[]).map(w=>optBtn('weight',w)).join('')}</div></div>`;
   document.getElementById('ph-modal').style.display='flex';
   document.body.style.overflow='hidden';
+
+  // Load reviews and reset form
+  loadReviews(selectedProduct.id);
+  phCurrentRating=0;
+  document.querySelectorAll('#ph-rev-stars-input span').forEach(function(s){ s.style.color='rgba(255,255,255,0.2)'; });
+  var revName=document.getElementById('ph-rev-name');
+  var revText=document.getElementById('ph-rev-text');
+  var revMsg=document.getElementById('ph-rev-msg');
+  if(revName) revName.value='';
+  if(revText) revText.value='';
+  if(revMsg) revMsg.textContent='';
 
   // Touch swipe on carousel image panel
   const modalImg=document.querySelector('.ph-modal-img');
@@ -1094,14 +1203,51 @@ function getShippingCost() {
   return SHIPPING_RATES[country] || 15;
 }
 
+// ---- PROMO CODES ----
+var appliedPromo=null;
+window.applyPromo=function(){
+  var code=(document.getElementById('ph-promo-input').value||'').trim().toUpperCase();
+  var msg=document.getElementById('ph-promo-msg');
+  if(!code){ msg.style.color='#e05555'; msg.textContent='Enter a promo code.'; return; }
+  msg.style.color='rgba(255,255,255,0.4)'; msg.textContent='Checking...';
+  fetch(SB_URL+'/rest/v1/promo_codes?code=eq.'+encodeURIComponent(code)+'&active=eq.true&select=*',{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    if(!rows||rows.length===0){ msg.style.color='#e05555'; msg.textContent='Invalid or expired code.'; appliedPromo=null; updateCheckoutTotals(); return; }
+    var promo=rows[0];
+    if(promo.expires_at&&new Date(promo.expires_at)<new Date()){ msg.style.color='#e05555'; msg.textContent='This code has expired.'; appliedPromo=null; updateCheckoutTotals(); return; }
+    if(promo.max_uses&&promo.uses_count>=promo.max_uses){ msg.style.color='#e05555'; msg.textContent='This code has reached its limit.'; appliedPromo=null; updateCheckoutTotals(); return; }
+    var sub=cart.reduce(function(s,i){ return s+(i.price*(i.qty||1)); },0);
+    if(sub<promo.min_order){ msg.style.color='#e05555'; msg.textContent='Minimum order $'+promo.min_order+' required for this code.'; appliedPromo=null; updateCheckoutTotals(); return; }
+    appliedPromo=promo;
+    var savings=promo.discount_type==='percent'?(sub*promo.discount_value/100).toFixed(2):Math.min(promo.discount_value,sub).toFixed(2);
+    msg.style.color='#d4af37'; msg.textContent='✓ Code applied — saving $'+savings+'!';
+    updateCheckoutTotals();
+  })
+  .catch(function(){ msg.style.color='#e05555'; msg.textContent='Could not check code. Try again.'; });
+};
+
 function updateCheckoutTotals() {
   const subtotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
-  const shipping = getShippingCost();
-  const total = subtotal + shipping;
+  const shippingCost = getShippingCost();
+  var discount=0;
+  if(appliedPromo){
+    discount=appliedPromo.discount_type==='percent'
+      ? subtotal*appliedPromo.discount_value/100
+      : Math.min(appliedPromo.discount_value,subtotal);
+    discount=Math.round(discount*100)/100;
+  }
+  const total = subtotal - discount + shippingCost;
   sqTotalStr = '$' + total.toFixed(2);
   document.getElementById('ph-co-subtotal-amt').textContent = '$' + subtotal.toFixed(2);
-  document.getElementById('ph-co-shipping-amt').textContent = '$' + shipping.toFixed(2);
+  document.getElementById('ph-co-shipping-amt').textContent = '$' + shippingCost.toFixed(2);
   document.getElementById('ph-co-total-amt').textContent = sqTotalStr;
+  var discRow=document.getElementById('ph-co-discount-row');
+  var discAmt=document.getElementById('ph-co-discount-amt');
+  if(discRow){ discRow.style.display=discount>0?'flex':'none'; }
+  if(discAmt && discount>0){ discAmt.textContent='-$'+discount.toFixed(2); }
   const payBtn = document.getElementById('ph-co-pay-btn');
   if (payBtn && payBtn.style.display !== 'none' && !payBtn.disabled) {
     payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
@@ -1143,6 +1289,13 @@ window.startCheckout = () => {
 window.closeCheckout = () => {
   document.getElementById('ph-co-modal').classList.remove('open');
   document.body.style.overflow = '';
+  appliedPromo=null;
+  var promoInput=document.getElementById('ph-promo-input');
+  var promoMsg=document.getElementById('ph-promo-msg');
+  if(promoInput) promoInput.value='';
+  if(promoMsg) promoMsg.textContent='';
+  var discRow=document.getElementById('ph-co-discount-row');
+  if(discRow) discRow.style.display='none';
 };
 
 async function getShipping() {
@@ -1183,7 +1336,7 @@ async function processPayment(token) {
     const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ cart, sourceId: token, shipping, shippingCost })
+      body: JSON.stringify({ cart, sourceId: token, shipping, shippingCost, discountCode: appliedPromo ? appliedPromo.code : null, discountAmount: appliedPromo ? (function(){ var s=cart.reduce(function(a,i){return a+i.price*i.qty;},0); var d=appliedPromo.discount_type==='percent'?s*appliedPromo.discount_value/100:Math.min(appliedPromo.discount_value,s); return Math.round(d*100)/100; })() : 0 })
     });
     const data = await res.json();
     if (data.success) {
@@ -1286,6 +1439,82 @@ window.closeModalDirect=()=>{
   if(modalInner._touchEndHandler) modalInner.removeEventListener('touchend', modalInner._touchEndHandler);
 };
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeZoom(); closeModalDirect(); } });
+
+// ---- REVIEWS ----
+var phCurrentRating=0;
+window.phSetRating=function(val){
+  phCurrentRating=val;
+  document.querySelectorAll('#ph-rev-stars-input span').forEach(function(s){
+    s.style.color=parseInt(s.dataset.val)<=val?'#d4af37':'rgba(255,255,255,0.2)';
+  });
+};
+function loadReviews(productId){
+  var list=document.getElementById('ph-reviews-list');
+  var avg=document.getElementById('ph-reviews-avg');
+  var starsEl=document.getElementById('ph-reviews-stars');
+  var countEl=document.getElementById('ph-reviews-count');
+  list.innerHTML='<p style="font-size:0.82rem;color:rgba(255,255,255,0.3);font-style:italic;">Loading reviews...</p>';
+  avg.style.display='none';
+  fetch(SB_URL+'/rest/v1/product_reviews?product_id=eq.'+productId+'&approved=eq.true&order=created_at.desc&limit=10',{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(reviews){
+    if(!Array.isArray(reviews)||reviews.length===0){
+      list.innerHTML='<p style="font-size:0.82rem;color:rgba(255,255,255,0.3);font-style:italic;">No reviews yet — be the first!</p>';
+      return;
+    }
+    var total=reviews.reduce(function(s,r){ return s+r.rating; },0);
+    var avgScore=(total/reviews.length).toFixed(1);
+    starsEl.textContent='★'.repeat(Math.round(total/reviews.length))+'☆'.repeat(5-Math.round(total/reviews.length));
+    countEl.textContent=avgScore+' · '+reviews.length+' review'+(reviews.length!==1?'s':'');
+    avg.style.display='block';
+    list.innerHTML=reviews.map(function(r){
+      var stars='★'.repeat(r.rating)+'☆'.repeat(5-r.rating);
+      var date=new Date(r.created_at).toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+      return '<div style="padding:0.85rem;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.07);">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;">'
+        +'<span style="font-size:0.82rem;font-weight:700;color:#fff;">'+r.reviewer_name+'</span>'
+        +'<span style="color:rgba(255,255,255,0.3);font-size:0.7rem;">'+date+'</span>'
+        +'</div>'
+        +'<div style="color:#d4af37;font-size:0.85rem;margin-bottom:0.4rem;">'+stars+'</div>'
+        +(r.review_text?'<p style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.65;">'+r.review_text+'</p>':'')
+        +'</div>';
+    }).join('');
+  })
+  .catch(function(){
+    list.innerHTML='<p style="font-size:0.82rem;color:rgba(255,255,255,0.3);font-style:italic;">Could not load reviews.</p>';
+  });
+}
+window.phSubmitReview=function(){
+  var name=(document.getElementById('ph-rev-name').value||'').trim();
+  var text=(document.getElementById('ph-rev-text').value||'').trim();
+  var msg=document.getElementById('ph-rev-msg');
+  if(!name){ msg.style.color='#e05555'; msg.textContent='Please enter your name.'; return; }
+  if(!phCurrentRating){ msg.style.color='#e05555'; msg.textContent='Please select a star rating.'; return; }
+  msg.style.color='rgba(255,255,255,0.4)'; msg.textContent='Submitting...';
+  fetch(SB_URL+'/rest/v1/product_reviews',{
+    method:'POST',
+    headers:{
+      'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,
+      'Content-Type':'application/json','Prefer':'return=minimal'
+    },
+    body:JSON.stringify({product_id:selectedProduct.id,reviewer_name:name,rating:phCurrentRating,review_text:text||null})
+  })
+  .then(function(r){
+    if(r.ok){
+      msg.style.color='#d4af37';
+      msg.textContent='Thank you! Your review is pending approval.';
+      document.getElementById('ph-rev-name').value='';
+      document.getElementById('ph-rev-text').value='';
+      phCurrentRating=0;
+      document.querySelectorAll('#ph-rev-stars-input span').forEach(function(s){ s.style.color='rgba(255,255,255,0.2)'; });
+    } else {
+      msg.style.color='#e05555'; msg.textContent='Could not submit. Please try again.';
+    }
+  })
+  .catch(function(){ msg.style.color='#e05555'; msg.textContent='Could not submit. Please try again.'; });
+};
 
 // ---- ZOOM LIGHTBOX ----
 window.openZoom = function(src){

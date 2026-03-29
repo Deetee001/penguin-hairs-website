@@ -1,0 +1,514 @@
+<!-- ============================================
+     PENGUIN HAIRS - ORDER TRACKING PAGE
+     Hosted on GitHub Pages, embedded via iframe
+     URL: /order-tracking on penguinhairs.com
+     ============================================ -->
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="description" content="Track your Penguin Hairs order status.">
+<meta property="og:title" content="Order Tracking | Penguin Hairs">
+<meta property="og:url" content="https://www.penguinhairs.com/order-tracking">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow: hidden !important; }
+
+#ph-overlay {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  overflow-y: scroll !important; overflow-x: hidden !important;
+  z-index: 999999 !important;
+  background: #0a0a0a !important;
+  scroll-behavior: smooth;
+}
+#ph-overlay::-webkit-scrollbar { width: 6px; }
+#ph-overlay::-webkit-scrollbar-track { background: #111; }
+#ph-overlay::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+
+#ph-app {
+  font-family: 'Lato', sans-serif;
+  color: white;
+  background: #0a0a0a;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+}
+#ph-app h1, #ph-app h2, #ph-app h3, #ph-app h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; }
+
+/* Canvas */
+#ph-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+/* Nav */
+#ph-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 1.5rem 3rem; display: flex; align-items: center; justify-content: space-between; transition: all 0.5s ease; }
+#ph-nav.scrolled { background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(212,175,55,0.15); padding: 1rem 3rem; }
+.ph-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+.ph-logo span { font-size: 1.5rem; }
+.ph-logo h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 400; letter-spacing: 0.2em; color: white; }
+.ph-nav-links { display: flex; gap: 2.5rem; align-items: center; }
+.ph-nav-links a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; transition: color 0.3s; position: relative; }
+.ph-nav-links a::after { content: ''; position: absolute; bottom: -3px; left: 0; width: 0; height: 1px; background: #d4af37; transition: width 0.3s; }
+.ph-nav-links a:hover { color: white; }
+.ph-nav-links a:hover::after { width: 100%; }
+.ph-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 0.5rem; }
+.ph-hamburger span { display: block; width: 24px; height: 1px; background: white; transition: all 0.3s; }
+.ph-mobile-menu { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.98); z-index: 999; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.ph-mobile-menu.open { opacity: 1; pointer-events: all; }
+.ph-mobile-menu a { color: white; text-decoration: none; font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; letter-spacing: 0.1em; transition: color 0.3s; }
+.ph-mobile-menu a:hover { color: #d4af37; }
+.ph-close-menu { position: absolute; top: 2rem; right: 2rem; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+
+/* Main */
+#ph-main {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 120px 2rem 6rem;
+  min-height: 100vh;
+}
+
+.ph-track-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.ph-track-header h2 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  background: linear-gradient(135deg, #fff 30%, #d4af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.75rem;
+}
+.ph-track-header p {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.1em;
+}
+
+.ph-track-form {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+.ph-track-form input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  font-family: 'Lato', sans-serif;
+  border-radius: 8px;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  transition: border-color 0.2s;
+}
+.ph-track-form input:focus { border-color: rgba(212,175,55,0.5); }
+.ph-track-form input::placeholder { text-transform: none; letter-spacing: 0; color: rgba(255,255,255,0.25); }
+.ph-track-btn {
+  background: linear-gradient(135deg, #d4af37, #f4d03f);
+  color: #000;
+  border: none;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: 'Lato', sans-serif;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.ph-track-btn:hover { opacity: 0.88; }
+.ph-track-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Status badges */
+.ph-status-badge {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.ph-status-pending   { background: rgba(255,200,0,0.15); color: #ffc800; border: 1px solid rgba(255,200,0,0.3); }
+.ph-status-processing{ background: rgba(80,140,255,0.15); color: #508cff; border: 1px solid rgba(80,140,255,0.3); }
+.ph-status-shipped   { background: rgba(160,80,255,0.15); color: #a050ff; border: 1px solid rgba(160,80,255,0.3); }
+.ph-status-delivered { background: rgba(50,200,100,0.15); color: #32c864; border: 1px solid rgba(50,200,100,0.3); }
+.ph-status-cancelled { background: rgba(220,60,60,0.15); color: #dc3c3c; border: 1px solid rgba(220,60,60,0.3); }
+
+/* Result card */
+.ph-order-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  animation: phFadeUp 0.4s ease;
+  margin-bottom: 1.5rem;
+}
+.ph-order-card-header {
+  padding: 1.5rem;
+  background: rgba(212,175,55,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.ph-order-ref {
+  font-size: 1.1rem;
+  font-family: 'Cormorant Garamond', serif;
+  color: #d4af37;
+  letter-spacing: 0.12em;
+}
+.ph-order-date {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.08em;
+}
+.ph-order-body { padding: 1.5rem; }
+.ph-order-section-title {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 0.75rem;
+}
+.ph-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 1rem;
+}
+.ph-order-item:last-child { border-bottom: none; }
+.ph-order-item-name { font-size: 0.88rem; color: white; margin-bottom: 0.2rem; }
+.ph-order-item-specs { font-size: 0.72rem; color: rgba(255,255,255,0.35); line-height: 1.4; }
+.ph-order-item-price { font-size: 0.88rem; color: #d4af37; white-space: nowrap; flex-shrink: 0; }
+.ph-order-totals { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.07); }
+.ph-order-total-row { display: flex; justify-content: space-between; margin-bottom: 0.45rem; }
+.ph-order-total-row span:first-child { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+.ph-order-total-row span:last-child { font-size: 0.85rem; color: rgba(255,255,255,0.7); }
+.ph-order-total-row.grand span { font-size: 0.88rem; color: white; font-weight: 700; }
+.ph-customer-info { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.07); }
+
+/* State messages */
+.ph-track-msg {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.9rem;
+}
+.ph-track-msg i { display: block; font-size: 2.5rem; margin-bottom: 1rem; color: rgba(255,255,255,0.15); }
+.ph-track-msg.error i { color: rgba(224,85,85,0.4); }
+.ph-track-msg.error p { color: rgba(224,85,85,0.7); }
+
+/* Back link */
+.ph-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255,255,255,0.35);
+  text-decoration: none;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  transition: color 0.3s;
+}
+.ph-back-link:hover { color: #d4af37; }
+
+@keyframes phFadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes phSpin { to { transform: rotate(360deg); } }
+.ph-spin { width: 30px; height: 30px; border: 2px solid rgba(255,255,255,0.08); border-top-color: #d4af37; border-radius: 50%; animation: phSpin 0.8s linear infinite; margin: 0 auto 1rem; }
+
+@media(max-width:768px){
+  #ph-nav { padding: 1.2rem 1.5rem; }
+  .ph-nav-links { display: none; }
+  .ph-hamburger { display: flex; }
+  #ph-main { padding: 100px 1rem 4rem; }
+  .ph-track-form { flex-direction: column; }
+  .ph-track-btn { width: 100%; }
+  .ph-order-card-header { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
+<div id="ph-overlay">
+<canvas id="ph-canvas"></canvas>
+
+<div id="ph-app">
+
+  <!-- Nav -->
+  <nav id="ph-nav">
+    <a href="/" class="ph-logo" target="_parent"><span>🐧</span><h1>PENGUIN HAIRS</h1></a>
+    <div class="ph-nav-links">
+      <a href="/" target="_parent">Home</a>
+      <a href="/shop" target="_parent">Collection</a>
+      <a href="/styling" target="_parent">Styling</a>
+    </div>
+    <button class="ph-hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  </nav>
+
+  <div class="ph-mobile-menu" id="ph-mobile-menu">
+    <button class="ph-close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
+    <a href="/" onclick="toggleMenu()" target="_parent">Home</a>
+    <a href="/shop" onclick="toggleMenu()" target="_parent">Collection</a>
+    <a href="/styling" onclick="toggleMenu()" target="_parent">Styling</a>
+  </div>
+
+  <main id="ph-main">
+    <a href="/shop" class="ph-back-link" target="_parent"><i class="fas fa-arrow-left"></i> Back to Shop</a>
+
+    <div class="ph-track-header">
+      <h2>Track Your Order</h2>
+      <p>Enter your 8-character order reference below</p>
+    </div>
+
+    <form class="ph-track-form" onsubmit="return false;">
+      <input type="text" id="ph-ref-input" placeholder="e.g. A1B2C3D4" maxlength="20" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')trackOrder()">
+      <button class="ph-track-btn" id="ph-track-btn" onclick="trackOrder()"><i class="fas fa-search"></i> Track</button>
+    </form>
+
+    <div id="ph-result"></div>
+  </main>
+
+</div>
+</div><!-- end ph-overlay -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ---- Hide Squarespace chrome ----
+(function(){
+  var s=document.createElement('style');
+  s.textContent='header,footer,.Header,.Footer,.site-header,.site-footer,.mobile-bar{display:none!important;}';
+  document.head.appendChild(s);
+})();
+
+// ---- SUPABASE ----
+var SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
+
+// ---- THREE.JS PARTICLE WAVE ----
+(function(){
+  var canvas=document.getElementById('ph-canvas');
+  var scene=new THREE.Scene();
+  var camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+  var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  camera.position.set(0,30,60);
+  camera.lookAt(0,-10,0);
+  var isMobile=window.innerWidth<768;
+  var gridSize=isMobile?50:80; var spacing=3; var total=gridSize*gridSize;
+  var geo=new THREE.BufferGeometry();
+  var p=new Float32Array(total*3);
+  var o=new Float32Array(total*3);
+  var ki=0;
+  for(var i=0;i<gridSize;i++) for(var j=0;j<gridSize;j++){
+    var x=(i-gridSize/2)*spacing, z=(j-gridSize/2)*spacing;
+    p[ki]=o[ki]=x; p[ki+1]=o[ki+1]=0; p[ki+2]=o[ki+2]=z; ki+=3;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(p,3));
+  var dc=document.createElement('canvas'); dc.width=dc.height=64;
+  var dctx=dc.getContext('2d');
+  var gr=dctx.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.4,'rgba(255,255,255,0.6)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  dctx.fillStyle=gr; dctx.fillRect(0,0,64,64);
+  var ptMat=new THREE.PointsMaterial({color:0xffffff,size:0.35,transparent:true,opacity:0.75,blending:THREE.AdditiveBlending,map:new THREE.CanvasTexture(dc),sizeAttenuation:true,depthWrite:false});
+  var pts=new THREE.Points(geo,ptMat); scene.add(pts);
+  var lg=new THREE.BufferGeometry(); var lp=[];
+  for(var i2=0;i2<gridSize;i2++) for(var j2=0;j2<gridSize;j2++){
+    var idx=(i2*gridSize+j2)*3;
+    if(j2<gridSize-1){var r=(i2*gridSize+(j2+1))*3; lp.push(p[idx],p[idx+1],p[idx+2],p[r],p[r+1],p[r+2]);}
+    if(i2<gridSize-1){var b=((i2+1)*gridSize+j2)*3; lp.push(p[idx],p[idx+1],p[idx+2],p[b],p[b+1],p[b+2]);}
+  }
+  lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));
+  var lines=new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x88ccff,transparent:true,opacity:0.08,blending:THREE.AdditiveBlending}));
+  scene.add(lines);
+  var t=0;
+  function animate(){
+    requestAnimationFrame(animate); t+=0.008;
+    var pa=pts.geometry.attributes.position.array;
+    var la=lines.geometry.attributes.position.array;
+    var pi=0;
+    for(var ii=0;ii<gridSize;ii++) for(var jj=0;jj<gridSize;jj++){
+      var ox=o[pi], oz=o[pi+2];
+      var d=Math.sqrt(ox*ox+oz*oz);
+      pa[pi+1]=Math.sin(ox*0.15+t)*8+Math.sin(oz*0.15+t*1.2)*6+Math.cos((ox+oz)*0.1+t*0.8)*4+Math.sin(d*0.1-t*2)*5;
+      pi+=3;
+    }
+    var li=0;
+    for(var ii2=0;ii2<gridSize;ii2++) for(var jj2=0;jj2<gridSize;jj2++){
+      var idx2=(ii2*gridSize+jj2)*3;
+      if(jj2<gridSize-1){var r2=(ii2*gridSize+(jj2+1))*3; la[li]=pa[idx2];la[li+1]=pa[idx2+1];la[li+2]=pa[idx2+2];la[li+3]=pa[r2];la[li+4]=pa[r2+1];la[li+5]=pa[r2+2]; li+=6;}
+      if(ii2<gridSize-1){var b2=((ii2+1)*gridSize+jj2)*3; la[li]=pa[idx2];la[li+1]=pa[idx2+1];la[li+2]=pa[idx2+2];la[li+3]=pa[b2];la[li+4]=pa[b2+1];la[li+5]=pa[b2+2]; li+=6;}
+    }
+    pts.geometry.attributes.position.needsUpdate=true;
+    lines.geometry.attributes.position.needsUpdate=true;
+    pts.rotation.y=t*0.05; lines.rotation.y=t*0.05;
+    renderer.render(scene,camera);
+  }
+  animate();
+  window.addEventListener('resize',function(){
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+})();
+
+// ---- NAV ----
+document.getElementById('ph-overlay').addEventListener('scroll',function(){
+  document.getElementById('ph-nav').classList.toggle('scrolled',document.getElementById('ph-overlay').scrollTop>80);
+});
+window.toggleMenu=function(){ document.getElementById('ph-mobile-menu').classList.toggle('open'); };
+
+// ---- STATUS CONFIG ----
+var STATUS_CLASSES = {
+  pending:    'ph-status-pending',
+  processing: 'ph-status-processing',
+  shipped:    'ph-status-shipped',
+  delivered:  'ph-status-delivered',
+  cancelled:  'ph-status-cancelled'
+};
+var STATUS_LABELS = {
+  pending:    'Pending',
+  processing: 'Processing',
+  shipped:    'Shipped',
+  delivered:  'Delivered',
+  cancelled:  'Cancelled'
+};
+
+// ---- ORDER TRACKING ----
+window.trackOrder = function(){
+  var ref = (document.getElementById('ph-ref-input').value || '').trim().toUpperCase();
+  var result = document.getElementById('ph-result');
+  var btn = document.getElementById('ph-track-btn');
+  if(!ref){
+    result.innerHTML = '<div class="ph-track-msg error"><i class="fas fa-exclamation-circle"></i><p>Please enter an order reference.</p></div>';
+    return;
+  }
+  result.innerHTML = '<div class="ph-track-msg"><div class="ph-spin"></div><p>Looking up your order...</p></div>';
+  btn.disabled = true;
+
+  // Search by last 8 chars of square_order_id (ilike) or full order ref
+  var query = SB_URL + '/rest/v1/orders?or=(square_order_id.ilike.*' + encodeURIComponent(ref) + ',square_payment_id.ilike.*' + encodeURIComponent(ref) + ')&select=*&limit=5';
+
+  fetch(query, {
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(orders){
+    btn.disabled = false;
+    if(!Array.isArray(orders) || orders.length === 0){
+      result.innerHTML = '<div class="ph-track-msg error"><i class="fas fa-search"></i><p>No order found for <strong style="color:rgba(255,255,255,0.6);">' + ref + '</strong>.<br><br>Please double-check your reference number.<br>It appears in your confirmation email as the last 8 characters.</p></div>';
+      return;
+    }
+    result.innerHTML = orders.map(function(order){ return renderOrder(order); }).join('');
+  })
+  .catch(function(){
+    btn.disabled = false;
+    result.innerHTML = '<div class="ph-track-msg error"><i class="fas fa-exclamation-triangle"></i><p>Could not look up your order. Please try again.</p></div>';
+  });
+};
+
+function renderOrder(order){
+  var ref8 = order.square_order_id ? order.square_order_id.slice(-8).toUpperCase() : (order.id || '');
+  var date = order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '';
+  var status = (order.status || 'pending').toLowerCase();
+  var statusClass = STATUS_CLASSES[status] || 'ph-status-pending';
+  var statusLabel = STATUS_LABELS[status] || status;
+
+  // Items
+  var items = [];
+  try { items = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]'); } catch(e){}
+  var itemsHtml = '';
+  if(items.length > 0){
+    itemsHtml = '<div class="ph-order-section-title" style="margin-top:1.25rem;">Items Ordered</div>';
+    itemsHtml += items.map(function(item){
+      return '<div class="ph-order-item">'
+        + '<div><div class="ph-order-item-name">' + (item.name || 'Item') + (item.qty > 1 ? ' &times;' + item.qty : '') + '</div>'
+        + (item.specs ? '<div class="ph-order-item-specs">' + item.specs + '</div>' : '') + '</div>'
+        + '<div class="ph-order-item-price">$' + ((item.price || 0) * (item.qty || 1)).toFixed(2) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // Totals
+  var subtotal = order.subtotal != null ? parseFloat(order.subtotal) : null;
+  var shipping = order.shipping_cost != null ? parseFloat(order.shipping_cost) : null;
+  var total = order.total != null ? parseFloat(order.total) : null;
+  var totalsHtml = '';
+  if(subtotal != null || total != null){
+    totalsHtml = '<div class="ph-order-totals">';
+    if(subtotal != null) totalsHtml += '<div class="ph-order-total-row"><span>Subtotal</span><span>$' + subtotal.toFixed(2) + '</span></div>';
+    if(shipping != null) totalsHtml += '<div class="ph-order-total-row"><span>Shipping</span><span>$' + shipping.toFixed(2) + '</span></div>';
+    if(total != null) totalsHtml += '<div class="ph-order-total-row grand"><span>Total</span><span>$' + total.toFixed(2) + ' CAD</span></div>';
+    totalsHtml += '</div>';
+  }
+
+  // Customer
+  var customerHtml = '';
+  if(order.customer_name){
+    customerHtml = '<div class="ph-customer-info">'
+      + '<div class="ph-order-section-title">Customer</div>'
+      + '<div style="font-size:0.85rem;color:rgba(255,255,255,0.6);">' + order.customer_name + '</div>'
+      + (order.customer_email ? '<div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-top:0.2rem;">' + order.customer_email + '</div>' : '')
+      + '</div>';
+  }
+
+  return '<div class="ph-order-card">'
+    + '<div class="ph-order-card-header">'
+    + '<div>'
+    + '<div class="ph-order-ref">Order #' + ref8 + '</div>'
+    + (date ? '<div class="ph-order-date">' + date + '</div>' : '')
+    + '</div>'
+    + '<span class="ph-status-badge ' + statusClass + '">' + statusLabel + '</span>'
+    + '</div>'
+    + '<div class="ph-order-body">'
+    + itemsHtml
+    + totalsHtml
+    + customerHtml
+    + '</div>'
+    + '</div>';
+}
+
+// ---- URL PARAM AUTO-SEARCH ----
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var ref = params.get('ref');
+  if(ref){
+    var input = document.getElementById('ph-ref-input');
+    if(input){ input.value = ref.toUpperCase(); trackOrder(); }
+  }
+})();
+
+// ---- SCROLL PROGRESS ----
+(function(){
+  var overlay = document.getElementById('ph-overlay');
+  overlay.addEventListener('scroll', function(){
+    document.getElementById('ph-nav').classList.toggle('scrolled', overlay.scrollTop > 80);
+  });
+})();
+
+// Navigate parent Squarespace window for internal links
+document.querySelectorAll('a[target="_parent"]').forEach(function(link){
+  link.addEventListener('click', function(e){
+    e.preventDefault();
+    var href = 'https://www.penguinhairs.com' + this.getAttribute('href');
+    try { window.top.location.href = href; }
+    catch(err) { window.parent.location.href = href; }
+  });
+});
+</script>
