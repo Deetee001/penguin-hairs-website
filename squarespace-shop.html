@@ -512,7 +512,7 @@ html{scroll-behavior:smooth;}
 <button id="ph-back-top" title="Back to top" onclick="document.getElementById('ph-overlay').scrollTo({top:0,behavior:'smooth'})" style="position:fixed;bottom:168px;right:20px;z-index:9999990;width:44px;height:44px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:16px;cursor:pointer;display:none;align-items:center;justify-content:center;transition:all 0.3s;backdrop-filter:blur(8px);"><i class="fas fa-chevron-up"></i></button>
 
 <!-- WhatsApp -->
-<a href="https://wa.me/YOURPHONENUMBER" target="_blank" rel="noopener" id="ph-whatsapp-btn" title="Chat on WhatsApp" style="position:fixed;bottom:104px;right:20px;z-index:9999990;width:52px;height:52px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,0.35);text-decoration:none;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fab fa-whatsapp" style="color:white;font-size:24px;"></i></a>
+<a href="https://wa.me/14376699449" target="_blank" rel="noopener" id="ph-whatsapp-btn" title="Chat on WhatsApp" style="position:fixed;bottom:104px;right:20px;z-index:9999990;width:52px;height:52px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,0.35);text-decoration:none;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fab fa-whatsapp" style="color:white;font-size:24px;"></i></a>
 
 <!-- Cookie consent -->
 <div id="ph-cookie" style="position:fixed;bottom:0;left:0;right:0;z-index:9999993;background:rgba(10,10,10,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(212,175,55,0.18);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
@@ -1229,6 +1229,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();}
     document.getElementById('ph-hero-subtitle').textContent=`${PRODUCTS.length} premium styles · 100% raw donor hair`;
     initHeroSlideshow(PRODUCTS);
     renderProducts();
+    // Auto-open product if navigated from homepage featured card
+    var pendingId = localStorage.getItem('ph_open_product');
+    if(pendingId){
+      localStorage.removeItem('ph_open_product');
+      var targetId = parseInt(pendingId,10);
+      if(!isNaN(targetId)) openModal(targetId);
+    }
   } catch(e){
     grid.innerHTML='<div class="ph-grid-loading"><p style="color:rgba(255,255,255,0.3)">Failed to load collection. Please refresh.</p></div>';
     console.error(e);
