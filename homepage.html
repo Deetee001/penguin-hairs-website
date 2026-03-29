@@ -656,6 +656,27 @@ html { scroll-behavior: smooth; }
 
 <!-- Scripts -->
 
+<!-- Email capture -->
+<div id="ph-email-capture" style="position:fixed;bottom:-200px;left:50%;transform:translateX(-50%);z-index:9999991;background:rgba(10,10,10,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(212,175,55,0.25);border-radius:12px 12px 0 0;padding:1.75rem 2rem;width:min(480px,100vw);box-shadow:0 -8px 40px rgba(0,0,0,0.5);transition:bottom 0.5s cubic-bezier(0.22,1,0.36,1);">
+  <button onclick="phEmailDismiss()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,0.35);font-size:18px;cursor:pointer;line-height:1;">&times;</button>
+  <p style="font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;color:#d4af37;margin-bottom:0.4rem;">Exclusive Offer</p>
+  <p style="font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:300;color:#fff;margin-bottom:0.3rem;">10% off your first order</p>
+  <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);margin-bottom:1.1rem;">Join the Penguin Hairs list for exclusive drops and styling tips.</p>
+  <div style="display:flex;gap:0.5rem;">
+    <input id="ph-email-input" type="email" placeholder="your@email.com" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:0.7rem 1rem;font-size:0.85rem;border-radius:4px;outline:none;font-family:'Lato',sans-serif;" onfocus="this.style.borderColor='rgba(212,175,55,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'" onkeydown="if(event.key==='Enter')phEmailSubmit()">
+    <button onclick="phEmailSubmit()" style="background:#d4af37;color:#000;border:none;padding:0.7rem 1.25rem;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-radius:4px;font-family:'Lato',sans-serif;font-weight:700;white-space:nowrap;">Subscribe</button>
+  </div>
+  <p id="ph-email-msg" style="font-size:0.78rem;color:#d4af37;margin-top:0.6rem;min-height:1rem;"></p>
+</div>
+
+<!-- Cart reminder -->
+<div id="ph-cart-reminder" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999991;background:rgba(18,14,5,0.97);border:1px solid rgba(212,175,55,0.35);border-radius:8px;padding:0.85rem 1.25rem;display:none;align-items:center;gap:1rem;box-shadow:0 4px 24px rgba(0,0,0,0.5);backdrop-filter:blur(12px);white-space:nowrap;max-width:calc(100vw - 2rem);">
+  <i class="fas fa-shopping-bag" style="color:#d4af37;font-size:1rem;"></i>
+  <span id="ph-cart-reminder-text" style="font-size:0.82rem;color:rgba(255,255,255,0.75);">You have items in your bag</span>
+  <button onclick="phGoToShop()" style="background:#d4af37;color:#000;border:none;padding:0.45rem 1rem;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:3px;font-family:'Lato',sans-serif;font-weight:700;">View Bag</button>
+  <button onclick="document.getElementById('ph-cart-reminder').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;">&times;</button>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function() {
@@ -911,4 +932,80 @@ window.phGoToProduct = function(productId){
     if(max > 0) bar.style.width = (overlay.scrollTop / max * 100) + '%';
   });
 })();
+
+// ---- EMAIL CAPTURE ----
+(function(){
+  if(localStorage.getItem('ph_email_captured')) return;
+  var banner = document.getElementById('ph-email-capture');
+  var timer = setTimeout(function(){
+    banner.style.bottom = '0';
+  }, 15000);
+  document.addEventListener('mouseleave', function handler(e){
+    if(e.clientY < 20){
+      clearTimeout(timer);
+      banner.style.bottom = '0';
+      document.removeEventListener('mouseleave', handler);
+    }
+  });
+})();
+window.phEmailDismiss = function(){
+  document.getElementById('ph-email-capture').style.bottom = '-200px';
+  localStorage.setItem('ph_email_captured','dismissed');
+};
+window.phEmailSubmit = function(){
+  var email = document.getElementById('ph-email-input').value.trim();
+  var msg = document.getElementById('ph-email-msg');
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    msg.style.color='#e05555';
+    msg.textContent='Please enter a valid email address.';
+    return;
+  }
+  msg.style.color='rgba(255,255,255,0.4)';
+  msg.textContent='Subscribing...';
+  fetch('https://plfcipgceshrozsdcgjq.supabase.co/rest/v1/email_subscribers', {
+    method:'POST',
+    headers:{
+      'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU',
+      'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU',
+      'Content-Type':'application/json',
+      'Prefer':'return=minimal'
+    },
+    body:JSON.stringify({email:email, source: window.location.pathname.includes('shop') ? 'shop' : window.location.pathname.includes('styling') ? 'styling' : 'homepage'})
+  })
+  .then(function(r){
+    if(r.ok || r.status===409){
+      msg.style.color='#d4af37';
+      msg.textContent = r.status===409 ? 'You\'re already on the list!' : 'Welcome! Your 10% code is on its way.';
+      localStorage.setItem('ph_email_captured','subscribed');
+      setTimeout(function(){ document.getElementById('ph-email-capture').style.bottom='-200px'; }, 3000);
+    } else {
+      msg.style.color='#e05555';
+      msg.textContent='Something went wrong. Try again.';
+    }
+  })
+  .catch(function(){
+    msg.style.color='#d4af37';
+    msg.textContent='Welcome! Your 10% code is on its way.';
+    localStorage.setItem('ph_email_captured','subscribed');
+    setTimeout(function(){ document.getElementById('ph-email-capture').style.bottom='-200px'; }, 3000);
+  });
+};
+
+// ---- CART REMINDER ----
+(function(){
+  try {
+    var cart = JSON.parse(localStorage.getItem('ph_cart') || '[]');
+    if(!Array.isArray(cart) || cart.length === 0) return;
+    var total = cart.reduce(function(s,i){ return s + (i.qty||1); }, 0);
+    var reminder = document.getElementById('ph-cart-reminder');
+    document.getElementById('ph-cart-reminder-text').textContent =
+      total === 1 ? 'You have 1 item in your bag' : 'You have ' + total + ' items in your bag';
+    reminder.style.display = 'flex';
+    setTimeout(function(){ reminder.style.display='none'; }, 8000);
+  } catch(e){}
+})();
+window.phGoToShop = function(){
+  try { window.top.location.href = 'https://www.penguinhairs.com/shop'; }
+  catch(e) { window.parent.location.href = 'https://www.penguinhairs.com/shop'; }
+};
 </script>
