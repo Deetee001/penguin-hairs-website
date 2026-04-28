@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Background Recording</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; overflow: hidden; width: 100vw; height: 100vh; }
+  canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  const canvas = document.getElementById('bg-canvas');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  camera.position.set(0, 30, 60);
+  camera.lookAt(0, -10, 0);
+
+  const gridSize = 80;
+  const spacing = 3;
+  const total = gridSize * gridSize;
+
+  const geo = new THREE.BufferGeometry();
+  const p = new Float32Array(total * 3);
+  const o = new Float32Array(total * 3);
+  let ki = 0;
+  for (let i = 0; i < gridSize; i++) for (let j = 0; j < gridSize; j++) {
+    const x = (i - gridSize/2) * spacing, z = (j - gridSize/2) * spacing;
+    p[ki] = o[ki] = x; p[ki+1] = o[ki+1] = 0; p[ki+2] = o[ki+2] = z; ki += 3;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+
+  const dc = document.createElement('canvas'); dc.width = dc.height = 64;
+  const dctx = dc.getContext('2d');
+  const gr = dctx.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,255,255,1)');
+  gr.addColorStop(0.4,'rgba(255,255,255,0.6)');
+  gr.addColorStop(1,'rgba(255,255,255,0)');
+  dctx.fillStyle = gr; dctx.fillRect(0,0,64,64);
+
+  const ptMat = new THREE.PointsMaterial({
+    color: 0xffffff, size: 0.35, transparent: true, opacity: 0.75,
+    blending: THREE.AdditiveBlending, map: new THREE.CanvasTexture(dc),
+    sizeAttenuation: true, depthWrite: false
+  });
+  const pts = new THREE.Points(geo, ptMat);
+  scene.add(pts);
+
+  const lg = new THREE.BufferGeometry();
+  const lp = [];
+  for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+    const idx=(i*gridSize+j)*3;
+    if(j<gridSize-1){const r=(i*gridSize+(j+1))*3; lp.push(p[idx],p[idx+1],p[idx+2],p[r],p[r+1],p[r+2]);}
+    if(i<gridSize-1){const b=((i+1)*gridSize+j)*3; lp.push(p[idx],p[idx+1],p[idx+2],p[b],p[b+1],p[b+2]);}
+  }
+  lg.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+  const lines = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({
+    color: 0x88ccff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending
+  }));
+  scene.add(lines);
+
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.008;
+    const pa = pts.geometry.attributes.position.array;
+    const la = lines.geometry.attributes.position.array;
+    let pi = 0;
+    for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+      const ox=o[pi], oz=o[pi+2];
+      const d=Math.sqrt(ox*ox+oz*oz);
+      pa[pi+1] = Math.sin(ox*0.15+t)*8 + Math.sin(oz*0.15+t*1.2)*6 + Math.cos((ox+oz)*0.1+t*0.8)*4 + Math.sin(d*0.1-t*2)*5;
+      pi += 3;
+    }
+    let li = 0;
+    for (let i=0; i<gridSize; i++) for (let j=0; j<gridSize; j++) {
+      const idx=(i*gridSize+j)*3;
+      if(j<gridSize-1){const r=(i*gridSize+(j+1))*3; la[li]=pa[idx];la[li+1]=pa[idx+1];la[li+2]=pa[idx+2];la[li+3]=pa[r];la[li+4]=pa[r+1];la[li+5]=pa[r+2]; li+=6;}
+      if(i<gridSize-1){const b=((i+1)*gridSize+j)*3; la[li]=pa[idx];la[li+1]=pa[idx+1];la[li+2]=pa[idx+2];la[li+3]=pa[b];la[li+4]=pa[b+1];la[li+5]=pa[b+2]; li+=6;}
+    }
+    pts.geometry.attributes.position.needsUpdate = true;
+    lines.geometry.attributes.position.needsUpdate = true;
+    pts.rotation.y = t * 0.05;
+    lines.rotation.y = t * 0.05;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+</body>
+</html>
