@@ -60,6 +60,30 @@ No-cache meta tags are in homepage.html to prevent browser caching:
   <meta http-equiv="Expires" content="0">
 If browser shows stale content, use Ctrl+Shift+R for a hard refresh.
 
+## Supabase MCP Server Setup (COMPLETE)
+
+The Supabase MCP server is configured and ready. It allows Claude to directly
+create tables, run SQL, and manage the Supabase database from within this project.
+
+**Setup done:**
+- MCP server added to `.mcp.json` in this project directory
+- `.mcp.json` and credential `.txt` files are gitignored (never committed)
+- Credentials are stored in:
+  - `PenguinHairs Access token to Supabase.txt` (access token)
+  - `Penguinhairs Supabase Password.txt` (DB password)
+  - `VCP Matching what connects to SupaBase.txt` (connection details)
+
+**To activate after restarting Claude Code:**
+1. Claude Code will automatically connect to the Supabase MCP server on startup
+2. If it doesn't connect, run: `claude mcp list` to verify the server is listed
+3. If missing, re-add with:
+   `claude mcp add supabase -s project -- npx -y @supabase/mcp-server-supabase@latest --access-token <token from txt file>`
+
+**Next steps — tell Claude to:**
+- "Set up the Supabase database for the admin product management page"
+- Claude will create the `products` table with all needed fields (name, price,
+  category, image/video URL, description, etc.) directly via the MCP server
+
 ## Future: Admin / Product Management Page (NOT YET BUILT)
 
 A future admin page is planned where the owner can:
@@ -67,7 +91,7 @@ A future admin page is planned where the owner can:
 - Update prices that reflect live on the website
 - Handle payment processing
 
-This will likely require a backend. Supabase is the preferred choice.
+Supabase is the chosen backend. MCP server is set up (see section above).
 Products are currently hardcoded in the PRODUCTS array in squarespace-shop.html.
 All prices are placeholders for now — the admin page is where real pricing will be managed.
 
