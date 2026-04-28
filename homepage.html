@@ -943,4 +943,7 @@ window.phGoToShop = function(){
   try { window.top.location.href = 'https://www.penguinhairs.com/shop'; }
   catch(e) { window.parent.location.href = 'https://www.penguinhairs.com/shop'; }
 };
+window.addEventListener('load', function() {
+  try { window.parent.postMessage('ph-ready', '*'); } catch(e) {}
+});
 </script>

@@ -1720,4 +1720,7 @@ window.phEmailSubmit = function(){
     setTimeout(function(){ document.getElementById('ph-email-capture').style.bottom='-200px'; }, 3000);
   });
 };
+window.addEventListener('load', function() {
+  try { window.parent.postMessage('ph-ready', '*'); } catch(e) {}
+});
 </script>
