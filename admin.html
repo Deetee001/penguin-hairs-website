@@ -1052,7 +1052,9 @@ async function uploadToCloudinary(input) {
     progressBar.style.width = '100%';
     progressLabel.textContent = 'Done!';
 
-    currentImages.push(url);
+    // Convert HEIC/HEIF to JPEG via Cloudinary URL (browsers can't display HEIC)
+    const compatUrl = url.replace(/\.(heic|heif)$/i, '.jpg');
+    currentImages.push(compatUrl);
     renderImageGallery();
 
     setTimeout(() => progressWrap.classList.remove('active'), 1200);
