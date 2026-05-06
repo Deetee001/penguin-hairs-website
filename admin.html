@@ -535,9 +535,17 @@ tr:hover td{background:rgba(212,175,55,.04);}
       </div>
       <div class="ph-form-row full">
         <div class="ph-form-group">
-          <label>Video URL (Cloudinary .mp4)</label>
-          <input type="url" id="f-video" placeholder="https://res.cloudinary.com/...mp4">
-          <span class="ph-hint">If set, video is shown instead of image on the shop page.</span>
+          <label>Video</label>
+          <div class="ph-upload-progress" id="ph-video-upload-progress">
+            <div class="ph-progress-bar-wrap"><div class="ph-progress-bar" id="ph-video-progress-bar"></div></div>
+            <span class="ph-upload-label" id="ph-video-upload-label">Uploading...</span>
+          </div>
+          <div class="ph-add-img-row" style="margin-top:6px;">
+            <input type="url" id="f-video" placeholder="https://res.cloudinary.com/...mp4" style="flex:1;">
+            <button type="button" class="ph-upload-btn" onclick="document.getElementById('f-video-file').click()">⬆ Upload Video</button>
+            <input type="file" id="f-video-file" accept="video/*" style="display:none" onchange="uploadVideoToCloudinary(this)">
+          </div>
+          <span class="ph-hint">Upload any video format — auto-converted to MP4. If set, video plays instead of image on the shop page.</span>
         </div>
       </div>
       <div class="ph-form-row full">
@@ -1056,6 +1064,67 @@ async function uploadToCloudinary(input) {
     const compatUrl = url.replace('/upload/', '/upload/f_auto,q_auto/');
     currentImages.push(compatUrl);
     renderImageGallery();
+
+    setTimeout(() => progressWrap.classList.remove('active'), 1200);
+  } catch(e) {
+    progressLabel.textContent = 'Upload failed. Try again.';
+    progressBar.style.width = '0%';
+    console.error(e);
+    setTimeout(() => progressWrap.classList.remove('active'), 3000);
+  }
+}
+
+// ---- CLOUDINARY VIDEO UPLOAD ----
+async function uploadVideoToCloudinary(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+
+  const progressWrap = document.getElementById('ph-video-upload-progress');
+  const progressBar = document.getElementById('ph-video-progress-bar');
+  const progressLabel = document.getElementById('ph-video-upload-label');
+
+  progressWrap.classList.add('active');
+  progressBar.style.width = '0%';
+  progressLabel.textContent = 'Uploading...';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  formData.append('folder', 'penguin-hairs/products');
+
+  try {
+    const url = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`);
+
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 90);
+          progressBar.style.width = pct + '%';
+          progressLabel.textContent = `Uploading... ${pct}%`;
+        }
+      };
+
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          resolve(data.secure_url);
+        } else {
+          reject(new Error('Upload failed: ' + xhr.responseText));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(formData);
+    });
+
+    progressBar.style.width = '100%';
+    progressLabel.textContent = 'Done!';
+
+    // Force MP4 output — works for MOV, AVI, WEBM, MKV, etc.
+    const mp4Url = url.replace('/upload/', '/upload/f_mp4,q_auto/').replace(/\.[^.]+$/, '.mp4');
+    document.getElementById('f-video').value = mp4Url;
 
     setTimeout(() => progressWrap.classList.remove('active'), 1200);
   } catch(e) {
