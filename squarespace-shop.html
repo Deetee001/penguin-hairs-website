@@ -812,9 +812,9 @@ async function initCurrency() {
     const cached = JSON.parse(localStorage.getItem('ph_fx_rates') || 'null');
     if (cached && Date.now() - cached.ts < 86400000) { fxRates = cached.rates; }
     else {
-      const r = await fetch('https://api.frankfurter.app/latest?from=CAD&to=USD,GBP,NGN');
+      const r = await fetch('https://open.er-api.com/v6/latest/CAD');
       const d = await r.json();
-      fxRates = { CAD:1, ...d.rates };
+      fxRates = { CAD:1, USD:d.rates.USD, GBP:d.rates.GBP, NGN:d.rates.NGN };
       localStorage.setItem('ph_fx_rates', JSON.stringify({ ts:Date.now(), rates:fxRates }));
     }
   } catch(e) { /* keep 1:1 fallback */ }
