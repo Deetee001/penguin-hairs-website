@@ -285,6 +285,19 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <div class="ph-stat"><div class="ph-stat-num" id="stat-services">—</div><div class="ph-stat-label">Active Services</div></div>
     </div>
 
+    <!-- NGN Black Market Rate -->
+    <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:#d4af37;margin-bottom:4px;">🇳🇬 NGN Black Market Rate</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">CA$1 = ₦<span id="ngn-rate-display">—</span> &nbsp;·&nbsp; Official API rate is ignored for NGN</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+        <input type="number" id="ngn-rate-input" placeholder="e.g. 1020" min="1" style="width:110px;padding:6px 10px;background:#111;border:1px solid #333;border-radius:6px;color:white;font-size:0.85rem;font-family:'Lato',sans-serif;">
+        <button onclick="saveNgnRate()" style="padding:6px 14px;background:#d4af37;color:#000;border:none;border-radius:6px;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;cursor:pointer;font-family:'Lato',sans-serif;">Update</button>
+        <span id="ngn-rate-status" style="font-size:0.75rem;color:#888;"></span>
+      </div>
+    </div>
+
     <!-- Tabs -->
     <div class="ph-tabs">
       <button class="ph-tab active" onclick="switchTab('products')">Products</button>
@@ -1842,6 +1855,39 @@ function prefetchCounts() {
     document.getElementById('stat-services').textContent = r.filter(s=>s.active).length;
   }).catch(()=>{});
 }
+
+// ---- NGN BLACK MARKET RATE ----
+async function loadNgnRate() {
+  try {
+    const rows = await sbFetch('settings?key=eq.ngn_black_market_rate&select=value');
+    if (rows[0]?.value) {
+      const rate = rows[0].value;
+      document.getElementById('ngn-rate-display').textContent = parseFloat(rate).toLocaleString();
+      document.getElementById('ngn-rate-input').value = rate;
+    }
+  } catch(e) {}
+}
+
+async function saveNgnRate() {
+  const val = parseFloat(document.getElementById('ngn-rate-input').value);
+  const statusEl = document.getElementById('ngn-rate-status');
+  if (!val || val < 1) { statusEl.textContent = 'Invalid rate.'; return; }
+  statusEl.textContent = 'Saving...';
+  try {
+    await sbFetch('settings?key=eq.ngn_black_market_rate', {
+      method: 'PATCH',
+      body: JSON.stringify({ value: String(val), updated_at: new Date().toISOString() })
+    });
+    document.getElementById('ngn-rate-display').textContent = val.toLocaleString();
+    statusEl.style.color = '#d4af37';
+    statusEl.textContent = 'Saved! Refresh shop to apply.';
+    setTimeout(() => { statusEl.textContent = ''; statusEl.style.color = '#888'; }, 4000);
+  } catch(e) {
+    statusEl.textContent = 'Error saving.';
+  }
+}
+window.saveNgnRate = saveNgnRate;
+loadNgnRate();
 
 // ---- ANALYTICS ----
 let analyticsDays = 7;

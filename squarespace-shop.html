@@ -812,9 +812,17 @@ async function initCurrency() {
     const cached = JSON.parse(localStorage.getItem('ph_fx_rates') || 'null');
     if (cached && Date.now() - cached.ts < 86400000) { fxRates = cached.rates; }
     else {
+      // Official rates for USD + GBP
       const r = await fetch('https://open.er-api.com/v6/latest/CAD');
       const d = await r.json();
-      fxRates = { CAD:1, USD:d.rates.USD, GBP:d.rates.GBP, NGN:d.rates.NGN };
+      // NGN: use black market rate stored in Supabase settings (not official API)
+      let ngnRate = 1020; // fallback
+      try {
+        const sr = await fetch(`${SB_URL}/rest/v1/settings?key=eq.ngn_black_market_rate&select=value`, { headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY} });
+        const sd = await sr.json();
+        if (sd[0]?.value) ngnRate = parseFloat(sd[0].value);
+      } catch(e) {}
+      fxRates = { CAD:1, USD:d.rates.USD, GBP:d.rates.GBP, NGN:ngnRate };
       localStorage.setItem('ph_fx_rates', JSON.stringify({ ts:Date.now(), rates:fxRates }));
     }
   } catch(e) { /* keep 1:1 fallback */ }
