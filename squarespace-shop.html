@@ -407,6 +407,13 @@ html{scroll-behavior:smooth;}
   .ph-add-sticky{position:sticky;bottom:0;background:rgba(10,10,10,0.97);padding:1rem 0 0.5rem;border-top:1px solid rgba(212,175,55,0.15);margin-top:auto;}
 }
 
+/* ---- Currency Selector ---- */
+.ph-currency-selector{display:flex;gap:4px;align-items:center;}
+.ph-cur-btn{background:none;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);font-size:0.65rem;font-weight:700;letter-spacing:0.08em;padding:4px 8px;border-radius:4px;cursor:pointer;font-family:'Lato',sans-serif;transition:all 0.2s;white-space:nowrap;}
+.ph-cur-btn:hover{border-color:rgba(212,175,55,0.4);color:rgba(255,255,255,0.8);}
+.ph-cur-btn.active{border-color:#d4af37;color:#d4af37;background:rgba(212,175,55,0.08);}
+@media(max-width:768px){.ph-currency-selector{flex-wrap:wrap;gap:6px;padding:1rem 2rem;border-top:1px solid rgba(255,255,255,0.08);}.ph-cur-btn{font-size:0.75rem;padding:6px 12px;}}
+
 /* ---- MOBILE: Kill ALL backdrop-filter — Chrome Android compositor can't handle multiple blur layers ---- */
 @media(max-width:768px){
   *, *::before, *::after {
@@ -455,6 +462,12 @@ html{scroll-behavior:smooth;}
       <a href="/" target="_parent">Home</a>
       <a href="/shop" class="active" target="_parent">Collection</a>
       <a href="/styling" target="_parent">Styling</a>
+      <div class="ph-currency-selector" id="ph-currency-sel">
+        <button class="ph-cur-btn active" data-cur="CAD" onclick="setCurrency('CAD')">🇨🇦 CAD</button>
+        <button class="ph-cur-btn" data-cur="USD" onclick="setCurrency('USD')">🇺🇸 USD</button>
+        <button class="ph-cur-btn" data-cur="NGN" onclick="setCurrency('NGN')">🇳🇬 NGN</button>
+        <button class="ph-cur-btn" data-cur="GBP" onclick="setCurrency('GBP')">🇬🇧 GBP</button>
+      </div>
       <button class="ph-cart-btn" onclick="toggleCart()">
         <i class="fas fa-shopping-bag"></i>
         <span class="ph-cart-count" id="ph-cart-count" style="display:none">0</span>
@@ -469,6 +482,12 @@ html{scroll-behavior:smooth;}
     <a href="/shop" onclick="toggleMenu()" target="_parent">Collection</a>
     <a href="/styling" onclick="toggleMenu()" target="_parent">Styling</a>
     <a href="#" onclick="toggleCart();toggleMenu()"><i class="fas fa-shopping-bag"></i> Cart</a>
+    <div class="ph-currency-selector" id="ph-currency-sel-mobile">
+      <button class="ph-cur-btn active" data-cur="CAD" onclick="setCurrency('CAD')">🇨🇦 CAD</button>
+      <button class="ph-cur-btn" data-cur="USD" onclick="setCurrency('USD')">🇺🇸 USD</button>
+      <button class="ph-cur-btn" data-cur="NGN" onclick="setCurrency('NGN')">🇳🇬 NGN</button>
+      <button class="ph-cur-btn" data-cur="GBP" onclick="setCurrency('GBP')">🇬🇧 GBP</button>
+    </div>
   </div>
 
   <!-- Shop Hero -->
@@ -760,6 +779,60 @@ const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
 const SHIPPING_RATES = { CA: 15, US: 20, GB: 35, AU: 35, NG: 25, GH: 25 };
 
+// ---- CURRENCY ----
+const CURRENCIES = { CAD:{symbol:'CA$',flag:'🇨🇦'}, USD:{symbol:'US$',flag:'🇺🇸'}, GBP:{symbol:'£',flag:'🇬🇧'}, NGN:{symbol:'₦',flag:'🇳🇬'} };
+const COUNTRY_TO_CURRENCY = { CA:'CAD',US:'USD',GB:'GBP',IE:'GBP',NG:'NGN',GH:'NGN' };
+let currentCurrency = localStorage.getItem('ph_currency') || 'CAD';
+let fxRates = { CAD:1, USD:1, GBP:1, NGN:1 };
+
+function formatPrice(cadAmt) {
+  const c = CURRENCIES[currentCurrency];
+  const v = cadAmt * fxRates[currentCurrency];
+  if (currentCurrency === 'NGN') return '₦' + Math.round(v).toLocaleString('en-NG');
+  return c.symbol + v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function setCurrency(code) {
+  currentCurrency = code;
+  localStorage.setItem('ph_currency', code);
+  document.querySelectorAll('.ph-cur-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === code));
+  updateCartUI();
+  renderProducts();
+  updateCheckoutTotals();
+  if (selectedProduct) {
+    const mp = (selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;}, selectedProduct.price);
+    document.getElementById('ph-modal-price').textContent = selection._price ? formatPrice(selection._price) : formatPrice(mp);
+  }
+}
+window.setCurrency = setCurrency;
+
+async function initCurrency() {
+  // Load fx rates (cached 24h)
+  try {
+    const cached = JSON.parse(localStorage.getItem('ph_fx_rates') || 'null');
+    if (cached && Date.now() - cached.ts < 86400000) { fxRates = cached.rates; }
+    else {
+      const r = await fetch('https://api.frankfurter.app/latest?from=CAD&to=USD,GBP,NGN');
+      const d = await r.json();
+      fxRates = { CAD:1, ...d.rates };
+      localStorage.setItem('ph_fx_rates', JSON.stringify({ ts:Date.now(), rates:fxRates }));
+    }
+  } catch(e) { /* keep 1:1 fallback */ }
+
+  // Auto-detect on first visit (no saved preference)
+  if (!localStorage.getItem('ph_currency')) {
+    try {
+      const r = await fetch('https://ipapi.co/json/');
+      const d = await r.json();
+      currentCurrency = COUNTRY_TO_CURRENCY[d.country_code] || 'CAD';
+      localStorage.setItem('ph_currency', currentCurrency);
+    } catch(e) { currentCurrency = 'CAD'; }
+  }
+
+  // Apply active state to buttons
+  document.querySelectorAll('.ph-cur-btn').forEach(b => b.classList.toggle('active', b.dataset.cur === currentCurrency));
+}
+
 // ---- DATA ----
 let PRODUCTS = [];
 let filteredProducts = [];
@@ -810,7 +883,7 @@ function updateCartUI(){
   const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
   const ce=document.getElementById('ph-cart-count');
   ce.style.display=count>0?'flex':'none'; ce.textContent=count;
-  document.getElementById('ph-cart-total').textContent='$'+total.toFixed(2);
+  document.getElementById('ph-cart-total').textContent=formatPrice(total);
   const items=document.getElementById('ph-cart-items');
   if(cart.length===0){items.innerHTML='<div class="ph-cart-empty"><i class="fas fa-shopping-bag" style="font-size:2rem;margin-bottom:1rem;display:block;color:rgba(255,255,255,0.2)"></i><p>Your bag is empty</p></div>';}
   else{items.innerHTML=cart.map((item,idx)=>`
@@ -819,7 +892,7 @@ function updateCartUI(){
         ? `<img class="ph-ci-thumb" src="${item.image}" alt="${item.name}" loading="lazy">`
         : `<div class="ph-ci-thumb-placeholder"><i class="fas fa-shopping-bag"></i></div>`}
       <div class="ph-ci-info">
-        <div class="ph-ci-top"><h4>${item.name}</h4><span>$${(item.price*item.qty).toFixed(2)}</span></div>
+        <div class="ph-ci-top"><h4>${item.name}</h4><span>${formatPrice(item.price*item.qty)}</span></div>
         <p class="ph-ci-specs">${item.specs}</p>
         <div class="ph-ci-qty">
           <button onclick="updateQty(${idx},-1)">−</button>
@@ -864,7 +937,7 @@ function renderProducts(){
         <h3>${p.name}</h3>
         <p class="ph-card-desc">${p.description||''}</p>
         <div class="ph-card-footer">
-          <div class="ph-card-price"><small>From </small>$${p.price}</div>
+          <div class="ph-card-price"><small>From </small>${formatPrice(p.price)}</div>
           <button class="ph-quick-btn" ${soldOut?'disabled':''} onclick="event.stopPropagation();${soldOut?'':` openModal(${p.id})`}">${soldOut?'Sold Out':'Customize'}</button>
         </div>
       </div>
@@ -978,7 +1051,7 @@ window.openModal=(id)=>{
   document.getElementById('ph-modal-desc').textContent=selectedProduct.description||'';
   // Show min length price as starting price (fallback to product.price)
   const _minPrice=(selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;},selectedProduct.price);
-  document.getElementById('ph-modal-price').textContent='$'+_minPrice;
+  document.getElementById('ph-modal-price').textContent=formatPrice(_minPrice);
   document.getElementById('ph-sel-summary').style.display='none';
   document.getElementById('ph-add-btn').disabled=true;
   document.getElementById('ph-add-btn').textContent='Select All Options to Add to Bag';
@@ -1079,7 +1152,7 @@ window.selectOpt=(type,value,btn)=>{
   const base=selection.length?_base(selection.length):selectedProduct.price;
   const total=base+_up(selection.closure)+_up(selection.color)+_up(selection.weight);
   selection._price=total;
-  document.getElementById('ph-modal-price').textContent='$'+total;
+  document.getElementById('ph-modal-price').textContent=formatPrice(total);
   const addBtn=document.getElementById('ph-add-btn');
   const sum=document.getElementById('ph-sel-summary');
   const allSelected=selection.length&&selection.closure&&selection.color&&selection.weight;
@@ -1087,7 +1160,7 @@ window.selectOpt=(type,value,btn)=>{
     sum.style.display='block';
     sum.innerHTML=`<strong style="color:#d4af37;display:block;margin-bottom:0.5rem">Your Selection</strong>${_name(selection.length)} · ${_name(selection.closure)} · ${_name(selection.color)} · ${_name(selection.weight)}`;
     addBtn.disabled=false;
-    addBtn.textContent='Add to Bag — $'+total;
+    addBtn.textContent='Add to Bag — '+formatPrice(total);
   } else {
     sum.style.display='none';
     addBtn.disabled=true;
@@ -1101,7 +1174,7 @@ const SQ_LOCATION_ID = 'LMF690XAMSZCZ';
 let sqPayments = null;
 let sqCard = null;
 let sqCardAttached = false;
-let sqTotalStr = '$0.00'; // stored so we can restore button text without reading from DOM
+let sqTotalStr = 'CA$0.00'; // stored so we can restore button text without reading from DOM
 
 // Init Square payments object on page load
 async function initSquarePayments() {
@@ -1224,10 +1297,10 @@ window.applyPromo=function(){
     if(promo.expires_at&&new Date(promo.expires_at)<new Date()){ msg.style.color='#e05555'; msg.textContent='This code has expired.'; appliedPromo=null; updateCheckoutTotals(); return; }
     if(promo.max_uses&&promo.uses_count>=promo.max_uses){ msg.style.color='#e05555'; msg.textContent='This code has reached its limit.'; appliedPromo=null; updateCheckoutTotals(); return; }
     var sub=cart.reduce(function(s,i){ return s+(i.price*(i.qty||1)); },0);
-    if(sub<promo.min_order){ msg.style.color='#e05555'; msg.textContent='Minimum order $'+promo.min_order+' required for this code.'; appliedPromo=null; updateCheckoutTotals(); return; }
+    if(sub<promo.min_order){ msg.style.color='#e05555'; msg.textContent='Minimum order '+formatPrice(promo.min_order)+' required for this code.'; appliedPromo=null; updateCheckoutTotals(); return; }
     appliedPromo=promo;
-    var savings=promo.discount_type==='percent'?(sub*promo.discount_value/100).toFixed(2):Math.min(promo.discount_value,sub).toFixed(2);
-    msg.style.color='#d4af37'; msg.textContent='✓ Code applied — saving $'+savings+'!';
+    var savingsCAD=promo.discount_type==='percent'?(sub*promo.discount_value/100):Math.min(promo.discount_value,sub);
+    msg.style.color='#d4af37'; msg.textContent='✓ Code applied — saving '+formatPrice(savingsCAD)+'!';
     updateCheckoutTotals();
   })
   .catch(function(){ msg.style.color='#e05555'; msg.textContent='Could not check code. Try again.'; });
@@ -1244,14 +1317,14 @@ function updateCheckoutTotals() {
     discount=Math.round(discount*100)/100;
   }
   const total = subtotal - discount + shippingCost;
-  sqTotalStr = '$' + total.toFixed(2);
-  document.getElementById('ph-co-subtotal-amt').textContent = '$' + subtotal.toFixed(2);
-  document.getElementById('ph-co-shipping-amt').textContent = '$' + shippingCost.toFixed(2);
-  document.getElementById('ph-co-total-amt').textContent = sqTotalStr;
+  sqTotalStr = 'CA$' + total.toFixed(2);
+  document.getElementById('ph-co-subtotal-amt').textContent = formatPrice(subtotal);
+  document.getElementById('ph-co-shipping-amt').textContent = formatPrice(shippingCost);
+  document.getElementById('ph-co-total-amt').textContent = formatPrice(total) + (currentCurrency !== 'CAD' ? ' ≈ ' + sqTotalStr : '');
   var discRow=document.getElementById('ph-co-discount-row');
   var discAmt=document.getElementById('ph-co-discount-amt');
   if(discRow){ discRow.style.display=discount>0?'flex':'none'; }
-  if(discAmt && discount>0){ discAmt.textContent='-$'+discount.toFixed(2); }
+  if(discAmt && discount>0){ discAmt.textContent='-'+formatPrice(discount); }
   const payBtn = document.getElementById('ph-co-pay-btn');
   if (payBtn && payBtn.style.display !== 'none' && !payBtn.disabled) {
     payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
@@ -1270,7 +1343,7 @@ window.startCheckout = () => {
         <div class="ph-co-item-name">${item.name} &times;${item.qty}</div>
         <div class="ph-co-item-specs">${item.specs}</div>
       </div>
-      <div class="ph-co-item-price">$${(item.price * item.qty).toFixed(2)}</div>
+      <div class="ph-co-item-price">${formatPrice(item.price * item.qty)}</div>
     </div>`).join('');
 
   updateCheckoutTotals();
@@ -1540,6 +1613,7 @@ window.closeZoom = function(){
 (async function loadProducts(){
   const grid=document.getElementById('ph-grid');
   grid.innerHTML=Array(6).fill(0).map(()=>`<div class="ph-card-skel"><div class="ph-skel-img ph-shimmer"></div><div class="ph-skel-body"><div class="ph-skel-line ph-shimmer" style="height:11px;width:45%;"></div><div class="ph-skel-line ph-shimmer" style="height:17px;width:78%;"></div><div class="ph-skel-line ph-shimmer" style="height:11px;width:35%;margin-top:4px;"></div></div></div>`).join('');
+  await initCurrency(); // ensure rates + currency are set before rendering prices
   try {
     const res=await fetch(SB_URL+'/rest/v1/products?order=sort_order.asc,id.asc&select=*',{
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
