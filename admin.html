@@ -701,6 +701,21 @@ tr:hover td{background:rgba(212,175,55,.04);}
       </div>
       <div class="ph-form-row full">
         <div class="ph-form-group">
+          <label>Service Image</label>
+          <div class="ph-upload-progress" id="ph-svc-upload-progress">
+            <div class="ph-progress-bar-wrap"><div class="ph-progress-bar" id="ph-svc-progress-bar"></div></div>
+            <span class="ph-upload-label" id="ph-svc-upload-label">Uploading...</span>
+          </div>
+          <div class="ph-add-img-row" style="margin-top:6px;">
+            <input type="url" id="fs-image" placeholder="https://res.cloudinary.com/... or paste URL" style="flex:1;">
+            <button type="button" class="ph-upload-btn" onclick="document.getElementById('f-svc-img-file').click()">⬆ Upload</button>
+            <input type="file" id="f-svc-img-file" accept="image/*" style="display:none" onchange="uploadServiceImage(this)">
+          </div>
+          <span class="ph-hint">Optional. Shown at the top of the service card on the styling page.</span>
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
           <label>Description</label>
           <textarea id="fs-desc" placeholder="Service description shown on the styling page..."></textarea>
         </div>
@@ -1125,6 +1140,59 @@ async function uploadVideoToCloudinary(input) {
     // Force MP4 output — works for MOV, AVI, WEBM, MKV, etc.
     const mp4Url = url.replace('/upload/', '/upload/f_mp4,q_auto/').replace(/\.[^.]+$/, '.mp4');
     document.getElementById('f-video').value = mp4Url;
+
+    setTimeout(() => progressWrap.classList.remove('active'), 1200);
+  } catch(e) {
+    progressLabel.textContent = 'Upload failed. Try again.';
+    progressBar.style.width = '0%';
+    console.error(e);
+    setTimeout(() => progressWrap.classList.remove('active'), 3000);
+  }
+}
+
+// ---- CLOUDINARY SERVICE IMAGE UPLOAD ----
+async function uploadServiceImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+
+  const progressWrap = document.getElementById('ph-svc-upload-progress');
+  const progressBar = document.getElementById('ph-svc-progress-bar');
+  const progressLabel = document.getElementById('ph-svc-upload-label');
+
+  progressWrap.classList.add('active');
+  progressBar.style.width = '0%';
+  progressLabel.textContent = 'Uploading...';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  formData.append('folder', 'penguin-hairs/services');
+
+  try {
+    const url = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 90);
+          progressBar.style.width = pct + '%';
+          progressLabel.textContent = `Uploading... ${pct}%`;
+        }
+      };
+      xhr.onload = function() {
+        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText).secure_url);
+        else reject(new Error('Upload failed: ' + xhr.responseText));
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(formData);
+    });
+
+    progressBar.style.width = '100%';
+    progressLabel.textContent = 'Done!';
+
+    const compatUrl = url.replace('/upload/', '/upload/f_auto,q_auto/');
+    document.getElementById('fs-image').value = compatUrl;
 
     setTimeout(() => progressWrap.classList.remove('active'), 1200);
   } catch(e) {
@@ -1652,6 +1720,7 @@ function openAddServiceModal() {
   document.getElementById('fs-icon').value = '';
   document.getElementById('fs-booking-value').value = '';
   document.getElementById('fs-desc').value = '';
+  document.getElementById('fs-image').value = '';
   document.getElementById('fs-active').checked = true;
   document.getElementById('ph-svc-save-status').textContent = '';
   updateIconPreview();
@@ -1671,6 +1740,7 @@ function openEditServiceModal(id) {
   document.getElementById('fs-booking-value').value = s.booking_value || '';
   document.getElementById('fs-desc').value = s.description || '';
   document.getElementById('fs-active').checked = !!s.active;
+  document.getElementById('fs-image').value = s.image_url || '';
   document.getElementById('ph-svc-save-status').textContent = '';
   updateIconPreview();
   document.getElementById('ph-svc-modal').classList.add('open');
@@ -1698,6 +1768,7 @@ async function saveService() {
     icon: document.getElementById('fs-icon').value.trim() || null,
     booking_value: document.getElementById('fs-booking-value').value.trim() || name,
     description: document.getElementById('fs-desc').value.trim() || null,
+    image_url: document.getElementById('fs-image').value.trim() || null,
     active: document.getElementById('fs-active').checked,
     updated_at: new Date().toISOString()
   };

@@ -632,7 +632,9 @@ async function loadServicesFromDB(){
     grid.innerHTML = services.map((s,i)=>{
       const bv = escHtml(s.booking_value||s.name);
       return `<div class="ph-service-card ${revealClasses[i%2]}">
-        <div class="ph-service-icon"><i class="${escHtml(s.icon||'fas fa-star')}"></i></div>
+        ${s.image_url
+          ? `<img src="${escHtml(s.image_url)}" alt="${escHtml(s.name)}" style="width:100%;height:200px;object-fit:cover;border-radius:12px;margin-bottom:1.5rem;">`
+          : `<div class="ph-service-icon"><i class="${escHtml(s.icon||'fas fa-star')}"></i></div>`}
         <h3>${escHtml(s.name)}</h3>
         <div class="ph-service-meta">
           <span class="ph-duration"><i class="far fa-clock"></i> ${escHtml(s.duration||'')}</span>
