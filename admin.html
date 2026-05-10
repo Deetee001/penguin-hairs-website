@@ -1642,7 +1642,9 @@ function renderServicesTable() {
   allServices.forEach(s => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><div class="ph-svc-icon"><i class="${escHtml(s.icon||'fas fa-star')}"></i></div></td>
+      <td>${s.image_url
+        ? `<img src="${escHtml(s.image_url)}" style="width:40px;height:40px;object-fit:cover;object-position:top;border-radius:8px;display:block;">`
+        : `<div class="ph-svc-icon"><i class="${escHtml(s.icon||'fas fa-star')}"></i></div>`}</td>
       <td><strong>${escHtml(s.name)}</strong></td>
       <td style="color:#888">${escHtml(s.duration||'—')}</td>
       <td style="color:#d4af37">$${s.price_from||0}</td>
