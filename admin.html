@@ -542,7 +542,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
             <input type="url" id="f-img-add-input" placeholder="Paste image URL and click Add...">
             <button type="button" class="ph-add-img-btn" onclick="addImageUrl()">+ Add URL</button>
             <button type="button" class="ph-upload-btn" onclick="document.getElementById('f-img-file').click()">⬆ Upload</button>
-            <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="uploadToCloudinary(this)">
+            <input type="file" id="f-img-file" accept="image/*,.heic,.heif,.dng,.tif,.tiff,.bmp,.avif" style="display:none" onchange="uploadToCloudinary(this)">
           </div>
           <span class="ph-hint">Upload from your computer or paste a URL. First photo is the main thumbnail.</span>
         </div>
@@ -724,7 +724,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
           <div class="ph-add-img-row" style="margin-top:6px;">
             <input type="url" id="fs-image" placeholder="https://res.cloudinary.com/... or paste URL" style="flex:1;">
             <button type="button" class="ph-upload-btn" onclick="document.getElementById('f-svc-img-file').click()">⬆ Upload</button>
-            <input type="file" id="f-svc-img-file" accept="image/*" style="display:none" onchange="uploadServiceImage(this)">
+            <input type="file" id="f-svc-img-file" accept="image/*,.heic,.heif,.dng,.tif,.tiff,.bmp,.avif" style="display:none" onchange="uploadServiceImage(this)">
           </div>
           <span class="ph-hint">Optional. Shown at the top of the service card on the styling page.</span>
         </div>
@@ -1040,10 +1040,38 @@ function addImageUrl() {
 const CLOUDINARY_CLOUD = 'dzbzox0x8';
 const CLOUDINARY_PRESET = 'Penguin-Uploads';
 
+// Image formats Cloudinary can process and convert to JPEG
+const SUPPORTED_IMAGE_EXTS = new Set([
+  'jpg','jpeg','png','gif','webp','avif','bmp','tiff','tif','svg',
+  'heic','heif', // iPhone
+  'dng',         // Adobe Digital Negative (Google Pixel, some Androids)
+]);
+
+// Formats that look like images but Cloudinary can't process
+const UNSUPPORTED_IMAGE_EXTS = {
+  cr2:'Canon RAW', cr3:'Canon RAW', nef:'Nikon RAW',
+  arw:'Sony RAW',  orf:'Olympus RAW', rw2:'Panasonic RAW',
+  dmp:'Windows dump file', raw:'RAW image',
+  psd:'Photoshop', ai:'Illustrator', eps:'EPS',
+};
+
+function validateImageFile(file, progressLabel) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (UNSUPPORTED_IMAGE_EXTS[ext]) {
+    progressLabel.textContent = `${UNSUPPORTED_IMAGE_EXTS[ext]} (.${ext}) not supported — please export as JPEG or PNG first.`;
+    return false;
+  }
+  if (!SUPPORTED_IMAGE_EXTS.has(ext) && !file.type.startsWith('image/')) {
+    progressLabel.textContent = `Unsupported file type (.${ext}) — please use JPEG, PNG, HEIC, DNG, or WebP.`;
+    return false;
+  }
+  return true;
+}
+
 async function uploadToCloudinary(input) {
   const file = input.files[0];
   if (!file) return;
-  input.value = ''; // reset so same file can be re-selected
+  input.value = '';
 
   const progressWrap = document.getElementById('ph-upload-progress');
   const progressBar = document.getElementById('ph-progress-bar');
@@ -1052,6 +1080,12 @@ async function uploadToCloudinary(input) {
   progressWrap.classList.add('active');
   progressBar.style.width = '0%';
   progressLabel.textContent = 'Uploading...';
+
+  if (!validateImageFile(file, progressLabel)) {
+    progressBar.style.width = '0%';
+    setTimeout(() => progressWrap.classList.remove('active'), 4000);
+    return;
+  }
 
   const formData = new FormData();
   formData.append('file', file);
@@ -1118,6 +1152,16 @@ async function uploadVideoToCloudinary(input) {
   progressBar.style.width = '0%';
   progressLabel.textContent = 'Uploading...';
 
+  // Video: validate it's actually a video format
+  const videoExt = file.name.split('.').pop().toLowerCase();
+  const SUPPORTED_VIDEO_EXTS = new Set(['mp4','mov','avi','webm','mkv','m4v','3gp','wmv','flv']);
+  if (!SUPPORTED_VIDEO_EXTS.has(videoExt) && !file.type.startsWith('video/')) {
+    progressLabel.textContent = `Unsupported video format (.${videoExt}) — please use MP4, MOV, AVI, or WEBM.`;
+    progressBar.style.width = '0%';
+    setTimeout(() => progressWrap.classList.remove('active'), 4000);
+    return;
+  }
+
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', CLOUDINARY_PRESET);
@@ -1178,6 +1222,12 @@ async function uploadServiceImage(input) {
   progressWrap.classList.add('active');
   progressBar.style.width = '0%';
   progressLabel.textContent = 'Uploading...';
+
+  if (!validateImageFile(file, progressLabel)) {
+    progressBar.style.width = '0%';
+    setTimeout(() => progressWrap.classList.remove('active'), 4000);
+    return;
+  }
 
   const formData = new FormData();
   formData.append('file', file);
