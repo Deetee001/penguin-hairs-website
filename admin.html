@@ -542,7 +542,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
             <input type="url" id="f-img-add-input" placeholder="Paste image URL and click Add...">
             <button type="button" class="ph-add-img-btn" onclick="addImageUrl()">+ Add URL</button>
             <button type="button" class="ph-upload-btn" onclick="document.getElementById('f-img-file').click()">⬆ Upload</button>
-            <input type="file" id="f-img-file" accept="image/*,.heic,.heif,.dng,.tif,.tiff,.bmp,.avif" style="display:none" onchange="uploadToCloudinary(this)">
+            <input type="file" id="f-img-file" style="display:none" onchange="uploadToCloudinary(this)">
           </div>
           <span class="ph-hint">Upload from your computer or paste a URL. First photo is the main thumbnail.</span>
         </div>
@@ -724,7 +724,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
           <div class="ph-add-img-row" style="margin-top:6px;">
             <input type="url" id="fs-image" placeholder="https://res.cloudinary.com/... or paste URL" style="flex:1;">
             <button type="button" class="ph-upload-btn" onclick="document.getElementById('f-svc-img-file').click()">⬆ Upload</button>
-            <input type="file" id="f-svc-img-file" accept="image/*,.heic,.heif,.dng,.tif,.tiff,.bmp,.avif" style="display:none" onchange="uploadServiceImage(this)">
+            <input type="file" id="f-svc-img-file" style="display:none" onchange="uploadServiceImage(this)">
           </div>
           <span class="ph-hint">Optional. Shown at the top of the service card on the styling page.</span>
         </div>
