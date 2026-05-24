@@ -99,7 +99,10 @@ html{scroll-behavior:smooth;}
   will-change:transform,filter,opacity;
 }
 .ph-car-item img{height:60vh;width:auto;display:block;}
-@media(max-width:768px){.ph-car-item img{height:44vh;}}
+@media(max-width:768px){
+  /* On mobile, size by width so portrait images don't overflow the narrow screen */
+  .ph-car-item img{height:auto;width:76vw;max-height:54vh;object-fit:cover;}
+}
 .ph-hero-content{position:relative;z-index:5;text-align:center;padding:2rem;}
 .ph-eyebrow{font-size:0.72rem;letter-spacing:0.4em;text-transform:uppercase;color:#d4af37;margin-bottom:1.5rem;opacity:0;animation:phFadeUp 1s ease forwards 0.2s;}
 .ph-hero-content h1{font-size:clamp(3rem,8vw,7rem);font-weight:300;letter-spacing:0.06em;background:linear-gradient(135deg,#fff 30%,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem;opacity:0;animation:phFadeUp 1.2s ease forwards 0.4s;}
@@ -700,12 +703,17 @@ function initStylingHeroCarousel(services){
     return {el, src};
   });
 
-  // Style config per distance from center
-  // translateX in vh — stays proportional on all screen sizes
-  const CFG=[
-    {tx:0,  scale:1,    blur:0, bright:0.9,  opacity:1,    z:10}, // center
-    {tx:39, scale:0.71, blur:3, bright:0.52, opacity:0.80, z:5},  // ±1
-    {tx:67, scale:0.52, blur:7, bright:0.32, opacity:0.48, z:2},  // ±2
+  // Desktop: translateX in vh (proportional to image height, consistent gap on all screens)
+  // Mobile:  translateX in vw (proportional to screen width so adjacent cards peek from edges)
+  const isMob = window.innerWidth < 768;
+  const CFG = isMob ? [
+    {tx:0,   unit:'vw', scale:1,    blur:0, bright:0.9,  opacity:1,    z:10}, // center — full
+    {tx:72,  unit:'vw', scale:0.84, blur:2, bright:0.5,  opacity:0.75, z:5},  // ±1 — peek ~30px
+    {tx:130, unit:'vw', scale:0.65, blur:5, bright:0.3,  opacity:0,    z:2},  // ±2 — hidden
+  ] : [
+    {tx:0,   unit:'vh', scale:1,    blur:0, bright:0.9,  opacity:1,    z:10},
+    {tx:39,  unit:'vh', scale:0.71, blur:3, bright:0.52, opacity:0.80, z:5},
+    {tx:67,  unit:'vh', scale:0.52, blur:7, bright:0.32, opacity:0.48, z:2},
   ];
   const TRANS='transform 1.8s cubic-bezier(0.22,0.61,0.36,1),filter 1.8s ease,opacity 1.8s ease';
 
@@ -727,7 +735,7 @@ function initStylingHeroCarousel(services){
           position:absolute;border-radius:18px;overflow:hidden;
           box-shadow:0 24px 72px rgba(0,0,0,0.75);
           transition:${TRANS};
-          transform:translateX(${cfg.tx*sign}vh) scale(${cfg.scale});
+          transform:translateX(${cfg.tx*sign}${cfg.unit}) scale(${cfg.scale});
           filter:blur(${cfg.blur}px) brightness(${cfg.bright});
           opacity:${cfg.opacity};
           z-index:${cfg.z};
