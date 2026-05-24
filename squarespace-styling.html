@@ -72,12 +72,16 @@ html{scroll-behavior:smooth;}
 .ph-close-menu{position:absolute;top:2rem;right:2rem;background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;}
 
 /* ---- Hero ---- */
-#ph-hero{position:relative;height:70vh;min-height:500px;overflow:hidden;display:flex;align-items:center;justify-content:center;z-index:2;background:#1a1208;}
-#ph-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.62);}
-#ph-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.35),rgba(0,0,0,0.15),rgba(0,0,0,0.35));}
-.ph-hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.4s ease;transform:translateZ(0);}
-.ph-hero-slide.active{opacity:1;}
-.ph-hero-slide img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.62);}
+#ph-hero{position:relative;height:70vh;min-height:500px;overflow:hidden;display:flex;align-items:center;justify-content:center;z-index:2;background:#0a0a0a;}
+#ph-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.45),rgba(0,0,0,0.2),rgba(0,0,0,0.45));z-index:2;pointer-events:none;}
+/* Conveyor belt */
+.ph-conveyor{position:absolute;inset:0;display:flex;align-items:center;overflow:hidden;}
+.ph-conveyor-track{display:flex;gap:6px;animation:ph-belt 22s linear infinite;will-change:transform;height:100%;}
+.ph-conveyor-track img{height:100%;width:auto;object-fit:cover;display:block;flex-shrink:0;filter:brightness(0.72);}
+@keyframes ph-belt{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+/* Fallback when no service images yet */
+#ph-hero-fallback{position:absolute;inset:0;}
+#ph-hero-fallback img{width:100%;height:100%;object-fit:cover;filter:brightness(0.62);}
 .ph-hero-content{position:relative;z-index:5;text-align:center;padding:2rem;}
 .ph-eyebrow{font-size:0.72rem;letter-spacing:0.4em;text-transform:uppercase;color:#d4af37;margin-bottom:1.5rem;opacity:0;animation:phFadeUp 1s ease forwards 0.2s;}
 .ph-hero-content h1{font-size:clamp(3rem,8vw,7rem);font-weight:300;letter-spacing:0.06em;background:linear-gradient(135deg,#fff 30%,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem;opacity:0;animation:phFadeUp 1.2s ease forwards 0.4s;}
@@ -238,8 +242,13 @@ input[type="date"]{cursor:pointer;}
 
   <!-- Hero -->
   <section id="ph-hero">
-    <div class="ph-hero-slide active" id="ph-hero-fallback">
+    <!-- Fallback shown while service images load -->
+    <div id="ph-hero-fallback">
       <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=1920&q=80" alt="Peng Hair Styling">
+    </div>
+    <!-- Conveyor belt injected by JS -->
+    <div class="ph-conveyor" id="ph-conveyor" style="display:none;">
+      <div class="ph-conveyor-track" id="ph-conveyor-track"></div>
     </div>
     <div class="ph-hero-content">
       <h1>Peng Hair Styling</h1>
@@ -628,30 +637,28 @@ function showToast(msg,duration=4000){const t=document.getElementById('ph-toast'
 // ---- DYNAMIC SERVICES (from Supabase) ----
 function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
-function initStylingHeroSlideshow(services){
-  const hero = document.getElementById('ph-hero');
+function initStylingHeroConveyor(services){
   const images = services.map(s=>s.image_url).filter(u=>u&&!u.match(/\.(mp4|mov|webm)$/i));
+  if(!images.length) return; // keep fallback
+  // Hide fallback, show conveyor
   const fallback = document.getElementById('ph-hero-fallback');
-  if(images.length<2){ return; } // keep fallback
-  if(fallback) fallback.remove();
-  // Shuffle
+  const conveyor = document.getElementById('ph-conveyor');
+  const track = document.getElementById('ph-conveyor-track');
+  if(fallback) fallback.style.display='none';
+  conveyor.style.display='flex';
+  // Shuffle for variety
   for(let i=images.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[images[i],images[j]]=[images[j],images[i]];}
-  const pool=images.slice(0,8);
-  pool.forEach((src,i)=>{
-    const el=document.createElement('div');
-    el.className='ph-hero-slide'+(i===0?' active':'');
+  // Duplicate images to fill belt seamlessly (need enough to loop without gap)
+  const needed = Math.max(images.length*2, 16);
+  const pool=[];
+  while(pool.length<needed) pool.push(...images);
+  // Build two identical halves so CSS translateX(-50%) loops perfectly
+  const half=pool.slice(0,Math.ceil(pool.length/2));
+  [...half,...half].forEach(src=>{
     const img=document.createElement('img');
     img.src=src; img.alt=''; img.setAttribute('loading','eager');
-    el.appendChild(img);
-    hero.insertBefore(el,hero.firstChild);
+    track.appendChild(img);
   });
-  let current=0;
-  const slides=hero.querySelectorAll('.ph-hero-slide');
-  setInterval(()=>{
-    slides[current].classList.remove('active');
-    current=(current+1)%slides.length;
-    slides[current].classList.add('active');
-  },4200);
 }
 
 async function loadServicesFromDB(){
@@ -661,7 +668,7 @@ async function loadServicesFromDB(){
     });
     const services = await res.json();
     if (!Array.isArray(services)||!services.length) return;
-    initStylingHeroSlideshow(services);
+    initStylingHeroConveyor(services);
 
     // Render service cards
     const grid = document.getElementById('ph-svcs-grid');
