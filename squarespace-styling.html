@@ -73,8 +73,16 @@ html{scroll-behavior:smooth;}
 
 /* ---- Hero ---- */
 #ph-hero{position:relative;height:72vh;min-height:520px;overflow:hidden;display:flex;align-items:center;justify-content:center;z-index:2;background:#0a0a0a;}
-/* Subtle vignette over carousel */
-#ph-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.55) 100%);z-index:3;pointer-events:none;}
+/* Ambient blurred background layers — crossfade on center change */
+.ph-hero-bg{
+  position:absolute;inset:-8%;
+  background-size:cover;background-position:center;
+  filter:blur(48px) brightness(0.32) saturate(1.4);
+  transition:opacity 1.8s ease;
+  z-index:1;
+}
+/* Deep vignette sits over the blurred bg */
+#ph-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.62) 100%);z-index:3;pointer-events:none;}
 /* Fallback when no service images yet */
 #ph-hero-fallback{position:absolute;inset:0;z-index:1;}
 #ph-hero-fallback img{width:100%;height:100%;object-fit:cover;filter:brightness(0.55);}
@@ -84,10 +92,10 @@ html{scroll-behavior:smooth;}
   position:absolute;
   border-radius:18px;
   overflow:hidden;
-  box-shadow:0 20px 60px rgba(0,0,0,0.7);
-  transition:transform 1s cubic-bezier(0.25,0.46,0.45,0.94),
-             filter 1s ease,
-             opacity 1s ease;
+  box-shadow:0 24px 72px rgba(0,0,0,0.75);
+  transition:transform 1.8s cubic-bezier(0.22,0.61,0.36,1),
+             filter 1.8s ease,
+             opacity 1.8s ease;
   will-change:transform,filter,opacity;
 }
 .ph-car-item img{height:60vh;width:auto;display:block;}
@@ -650,18 +658,38 @@ function initStylingHeroCarousel(services){
   if(!images.length) return;
 
   const fallback = document.getElementById('ph-hero-fallback');
+  const hero = document.getElementById('ph-hero');
   const carousel = document.getElementById('ph-carousel');
   if(fallback) fallback.style.display='none';
   carousel.style.display='flex';
 
+  // Two crossfading ambient background layers inserted into the hero
+  const bgA=document.createElement('div'); bgA.className='ph-hero-bg';
+  const bgB=document.createElement('div'); bgB.className='ph-hero-bg'; bgB.style.opacity='0';
+  hero.insertBefore(bgA, hero.firstChild);
+  hero.insertBefore(bgB, hero.firstChild);
+  let bgSlot='a'; // which bg is currently visible
+
+  function updateBackground(src){
+    if(bgSlot==='a'){
+      bgB.style.backgroundImage=`url(${src})`;
+      bgB.style.opacity='1'; bgA.style.opacity='0';
+      bgSlot='b';
+    } else {
+      bgA.style.backgroundImage=`url(${src})`;
+      bgA.style.opacity='1'; bgB.style.opacity='0';
+      bgSlot='a';
+    }
+  }
+
   // Shuffle for variety each visit
   for(let i=images.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[images[i],images[j]]=[images[j],images[i]];}
-  // Need at least 5 items to fill all visible positions; pad if needed
+  // Need at least 5 items; pad if fewer
   const pool=[];
   while(pool.length<5) pool.push(...images);
   const items=pool.slice(0,Math.max(images.length,5));
 
-  // Build DOM items
+  // Build DOM card items
   const els=items.map(src=>{
     const el=document.createElement('div');
     el.className='ph-car-item';
@@ -669,46 +697,51 @@ function initStylingHeroCarousel(services){
     img.src=src; img.alt=''; img.setAttribute('loading','eager');
     el.appendChild(img);
     carousel.appendChild(el);
-    return el;
+    return {el, src};
   });
 
-  // Style config per distance from center (0=center, 1=adjacent, 2=far)
-  // translateX in vh so it scales proportionally with image height on all screen sizes
+  // Style config per distance from center
+  // translateX in vh — stays proportional on all screen sizes
   const CFG=[
-    {tx:0,  scale:1,    blur:0, bright:0.88, opacity:1,   z:10}, // center
-    {tx:39, scale:0.71, blur:3, bright:0.55, opacity:0.82, z:5}, // ±1
-    {tx:67, scale:0.52, blur:7, bright:0.35, opacity:0.5,  z:2}, // ±2
+    {tx:0,  scale:1,    blur:0, bright:0.9,  opacity:1,    z:10}, // center
+    {tx:39, scale:0.71, blur:3, bright:0.52, opacity:0.80, z:5},  // ±1
+    {tx:67, scale:0.52, blur:7, bright:0.32, opacity:0.48, z:2},  // ±2
   ];
+  const TRANS='transform 1.8s cubic-bezier(0.22,0.61,0.36,1),filter 1.8s ease,opacity 1.8s ease';
 
   let center=0;
 
   function applyStyles(){
     const n=els.length;
-    els.forEach((el,i)=>{
+    els.forEach(({el,src},i)=>{
       let pos=((i-center)%n+n)%n;
-      if(pos>n/2) pos-=n; // normalize to range [-floor(n/2), +floor(n/2)]
-      const abs=Math.min(Math.abs(pos),2);
+      if(pos>n/2) pos-=n;
+      const absPos=Math.abs(pos);
+      const abs=Math.min(absPos,2);
       const cfg=CFG[abs];
       const sign=pos<0?-1:1;
-      if(Math.abs(pos)>2){
-        el.style.cssText='opacity:0;z-index:0;pointer-events:none;position:absolute;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.7);transition:transform 1s cubic-bezier(0.25,0.46,0.45,0.94),filter 1s ease,opacity 1s ease;';
+      if(absPos>2){
+        el.style.cssText=`position:absolute;border-radius:18px;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,0.75);transition:${TRANS};opacity:0;z-index:0;pointer-events:none;`;
       } else {
         el.style.cssText=`
           position:absolute;border-radius:18px;overflow:hidden;
-          box-shadow:0 20px 60px rgba(0,0,0,0.7);
-          transition:transform 1s cubic-bezier(0.25,0.46,0.45,0.94),filter 1s ease,opacity 1s ease;
+          box-shadow:0 24px 72px rgba(0,0,0,0.75);
+          transition:${TRANS};
           transform:translateX(${cfg.tx*sign}vh) scale(${cfg.scale});
           filter:blur(${cfg.blur}px) brightness(${cfg.bright});
           opacity:${cfg.opacity};
           z-index:${cfg.z};
           pointer-events:${abs===0?'auto':'none'};
         `;
+        if(abs===0) updateBackground(src);
       }
     });
   }
 
+  // Set initial bg immediately (no transition on first paint)
+  bgA.style.backgroundImage=`url(${els[0].src})`; bgA.style.opacity='1';
   applyStyles();
-  setInterval(()=>{ center=(center+1)%els.length; applyStyles(); }, 3800);
+  setInterval(()=>{ center=(center+1)%els.length; applyStyles(); }, 5500);
 }
 
 async function loadServicesFromDB(){
