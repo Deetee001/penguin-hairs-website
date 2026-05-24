@@ -777,7 +777,15 @@ html{scroll-behavior:smooth;}
 // ---- SUPABASE ----
 const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
-const SHIPPING_RATES = { CA: 15, US: 20, GB: 35, AU: 35, NG: 25, GH: 25 };
+// Shipping rates stored in each country's native currency
+const SHIPPING_RATES = {
+  CA: { amount: 38,   cur: 'CAD' },
+  US: { amount: 45,   cur: 'USD' },
+  GB: { amount: 35,   cur: 'GBP' },
+  NG: { amount: 5000, cur: 'NGN' },
+  GH: { amount: 5000, cur: 'NGN' },
+  AU: { amount: 50,   cur: 'CAD' },
+};
 
 // ---- CURRENCY ----
 const CURRENCIES = { CAD:{symbol:'CA$',flag:'🇨🇦'}, USD:{symbol:'US$',flag:'🇺🇸'}, GBP:{symbol:'£',flag:'🇬🇧'}, NGN:{symbol:'₦',flag:'🇳🇬'} };
@@ -1285,7 +1293,16 @@ async function attachExpressPayments(totalStr) {
 
 function getShippingCost() {
   const country = (document.getElementById('co-country').value || 'CA');
-  return SHIPPING_RATES[country] || 15;
+  const rate = SHIPPING_RATES[country] || { amount: 38, cur: 'CAD' };
+  // Convert native amount to CAD for Square charge
+  const cadAmount = rate.cur === 'CAD' ? rate.amount : rate.amount / (fxRates[rate.cur] || 1);
+  // Format display in the rate's native currency (always show what the customer actually pays)
+  let display;
+  if (rate.cur === 'NGN') display = '₦' + Math.round(rate.amount).toLocaleString();
+  else if (rate.cur === 'GBP') display = '£' + rate.amount.toFixed(2);
+  else if (rate.cur === 'USD') display = 'US$' + rate.amount.toFixed(2);
+  else display = 'CA$' + rate.amount.toFixed(2);
+  return { cadAmount: Math.round(cadAmount * 100) / 100, display };
 }
 
 // ---- PROMO CODES ----
@@ -1316,7 +1333,7 @@ window.applyPromo=function(){
 
 function updateCheckoutTotals() {
   const subtotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
-  const shippingCost = getShippingCost();
+  const shipping = getShippingCost();
   var discount=0;
   if(appliedPromo){
     discount=appliedPromo.discount_type==='percent'
@@ -1324,10 +1341,10 @@ function updateCheckoutTotals() {
       : Math.min(appliedPromo.discount_value,subtotal);
     discount=Math.round(discount*100)/100;
   }
-  const total = subtotal - discount + shippingCost;
+  const total = subtotal - discount + shipping.cadAmount;
   sqTotalStr = 'CA$' + total.toFixed(2);
   document.getElementById('ph-co-subtotal-amt').textContent = formatPrice(subtotal);
-  document.getElementById('ph-co-shipping-amt').textContent = formatPrice(shippingCost);
+  document.getElementById('ph-co-shipping-amt').textContent = shipping.display;
   document.getElementById('ph-co-total-amt').textContent = formatPrice(total) + (currentCurrency !== 'CAD' ? ' ≈ ' + sqTotalStr : '');
   var discRow=document.getElementById('ph-co-discount-row');
   var discAmt=document.getElementById('ph-co-discount-amt');
@@ -1415,7 +1432,7 @@ async function processPayment(token) {
     return;
   }
 
-  const shippingCost = getShippingCost();
+  const shippingCost = getShippingCost().cadAmount;
 
   try {
     const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
