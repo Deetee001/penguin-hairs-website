@@ -246,8 +246,8 @@ html{scroll-behavior:smooth;}
 .ph-co-field input,.ph-co-field select{padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:white;font-family:'Lato',sans-serif;font-size:0.82rem;outline:none;transition:border-color 0.2s;border-radius:8px;}
 .ph-co-field input:focus,.ph-co-field select:focus{border-color:#d4af37;}
 .ph-co-field input::placeholder{color:rgba(255,255,255,0.35);}
-.ph-co-field select{cursor:pointer;}
-.ph-co-field select option{background:#111;}
+.ph-co-field select{cursor:pointer;background:#1a1a1a;color:white;color-scheme:dark;}
+.ph-co-field select option{background:#1a1a1a;color:white;}
 #sq-card-container{min-height:90px;background:#fff;border:1px solid rgba(212,175,55,0.35);padding:4px;border-radius:3px;}
 #sq-card-container.focused{border-color:#d4af37;}
 .ph-co-pay-btn{width:100%;padding:1.1rem;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;border:none;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;margin-top:1rem;}
@@ -1470,6 +1470,7 @@ async function processPayment(token) {
         'CVV_FAILURE': 'The security code (CVV) is incorrect.',
         'ADDRESS_VERIFICATION_FAILURE': 'Address verification failed. Please check your billing address.',
         'PAYMENT_LIMIT_EXCEEDED': 'This payment exceeds the allowed limit.',
+        'PAN_FAILURE': 'Your card could not be processed. Nigerian Verve cards and local-only cards are not supported — please use a Visa or Mastercard that is enabled for international payments.',
       };
       let errorMsg = 'Payment failed. Please try again.';
       try {
