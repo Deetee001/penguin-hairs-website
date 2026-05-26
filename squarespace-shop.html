@@ -1233,34 +1233,42 @@ let sqCard = null;
 let sqCardAttached = false;
 let sqTotalStr = 'CA$0.00'; // stored so we can restore button text without reading from DOM
 
-// Init Square payments object on page load
-async function initSquarePayments() {
-  if (!window.Square) return;
-  try {
-    sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
-  } catch(e) { console.error('Square init:', e); }
+// Wait for Square SDK to be available (iframe can delay script execution)
+async function waitForSquare(ms = 10000) {
+  const deadline = Date.now() + ms;
+  while (!window.Square) {
+    if (Date.now() > deadline) throw new Error('Square library failed to load. Please refresh.');
+    await new Promise(r => setTimeout(r, 250));
+  }
 }
-initSquarePayments();
+
+// Init Square payments — retries up to 4x with 1.5s gaps for the iframe timing issue
+async function ensureSquarePayments() {
+  if (sqPayments) return;
+  await waitForSquare();
+  let lastErr;
+  for (let i = 0; i < 4; i++) {
+    try {
+      sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
+      return;
+    } catch(e) {
+      lastErr = e;
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  throw lastErr;
+}
+
+// Kick off initialisation early so it's likely ready when checkout opens
+waitForSquare().then(() => {
+  ensureSquarePayments().catch(() => {});
+});
 
 async function attachSquareCard() {
   if (sqCardAttached) return;
   const errEl = document.getElementById('ph-co-error');
-  // Init sqPayments if not yet done (Square.js may load after our script)
-  if (!sqPayments) {
-    if (!window.Square) {
-      errEl.textContent = 'Square payment library failed to load. Please refresh the page.';
-      errEl.style.display = 'block';
-      return;
-    }
-    try {
-      sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
-    } catch(e) {
-      errEl.textContent = 'Payment init error: ' + e.message;
-      errEl.style.display = 'block';
-      return;
-    }
-  }
   try {
+    await ensureSquarePayments();
     sqCard = await sqPayments.card({
       style: {
         '.input-container': { borderColor: '#333', borderRadius: '0px' },
@@ -1277,7 +1285,8 @@ async function attachSquareCard() {
     errEl.style.display = 'none';
   } catch(e) {
     sqCard = null;
-    errEl.textContent = 'Card setup error: ' + e.message;
+    sqCardAttached = false;
+    errEl.textContent = 'Card setup error: ' + e.message + ' — please try again.';
     errEl.style.display = 'block';
   }
 }
