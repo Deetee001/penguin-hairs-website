@@ -20,6 +20,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://web.squarecdn.com/v1/square.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
 
 <style>
 /* ---- OVERLAY APPROACH: sits fixed on top of all Squarespace UI ---- */
@@ -729,11 +730,19 @@ html{scroll-behavior:smooth;}
 
       <div class="ph-co-section">
         <h3>Payment</h3>
-        <div id="sq-card-container"></div>
+        <!-- Square (all countries except Nigeria) -->
+        <div id="sq-payment-wrap">
+          <div id="sq-card-container"></div>
+        </div>
+        <!-- Paystack (Nigeria) -->
+        <div id="ps-payment-wrap" style="display:none;padding:0.75rem 0;">
+          <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);line-height:1.7;">Pay securely in Naira via Paystack.<br>Accepts <strong style="color:rgba(255,255,255,0.7);">Verve, Mastercard, Visa</strong> and bank transfer.</p>
+        </div>
         <div class="ph-co-error" id="ph-co-error"></div>
       </div>
 
       <button class="ph-co-pay-btn" id="ph-co-pay-btn" onclick="submitPayment('card')">Pay Now</button>
+      <button class="ph-co-pay-btn" id="ph-co-pay-btn-ps" onclick="initPaystackPayment()" style="display:none;background:linear-gradient(135deg,#00c3f7,#0093e9);border-color:#00c3f7;color:#fff;">Pay with Paystack &nbsp;₦</button>
 
       <!-- Success state -->
       <div class="ph-co-success" id="ph-co-success">
@@ -1356,7 +1365,14 @@ function updateCheckoutTotals() {
   }
 }
 
-window.onCountryChange = () => { updateCheckoutTotals(); };
+window.onCountryChange = () => {
+  updateCheckoutTotals();
+  const isNG = document.getElementById('co-country').value === 'NG';
+  document.getElementById('sq-payment-wrap').style.display  = isNG ? 'none'  : 'block';
+  document.getElementById('ps-payment-wrap').style.display  = isNG ? 'block' : 'none';
+  document.getElementById('ph-co-pay-btn').style.display    = isNG ? 'none'  : '';
+  document.getElementById('ph-co-pay-btn-ps').style.display = isNG ? ''      : 'none';
+};
 
 window.startCheckout = () => {
   if (cart.length === 0) return;
@@ -1412,6 +1428,93 @@ async function getShipping() {
     country:   document.getElementById('co-country').value,
   };
   return shipping;
+}
+
+// ---- PAYSTACK (Nigeria) ----
+window.initPaystackPayment = function() {
+  const errEl = document.getElementById('ph-co-error');
+  errEl.style.display = 'none';
+
+  const shipping = {
+    firstName: document.getElementById('co-first').value.trim(),
+    lastName:  document.getElementById('co-last').value.trim(),
+    email:     document.getElementById('co-email').value.trim(),
+    address:   document.getElementById('co-address').value.trim(),
+    city:      document.getElementById('co-city').value.trim(),
+    province:  document.getElementById('co-province').value.trim(),
+    postal:    document.getElementById('co-postal').value.trim(),
+    country:   'NG',
+  };
+  if (Object.values(shipping).some(v => !v)) {
+    errEl.textContent = 'Please fill in all delivery fields above.';
+    errEl.style.display = 'block';
+    document.getElementById('ph-co-right').scrollTop = 0;
+    return;
+  }
+
+  const subtotalCAD   = cart.reduce((s, i) => s + i.price * (i.qty || 1), 0);
+  const shippingCost  = getShippingCost();
+  let   discountCAD   = 0;
+  if (appliedPromo) {
+    discountCAD = appliedPromo.discount_type === 'percent'
+      ? subtotalCAD * appliedPromo.discount_value / 100
+      : Math.min(appliedPromo.discount_value, subtotalCAD);
+    discountCAD = Math.round(discountCAD * 100) / 100;
+  }
+  const totalCAD  = Math.round((subtotalCAD - discountCAD + shippingCost.cadAmount) * 100) / 100;
+  const ngnRate   = fxRates.NGN || 1020;
+  const totalNGN  = Math.round(totalCAD * ngnRate);
+  const amountKobo = totalNGN * 100;
+
+  const handler = PaystackPop.setup({
+    key:      'pk_live_559b7d94d98acdb6c45eca920fdf914010c77ab2',
+    email:    shipping.email,
+    amount:   amountKobo,
+    currency: 'NGN',
+    metadata: { custom_fields: [
+      { display_name: 'Customer',  variable_name: 'customer', value: shipping.firstName + ' ' + shipping.lastName },
+      { display_name: 'City',      variable_name: 'city',     value: shipping.city },
+    ]},
+    callback: function(response) {
+      processPaystackPayment(response.reference, shipping, shippingCost.cadAmount, subtotalCAD, totalCAD, totalNGN);
+    },
+    onClose: function() { /* user closed popup, do nothing */ }
+  });
+  handler.openIframe();
+};
+
+async function processPaystackPayment(reference, shipping, shippingCost, subtotalCAD, totalCAD, totalNGN) {
+  const errEl  = document.getElementById('ph-co-error');
+  const payBtn = document.getElementById('ph-co-pay-btn-ps');
+  errEl.style.display = 'none';
+  payBtn.disabled = true;
+  payBtn.textContent = 'Verifying payment...';
+
+  try {
+    const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/verify-paystack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
+      body: JSON.stringify({ reference, cart, shipping, shippingCost, subtotalCAD, totalCAD, totalNGN,
+        discountCode: appliedPromo ? appliedPromo.code : null })
+    });
+    const data = await res.json();
+    if (data.success) {
+      try { cart.forEach(item => trackEvent({ event_type: 'purchase', page: 'shop', product_id: String(item.id), product_name: item.name, amount: Math.round(item.price * item.qty * 100) })); } catch(e) {}
+      cart = []; saveCart(); updateCartUI();
+      document.getElementById('ph-cart-panel').classList.remove('open');
+      document.getElementById('ph-cart-overlay').style.display = 'none';
+      payBtn.style.display = 'none';
+      if (data.orderRef) document.getElementById('ph-co-order-ref').textContent = 'Order #' + data.orderRef;
+      document.getElementById('ph-co-success').style.display = 'flex';
+    } else {
+      throw new Error(data.error || 'Verification failed. Contact us with reference: ' + reference);
+    }
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    payBtn.disabled = false;
+    payBtn.textContent = 'Pay with Paystack ₦';
+  }
 }
 
 async function processPayment(token) {
