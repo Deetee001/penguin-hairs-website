@@ -19,7 +19,6 @@
 <meta name="twitter:image" content="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://web.squarecdn.com/v1/square.js"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 
 <style>
@@ -1233,40 +1232,52 @@ let sqCard = null;
 let sqCardAttached = false;
 let sqTotalStr = 'CA$0.00'; // stored so we can restore button text without reading from DOM
 
-// Wait for Square SDK to be available (iframe can delay script execution)
-async function waitForSquare(ms = 10000) {
-  const deadline = Date.now() + ms;
-  while (!window.Square) {
-    if (Date.now() > deadline) throw new Error('Square library failed to load. Please refresh.');
-    await new Promise(r => setTimeout(r, 250));
-  }
-}
+// Single shared promise — prevents two concurrent Square.payments() calls
+let sqInitPromise = null;
 
-// Init Square payments — retries up to 4x with 1.5s gaps for the iframe timing issue
 async function ensureSquarePayments() {
   if (sqPayments) return;
-  await waitForSquare();
-  let lastErr;
-  for (let i = 0; i < 4; i++) {
-    try {
-      sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
-      return;
-    } catch(e) {
-      lastErr = e;
-      await new Promise(r => setTimeout(r, 1500));
-    }
-  }
-  throw lastErr;
-}
+  if (sqInitPromise) { await sqInitPromise; return; }
 
-// Kick off initialisation early so it's likely ready when checkout opens
-waitForSquare().then(() => {
-  ensureSquarePayments().catch(() => {});
-});
+  sqInitPromise = (async () => {
+    // Lazy-load square.js on demand so onload fires in user-gesture context,
+    // giving the SDK the best chance to complete its internal async init.
+    if (!window.Square) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://web.squarecdn.com/v1/square.js';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Square library failed to load. Please refresh and try again.'));
+        document.head.appendChild(s);
+      });
+    }
+
+    // Give the SDK a moment to finish its own async setup after onload
+    await new Promise(r => setTimeout(r, 800));
+
+    let lastErr;
+    for (let i = 0; i < 3; i++) {
+      try {
+        sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
+        return;
+      } catch(e) {
+        lastErr = e;
+        sqPayments = null;
+        if (i < 2) await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+    sqInitPromise = null;
+    throw lastErr;
+  })();
+
+  await sqInitPromise;
+}
 
 async function attachSquareCard() {
   if (sqCardAttached) return;
   const errEl = document.getElementById('ph-co-error');
+  errEl.style.cssText = 'display:block;color:#d4af37;background:rgba(212,175,55,0.08);border-color:rgba(212,175,55,0.3);border-left-color:#d4af37;';
+  errEl.textContent = 'Loading payment form…';
   try {
     await ensureSquarePayments();
     sqCard = await sqPayments.card({
@@ -1283,10 +1294,14 @@ async function attachSquareCard() {
     await sqCard.attach(document.getElementById('sq-card-container'));
     sqCardAttached = true;
     errEl.style.display = 'none';
+    errEl.style.cssText = ''; // reset inline styles
   } catch(e) {
     sqCard = null;
     sqCardAttached = false;
-    errEl.textContent = 'Card setup error: ' + e.message + ' — please try again.';
+    sqPayments = null;
+    sqInitPromise = null; // allow fresh retry next time checkout opens
+    errEl.style.cssText = '';
+    errEl.textContent = 'Payment form failed to load — please close and reopen checkout to try again.';
     errEl.style.display = 'block';
   }
 }
