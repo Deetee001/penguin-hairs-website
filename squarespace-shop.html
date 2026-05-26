@@ -1764,6 +1764,7 @@ window.phCookieDecline = function(){
 
 // ---- EMAIL CAPTURE ----
 (function(){
+  return; // temporarily disabled
   if(localStorage.getItem('ph_email_captured')) return;
   var banner = document.getElementById('ph-email-capture');
   var timer = setTimeout(function(){
