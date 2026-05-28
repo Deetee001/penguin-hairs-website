@@ -1622,7 +1622,9 @@ async function psHandleResponse(resp) {
       } catch(e) {}
     }, 3000);
   } else {
-    throw new Error(resp.data?.display_text || resp.message || 'Payment failed. Please try again.');
+    const status = resp.data?.status || 'unknown';
+    const msg = resp.data?.display_text || resp.data?.gateway_response || resp.message || '';
+    throw new Error(msg || `Payment failed (status: ${status}). Please try again.`);
   }
 }
 
