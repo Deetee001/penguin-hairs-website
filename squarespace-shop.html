@@ -767,6 +767,7 @@ html{scroll-behavior:smooth;}
               <label>One-Time Password</label>
               <input type="text" id="ps-otp" placeholder="Enter OTP" inputmode="numeric" autocomplete="one-time-code">
             </div>
+            <p style="margin:8px 0 0;font-size:0.75rem;color:rgba(255,255,255,0.4);">Didn't receive it? <a id="ps-resend-otp" href="#" style="color:#d4af37;text-decoration:none;" onclick="psResendOtp(event)">Resend OTP</a></p>
           </div>
         </div>
         <div class="ph-co-error" id="ph-co-error"></div>
@@ -1520,6 +1521,25 @@ function psNgnTotals() {
   const totalCAD = Math.round((subtotalCAD - discount + shippingInfo.cadAmount) * 100) / 100;
   const totalNGN = Math.round(totalCAD * (fxRates.NGN || 1020));
   return { subtotalCAD, shippingInfo, totalCAD, totalNGN };
+}
+
+async function psResendOtp(e) {
+  e.preventDefault();
+  if (!psReference) return;
+  const link = document.getElementById('ps-resend-otp');
+  const errEl = document.getElementById('ph-co-error');
+  link.textContent = 'Sending…';
+  link.style.pointerEvents = 'none';
+  try {
+    await psApiCall('resend_otp', { reference: psReference });
+    link.textContent = 'OTP resent!';
+    setTimeout(() => { link.textContent = 'Resend OTP'; link.style.pointerEvents = ''; }, 8000);
+  } catch(err) {
+    errEl.textContent = 'Could not resend OTP — please try again.';
+    errEl.style.display = 'block';
+    link.textContent = 'Resend OTP';
+    link.style.pointerEvents = '';
+  }
 }
 
 function psSetState(state, msg) {
