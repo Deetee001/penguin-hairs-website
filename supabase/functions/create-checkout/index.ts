@@ -21,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cart, sourceId, shipping, shippingCost } = await req.json();
+    const { cart, sourceId, shipping, shippingCost, discountAmount } = await req.json();
 
     if (!cart || cart.length === 0) {
       return new Response(JSON.stringify({ error: "Cart is empty" }), {
@@ -35,9 +35,10 @@ serve(async (req) => {
     }
 
     const shippingCostNum = Number(shippingCost) || 0;
+    const discountCents = Math.round((Number(discountAmount) || 0) * 100);
     const subtotalCents = cart.reduce((sum: number, item: any) => sum + item.price * item.qty * 100, 0);
     const shippingCents = Math.round(shippingCostNum * 100);
-    const totalCents = subtotalCents + shippingCents;
+    const totalCents = Math.max(0, subtotalCents + shippingCents - discountCents);
 
     const lineItems: any[] = cart.map((item: any) => ({
       name: item.name,

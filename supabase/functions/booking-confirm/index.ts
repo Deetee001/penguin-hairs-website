@@ -11,11 +11,20 @@ const cors = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
 };
 
+// Keys match the option values in the booking form select
 const SERVICE_LABELS: Record<string, string> = {
-  installation: "Wig Installation",
-  custom_cut: "Custom Cut & Style",
-  styling_color: "Styling & Color",
-  maintenance: "Maintenance & Care",
+  "Wig Installation": "Wig Installation",
+  "Custom Wig Cut": "Custom Wig Cut",
+  "Wig Styling & Color": "Wig Styling & Color",
+  "Maintenance & Refresh": "Maintenance & Refresh",
+};
+
+// Duration in hours per service (used for ICS calendar event end time)
+const SERVICE_DURATIONS: Record<string, number> = {
+  "Wig Installation": 2,
+  "Custom Wig Cut": 1.5,
+  "Wig Styling & Color": 3,
+  "Maintenance & Refresh": 1,
 };
 
 serve(async (req) => {
@@ -49,7 +58,8 @@ serve(async (req) => {
     });
 
     // Build ICS calendar attachment
-    const icsContent = buildICS(fullName, email, serviceLabel, date, time);
+    const serviceDuration = SERVICE_DURATIONS[service] || 1;
+    const icsContent = buildICS(fullName, email, serviceLabel, date, time, serviceDuration);
     // Use TextEncoder so non-ASCII chars don't break btoa
     const icsBytes = new TextEncoder().encode(icsContent);
     const icsBase64 = btoa(Array.from(icsBytes, b => String.fromCharCode(b)).join(""));
@@ -171,13 +181,15 @@ function parseTime(timeStr: string): { hours: number; minutes: number } {
   return { hours, minutes };
 }
 
-function buildICS(name: string, email: string, service: string, date: string, time: string): string {
+function buildICS(name: string, email: string, service: string, date: string, time: string, durationHours = 1): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   const { hours, minutes } = parseTime(time);
   const [year, month, day] = date.split("-").map(Number);
   const dtStart = `${year}${pad(month)}${pad(day)}T${pad(hours)}${pad(minutes)}00`;
-  const endHours = hours + 1 >= 24 ? 23 : hours + 1;
-  const dtEnd = `${year}${pad(month)}${pad(day)}T${pad(endHours)}${pad(minutes)}00`;
+  const totalEndMinutes = hours * 60 + minutes + Math.round(durationHours * 60);
+  const endHours = Math.min(Math.floor(totalEndMinutes / 60), 23);
+  const endMins = totalEndMinutes % 60;
+  const dtEnd = `${year}${pad(month)}${pad(day)}T${pad(endHours)}${pad(endMins)}00`;
   const uid = `ph-${Date.now()}@penguinhairs.com`;
   const dtstamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
 
