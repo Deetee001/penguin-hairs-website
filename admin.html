@@ -1615,7 +1615,7 @@ const APPT_SERVICE_LABELS = {
 
 async function loadAppointments() {
   try {
-    allAppointments = await sbFetch('bookings?order=date.desc,time.asc&select=*');
+    allAppointments = await sbFetch('bookings?order=date.asc,time.asc&select=*');
     apptsLoaded = true;
     const today = new Date().toISOString().split('T')[0];
     const upcoming = allAppointments.filter(a => a.date >= today && a.status !== 'cancelled').length;
@@ -1637,7 +1637,15 @@ function renderAppointments() {
   if (mobList) mobList.innerHTML = '';
   empty.style.display = allAppointments.length ? 'none' : 'block';
   const today = new Date().toISOString().split('T')[0];
-  allAppointments.forEach(a => {
+  const INACTIVE = new Set(['cancelled', 'completed']);
+  const appts = [...allAppointments].sort((a, b) => {
+    const aInactive = INACTIVE.has(a.status);
+    const bInactive = INACTIVE.has(b.status);
+    if (aInactive !== bInactive) return aInactive ? 1 : -1;
+    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+    return 0;
+  });
+  appts.forEach(a => {
     const date = new Date(a.date + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric'});
     const isPast = a.date < today;
     const serviceLabel = APPT_SERVICE_LABELS[a.service] || a.service || '—';
