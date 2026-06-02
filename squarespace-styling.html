@@ -63,6 +63,8 @@ html{scroll-behavior:smooth;}
 .ph-nav-links a{color:rgba(255,255,255,0.8);text-decoration:none;font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.3s;position:relative;}
 .ph-nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:#d4af37;transition:width 0.3s;}
 .ph-nav-links a:hover{color:white;} .ph-nav-links a:hover::after,.ph-nav-links a.active::after{width:100%;} .ph-nav-links a.active{color:#d4af37;}
+.ph-cart-btn{position:relative;background:none;border:none;color:white;cursor:pointer;font-size:1.1rem;padding:0.5rem;}
+.ph-cart-count{position:absolute;top:-5px;right:-5px;background:#d4af37;color:#000;font-size:0.65rem;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
 .ph-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:0.5rem;}
 .ph-hamburger span{display:block;width:24px;height:1px;background:white;}
 .ph-mobile-menu{display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.98);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:2rem;opacity:0;pointer-events:none;transition:opacity 0.3s ease;}
@@ -250,6 +252,10 @@ input[type="date"]{cursor:pointer;}
       <a href="/" target="_parent">Home</a>
       <a href="/shop" target="_parent">Collection</a>
       <a href="/styling" class="active" target="_parent">Styling</a>
+      <button class="ph-cart-btn" onclick="phGoToShop()" title="View bag">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="ph-cart-count" id="ph-nav-cart-count" style="display:none">0</span>
+      </button>
     </div>
     <button class="ph-hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
   </nav>
@@ -259,6 +265,7 @@ input[type="date"]{cursor:pointer;}
     <a href="/" onclick="toggleMenu()" target="_parent">Home</a>
     <a href="/shop" onclick="toggleMenu()" target="_parent">Collection</a>
     <a href="/styling" onclick="toggleMenu()" target="_parent">Styling</a>
+    <a href="/shop" onclick="toggleMenu()" target="_parent"><i class="fas fa-shopping-bag"></i> My Bag <span id="ph-mob-cart-count"></span></a>
   </div>
 
   <!-- Hero -->
@@ -551,6 +558,20 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 // ---- NAV ----
 document.getElementById('ph-overlay').addEventListener('scroll',()=>document.getElementById('ph-nav').classList.toggle('scrolled',(document.getElementById('ph-overlay')||window).scrollTop||window.scrollY>80));
 window.toggleMenu=()=>document.getElementById('ph-mobile-menu').classList.toggle('open');
+
+// ---- NAV CART COUNT ----
+(function updateNavCartCount(){
+  try {
+    var cart = JSON.parse(localStorage.getItem('ph_cart') || '[]');
+    var count = cart.reduce(function(s,i){ return s + (i.qty||1); }, 0);
+    var badge = document.getElementById('ph-nav-cart-count');
+    var mobCount = document.getElementById('ph-mob-cart-count');
+    if (count > 0) {
+      if (badge) { badge.textContent = count; badge.style.display = 'flex'; }
+      if (mobCount) mobCount.textContent = '(' + count + ')';
+    }
+  } catch(e) {}
+})();
 
 // ---- SCROLL REVEAL ----
 const overlayRoot=document.getElementById('ph-overlay');
