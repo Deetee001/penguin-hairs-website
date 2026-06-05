@@ -644,6 +644,9 @@ window.submitBooking=async ()=>{
   if(!fname||!email||!service||!date||!selectedTime){
     showToast('Please fill in all required fields'); return;
   }
+  if(phone && !/^\+?[\d\s\-().]{7,20}$/.test(phone)){
+    showToast('Please enter a valid phone number'); return;
+  }
   const btn=document.querySelector('[onclick="submitBooking()"]');
   if(btn){btn.disabled=true;btn.textContent='Checking availability...';}
   // Final availability check before submitting
