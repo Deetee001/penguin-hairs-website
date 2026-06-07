@@ -518,9 +518,10 @@ tr:hover td{background:rgba(212,175,55,.04);}
       </div>
       <div class="ph-form-row">
         <div class="ph-form-group">
-          <label>Base Price <span style="color:#d4af37;font-size:0.75rem;">(CA$)</span></label>
-          <input type="number" id="f-price" placeholder="299" min="0">
-          <span class="ph-hint">Enter in Canadian dollars. Converted automatically on the website.</span>
+          <label>Starting Price <span style="color:#d4af37;font-size:0.75rem;">(CA$, auto)</span></label>
+          <input type="number" id="f-price" min="0" style="display:none">
+          <div id="f-price-preview" style="padding:0.6rem 0.8rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;font-size:0.95rem;color:rgba(255,255,255,0.35);">Set by your lowest length price</div>
+          <span class="ph-hint">Automatically pulled from the cheapest length you enter below.</span>
         </div>
         <div class="ph-form-group">
           <label>Sort Order</label>
@@ -1276,6 +1277,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('f-img-add-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { e.preventDefault(); addImageUrl(); }
   });
+  document.getElementById('f-lengths-tbl').addEventListener('input', updatePricePreview);
 });
 
 // ---- PRICING TABLE ----
@@ -1295,7 +1297,7 @@ function appendPricingRow(tbl, name, price) {
     <input type="text" placeholder="Option name" value="${escHtml(name)}" style="font-size:16px">
     <span class="ph-price-prefix">$</span>
     <input type="number" placeholder="0" value="${escHtml(price)}" min="0" step="1" style="font-size:16px">
-    <button type="button" class="ph-rm-btn" onclick="this.parentElement.remove()">✕</button>
+    <button type="button" class="ph-rm-btn" onclick="this.parentElement.remove();updatePricePreview()">✕</button>
   `;
   tbl.appendChild(row);
 }
@@ -1318,6 +1320,25 @@ function getPricingValues(field) {
   return result;
 }
 
+function updatePricePreview() {
+  const prices = [];
+  document.querySelectorAll('#f-lengths-tbl .ph-pricing-row input[type="number"]').forEach(inp => {
+    const v = parseInt(inp.value, 10);
+    if (!isNaN(v) && v >= 0) prices.push(v);
+  });
+  const preview = document.getElementById('f-price-preview');
+  if (prices.length) {
+    const min = Math.min(...prices);
+    preview.textContent = 'CA$' + min;
+    preview.style.color = '#d4af37';
+    document.getElementById('f-price').value = min;
+  } else {
+    preview.textContent = 'Set by your lowest length price';
+    preview.style.color = 'rgba(255,255,255,0.35)';
+    document.getElementById('f-price').value = '';
+  }
+}
+
 // ---- EDIT MODAL ----
 function openAddModal() {
   document.getElementById('ph-modal-title').textContent = 'Add Product';
@@ -1332,6 +1353,7 @@ function openAddModal() {
   buildPricingUI('closures', []);
   buildPricingUI('colors', []);
   buildPricingUI('weights', []);
+  updatePricePreview();
   document.getElementById('f-featured').checked = false;
   document.getElementById('f-in-stock').checked = true;
   document.getElementById('ph-save-status').textContent = '';
@@ -1355,6 +1377,7 @@ function openEditModal(id) {
   buildPricingUI('closures', p.closures || []);
   buildPricingUI('colors', p.colors || []);
   buildPricingUI('weights', p.weights || []);
+  updatePricePreview();
   document.getElementById('f-featured').checked = !!p.featured;
   document.getElementById('f-in-stock').checked = !!p.in_stock;
   document.getElementById('ph-save-status').textContent = '';
