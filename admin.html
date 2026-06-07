@@ -1277,7 +1277,9 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('f-img-add-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { e.preventDefault(); addImageUrl(); }
   });
-  document.getElementById('f-lengths-tbl').addEventListener('input', updatePricePreview);
+  ['f-lengths-tbl','f-closures-tbl','f-colors-tbl','f-weights-tbl'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePricePreview);
+  });
 });
 
 // ---- PRICING TABLE ----
@@ -1320,23 +1322,35 @@ function getPricingValues(field) {
   return result;
 }
 
-function updatePricePreview() {
+function minGroupPrice(tableId) {
   const prices = [];
-  document.querySelectorAll('#f-lengths-tbl .ph-pricing-row input[type="number"]').forEach(inp => {
+  document.querySelectorAll('#' + tableId + ' .ph-pricing-row input[type="number"]').forEach(inp => {
     const v = parseInt(inp.value, 10);
     if (!isNaN(v) && v >= 0) prices.push(v);
   });
+  return prices.length ? Math.min(...prices) : 0;
+}
+
+function updatePricePreview() {
+  const lengthPrices = [];
+  document.querySelectorAll('#f-lengths-tbl .ph-pricing-row input[type="number"]').forEach(inp => {
+    const v = parseInt(inp.value, 10);
+    if (!isNaN(v) && v >= 0) lengthPrices.push(v);
+  });
   const preview = document.getElementById('f-price-preview');
-  if (prices.length) {
-    const min = Math.min(...prices);
-    preview.textContent = 'CA$' + min;
-    preview.style.color = '#d4af37';
-    document.getElementById('f-price').value = min;
-  } else {
+  if (!lengthPrices.length) {
     preview.textContent = 'Set by your lowest length price';
     preview.style.color = 'rgba(255,255,255,0.35)';
     document.getElementById('f-price').value = '';
+    return;
   }
+  const base = Math.min(...lengthPrices)
+    + minGroupPrice('f-closures-tbl')
+    + minGroupPrice('f-colors-tbl')
+    + minGroupPrice('f-weights-tbl');
+  preview.textContent = 'CA$' + base;
+  preview.style.color = '#d4af37';
+  document.getElementById('f-price').value = base;
 }
 
 // ---- EDIT MODAL ----
@@ -1406,11 +1420,14 @@ async function saveProduct() {
   const colors = getPricingValues('colors');
   const weights = getPricingValues('weights');
 
-  // Auto-set base price to minimum length price (if lengths defined)
+  // Auto-set base price = min(length) + min(closure) + min(color) + min(weight)
+  function minFrom(arr) {
+    const prices = arr.map(v => parseInt(v.split('|')[1] || '0', 10)).filter(n => !isNaN(n));
+    return prices.length ? Math.min(...prices) : 0;
+  }
   let finalPrice = price;
   if (lengths.length) {
-    const prices = lengths.map(v => parseInt(v.split('|')[1] || '0', 10)).filter(n => !isNaN(n));
-    if (prices.length) finalPrice = Math.min(...prices);
+    finalPrice = minFrom(lengths) + minFrom(closures) + minFrom(colors) + minFrom(weights);
   }
   if (isNaN(finalPrice) || finalPrice < 0) finalPrice = 0;
 
