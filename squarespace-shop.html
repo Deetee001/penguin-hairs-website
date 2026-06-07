@@ -1120,6 +1120,11 @@ window.openModal=(id)=>{
     <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${(selectedProduct.closures||[]).map(c=>optBtn('closure',c)).join('')}</div></div>
     <div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${(selectedProduct.colors||[]).map(c=>optBtn('color',c)).join('')}</div></div>
     <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${(selectedProduct.weights||[]).map(w=>optBtn('weight',w)).join('')}</div></div>`;
+  // Auto-select any option group that has only one choice
+  document.querySelectorAll('#ph-modal-opts .ph-option-group').forEach(group=>{
+    const btns=group.querySelectorAll('.ph-opt');
+    if(btns.length===1) btns[0].click();
+  });
   document.getElementById('ph-modal').classList.add('ph-modal-open');
   document.body.style.overflow='hidden';
 
