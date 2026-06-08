@@ -530,6 +530,24 @@ tr:hover td{background:rgba(212,175,55,.04);}
       </div>
       <div class="ph-form-row full">
         <div class="ph-form-group">
+          <label style="display:flex;align-items:center;gap:0.75rem;">
+            <span>On Sale?</span>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-weight:400;cursor:pointer;">
+              <input type="checkbox" id="f-on-sale" onchange="toggleSaleField()" style="accent-color:#e05555;width:16px;height:16px;">
+              <span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Enable sale price</span>
+            </label>
+          </label>
+          <div id="f-sale-wrap" style="display:none;margin-top:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <span style="color:rgba(255,255,255,0.5);font-size:0.9rem;">CA$</span>
+              <input type="number" id="f-sale-price" min="0" placeholder="e.g. 180" style="flex:1;">
+            </div>
+            <span class="ph-hint" style="color:#e05555;">Customers will see the original price crossed out and this sale price on the card.</span>
+          </div>
+        </div>
+      </div>
+      <div class="ph-form-row full">
+        <div class="ph-form-group">
           <label>Description</label>
           <textarea id="f-desc" placeholder="Product description..."></textarea>
         </div>
@@ -1331,6 +1349,12 @@ function minGroupPrice(tableId) {
   return prices.length ? Math.min(...prices) : 0;
 }
 
+function toggleSaleField() {
+  const on = document.getElementById('f-on-sale').checked;
+  document.getElementById('f-sale-wrap').style.display = on ? 'block' : 'none';
+  if (!on) document.getElementById('f-sale-price').value = '';
+}
+
 function updatePricePreview() {
   const lengthPrices = [];
   document.querySelectorAll('#f-lengths-tbl .ph-pricing-row input[type="number"]').forEach(inp => {
@@ -1368,6 +1392,9 @@ function openAddModal() {
   buildPricingUI('colors', []);
   buildPricingUI('weights', []);
   updatePricePreview();
+  document.getElementById('f-on-sale').checked = false;
+  document.getElementById('f-sale-price').value = '';
+  document.getElementById('f-sale-wrap').style.display = 'none';
   document.getElementById('f-featured').checked = false;
   document.getElementById('f-in-stock').checked = true;
   document.getElementById('ph-save-status').textContent = '';
@@ -1392,6 +1419,10 @@ function openEditModal(id) {
   buildPricingUI('colors', p.colors || []);
   buildPricingUI('weights', p.weights || []);
   updatePricePreview();
+  const onSale = p.sale_price != null;
+  document.getElementById('f-on-sale').checked = onSale;
+  document.getElementById('f-sale-price').value = onSale ? p.sale_price : '';
+  document.getElementById('f-sale-wrap').style.display = onSale ? 'block' : 'none';
   document.getElementById('f-featured').checked = !!p.featured;
   document.getElementById('f-in-stock').checked = !!p.in_stock;
   document.getElementById('ph-save-status').textContent = '';
@@ -1434,10 +1465,14 @@ async function saveProduct() {
   // Collect image URLs from currentImages (filter out blanks)
   const imageUrls = currentImages.filter(u => u && u.trim());
 
+  const onSale = document.getElementById('f-on-sale').checked;
+  const salePriceVal = onSale ? (parseInt(document.getElementById('f-sale-price').value, 10) || null) : null;
+
   const payload = {
     name,
     category: document.getElementById('f-category').value,
     price: finalPrice,
+    sale_price: salePriceVal,
     sort_order: parseInt(document.getElementById('f-sort').value, 10) || 0,
     description: document.getElementById('f-desc').value.trim() || null,
     image_url: imageUrls[0] || null,   // keep legacy field in sync

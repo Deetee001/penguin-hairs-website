@@ -146,6 +146,9 @@ html{scroll-behavior:smooth;}
 .ph-card-footer{display:flex;justify-content:space-between;align-items:center;}
 .ph-card-price{font-size:1.1rem;color:white;}
 .ph-card-price small{font-size:0.7rem;color:rgba(255,255,255,0.4);}
+.ph-card-price .ph-orig-price{font-size:0.8rem;color:rgba(255,255,255,0.35);text-decoration:line-through;margin-right:0.4rem;}
+.ph-card-price .ph-sale-price{color:#e05555;}
+.ph-sale-badge{display:inline-block;font-size:0.55rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:#e05555;color:#fff;padding:0.18rem 0.45rem;border-radius:3px;margin-left:0.5rem;vertical-align:middle;}
 .ph-quick-btn{padding:0.5rem 1rem;border:1px solid rgba(212,175,55,0.4);background:transparent;color:#d4af37;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;font-family:'Lato',sans-serif;border-radius:6px;}
 .ph-quick-btn:hover{background:#d4af37;color:#000;}
 .ph-no-results{text-align:center;padding:5rem 2rem;color:rgba(255,255,255,0.3);}
@@ -849,7 +852,8 @@ function setCurrency(code) {
   renderProducts();
   updateCheckoutTotals();
   if (selectedProduct) {
-    const mp = (selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;}, selectedProduct.price);
+    const _sd=selectedProduct.sale_price!=null?Math.max(0,selectedProduct.price-selectedProduct.sale_price):0;
+    const mp = Math.max(0,(selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;}, selectedProduct.price)-_sd);
     document.getElementById('ph-modal-price').textContent = selection._price ? formatPrice(selection._price) : formatPrice(mp);
   }
 }
@@ -967,8 +971,9 @@ updateCartUI();
 // ---- RENDER PRODUCTS ----
 function renderProducts(){
   let products=[...filteredProducts];
-  if(currentSort==='price-asc')products.sort((a,b)=>a.price-b.price);
-  else if(currentSort==='price-desc')products.sort((a,b)=>b.price-a.price);
+  const effPrice=p=>p.sale_price!=null?p.sale_price:p.price;
+  if(currentSort==='price-asc')products.sort((a,b)=>effPrice(a)-effPrice(b));
+  else if(currentSort==='price-desc')products.sort((a,b)=>effPrice(b)-effPrice(a));
   else if(currentSort==='name')products.sort((a,b)=>a.name.localeCompare(b.name));
   const grid=document.getElementById('ph-grid');
   const noRes=document.getElementById('ph-no-results');
@@ -990,11 +995,14 @@ function renderProducts(){
         <div class="ph-card-overlay"></div>
       </div>
       <div class="ph-card-body">
-        <p style="display:flex;align-items:center;justify-content:space-between;">${p.category}${soldOut?'<span style="font-size:0.6rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#888;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);padding:0.2rem 0.5rem;border-radius:4px;">Sold Out</span>':''}</p>
+        <p style="display:flex;align-items:center;justify-content:space-between;">${p.category}${p.sale_price!=null?'<span class="ph-sale-badge">Sale</span>':''}${soldOut?'<span style="font-size:0.6rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#888;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);padding:0.2rem 0.5rem;border-radius:4px;">Sold Out</span>':''}</p>
         <h3>${p.name}</h3>
         <p class="ph-card-desc">${p.description||''}</p>
         <div class="ph-card-footer">
-          <div class="ph-card-price"><small>From </small>${formatPrice(p.price)}</div>
+          <div class="ph-card-price">${p.sale_price!=null
+            ? `<small>From </small><span class="ph-orig-price">${formatPrice(p.price)}</span><span class="ph-sale-price">${formatPrice(p.sale_price)}</span>`
+            : `<small>From </small>${formatPrice(p.price)}`
+          }</div>
           <button class="ph-quick-btn" ${soldOut?'disabled':''} onclick="event.stopPropagation();${soldOut?'':` openModal(${p.id})`}">${soldOut?'Sold Out':'Customize'}</button>
         </div>
       </div>
@@ -1106,9 +1114,10 @@ window.openModal=(id)=>{
   document.getElementById('ph-modal-cat').textContent=selectedProduct.category;
   document.getElementById('ph-modal-title').textContent=selectedProduct.name;
   document.getElementById('ph-modal-desc').textContent=selectedProduct.description||'';
-  // Show min length price as starting price (fallback to product.price)
-  const _minPrice=(selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;},selectedProduct.price);
-  document.getElementById('ph-modal-price').textContent=formatPrice(_minPrice);
+  // Show min length price as starting price, applying sale discount if active
+  const _rawMin=(selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;},selectedProduct.price);
+  const _saleDiscount=selectedProduct.sale_price!=null?Math.max(0,selectedProduct.price-selectedProduct.sale_price):0;
+  document.getElementById('ph-modal-price').textContent=formatPrice(Math.max(0,_rawMin-_saleDiscount));
   document.getElementById('ph-sel-summary').style.display='none';
   document.getElementById('ph-add-btn').disabled=true;
   document.getElementById('ph-add-btn').textContent='Select All Options to Add to Bag';
@@ -1208,10 +1217,11 @@ window.selectOpt=(type,value,btn)=>{
   selection[type]=value;
   // Parse helpers
   const _name=v=>v&&v.includes('|')?v.split('|')[0]:(v||'');
-  const _base=v=>v&&v.includes('|')?parseInt(v.split('|')[1],10)||0:selectedProduct.price;
+  const _saleDiscount=selectedProduct.sale_price!=null?Math.max(0,selectedProduct.price-selectedProduct.sale_price):0;
+  const _base=v=>v&&v.includes('|')?Math.max(0,(parseInt(v.split('|')[1],10)||0)-_saleDiscount):selectedProduct.sale_price??selectedProduct.price;
   const _up=v=>v&&v.includes('|')?parseInt(v.split('|')[1],10)||0:0;
   // Always compute and show live price
-  const base=selection.length?_base(selection.length):selectedProduct.price;
+  const base=selection.length?_base(selection.length):selectedProduct.sale_price??selectedProduct.price;
   const total=base+_up(selection.closure)+_up(selection.color)+_up(selection.weight);
   selection._price=total;
   document.getElementById('ph-modal-price').textContent=formatPrice(total);
