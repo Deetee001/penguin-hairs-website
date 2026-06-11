@@ -308,6 +308,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <button class="ph-tab" onclick="switchTab('appointments')">Appointments</button>
       <button class="ph-tab" onclick="switchTab('services')">Services</button>
       <button class="ph-tab" onclick="switchTab('analytics')">Analytics</button>
+      <button class="ph-tab" onclick="switchTab('shipping')">Shipping</button>
     </div>
 
     <!-- Products Tab -->
@@ -485,6 +486,62 @@ tr:hover td{background:rgba(212,175,55,.04);}
             </table>
           </div>
           <div class="ph-empty" id="ph-an-empty" style="display:none">No data yet for this period.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipping Tab -->
+    <div id="tab-shipping" style="display:none">
+      <div class="ph-toolbar" style="justify-content:flex-end;">
+        <button class="ph-btn ph-btn-gold" onclick="openAddShippingRow()">+ Add Country</button>
+      </div>
+      <div class="ph-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Country</th>
+              <th>Code</th>
+              <th>Amount</th>
+              <th>Currency</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ph-shipping-body">
+            <tr><td colspan="5" class="ph-loading" style="padding:20px;text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="ph-shipping-add-form" style="display:none;background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin-top:16px;">
+        <h3 style="font-size:13px;color:#d4af37;margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;">Add Shipping Country</h3>
+        <div style="display:grid;grid-template-columns:1fr 120px 120px 120px;gap:12px;align-items:end;">
+          <div>
+            <label style="font-size:11px;color:#666;display:block;margin-bottom:5px;">Country Name</label>
+            <input type="text" id="sh-add-name" placeholder="e.g. France">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#666;display:block;margin-bottom:5px;">Code (2-letter)</label>
+            <input type="text" id="sh-add-code" placeholder="FR" maxlength="2" style="text-transform:uppercase;">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#666;display:block;margin-bottom:5px;">Amount</label>
+            <input type="number" id="sh-add-amount" placeholder="0" min="0" step="0.01">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#666;display:block;margin-bottom:5px;">Currency</label>
+            <select id="sh-add-currency">
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+              <option value="NGN">NGN</option>
+              <option value="EUR">EUR</option>
+              <option value="AUD">AUD</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;align-items:center;">
+          <button class="ph-btn ph-btn-gold" onclick="saveNewShippingRate()">Save</button>
+          <button class="ph-btn ph-btn-outline" onclick="document.getElementById('ph-shipping-add-form').style.display='none'">Cancel</button>
+          <span id="ph-shipping-add-status" style="font-size:12px;"></span>
         </div>
       </div>
     </div>
@@ -1619,7 +1676,7 @@ document.getElementById('ph-confirm-modal').addEventListener('click', function(e
 document.getElementById('ph-appt-modal').addEventListener('click', function(e){ if(e.target===this) closeApptModal(); });
 
 // ---- TABS ----
-const TAB_NAMES = ['products','orders','appointments','services','analytics'];
+const TAB_NAMES = ['products','orders','appointments','services','analytics','shipping'];
 function switchTab(tab) {
   TAB_NAMES.forEach((t, i) => {
     document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
@@ -1629,6 +1686,7 @@ function switchTab(tab) {
   if (tab === 'appointments' && !apptsLoaded) loadAppointments();
   if (tab === 'services' && !servicesLoaded) loadServices();
   if (tab === 'analytics') loadAnalytics();
+  if (tab === 'shipping' && !shippingLoaded) loadShipping();
 }
 
 // ---- ORDERS ----
@@ -2099,6 +2157,115 @@ async function loadAnalytics() {
     document.getElementById('ph-an-loading').style.display = 'none';
     document.getElementById('ph-an-container').style.display = 'block';
     document.getElementById('ph-an-empty').style.display = 'block';
+  }
+}
+
+// ---- SHIPPING ----
+let shippingLoaded = false;
+let allShippingRates = [];
+
+async function loadShipping() {
+  shippingLoaded = true;
+  const tbody = document.getElementById('ph-shipping-body');
+  tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:#666;">Loading...</td></tr>';
+  try {
+    allShippingRates = await sbFetch('shipping_rates?order=country_name.asc');
+    renderShippingTable();
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#e05555;padding:20px;">Failed to load. Please refresh.</td></tr>';
+  }
+}
+
+function renderShippingTable() {
+  const tbody = document.getElementById('ph-shipping-body');
+  if (!allShippingRates.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:#555;">No shipping rates yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = allShippingRates.map(r => `
+    <tr id="sh-row-${r.id}">
+      <td>${r.country_name}</td>
+      <td><span style="font-family:monospace;background:#1a1a1a;padding:2px 8px;border-radius:4px;font-size:12px;">${r.country_code}</span></td>
+      <td id="sh-amt-${r.id}">${r.amount}</td>
+      <td style="color:rgba(255,255,255,0.5);">${r.currency}</td>
+      <td>
+        <div class="ph-actions">
+          <button class="ph-btn-sm ph-edit-btn" onclick="editShippingRate(${r.id})">Edit</button>
+          <button class="ph-btn-sm ph-del-btn" onclick="deleteShippingRate(${r.id},'${r.country_name.replace(/'/g,"\\'")}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function editShippingRate(id) {
+  const r = allShippingRates.find(x => x.id === id);
+  if (!r) return;
+  const amtCell = document.getElementById('sh-amt-' + id);
+  amtCell.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <input type="number" value="${r.amount}" min="0" step="0.01" style="width:100px;" id="sh-edit-${id}">
+      <button class="ph-btn-sm ph-edit-btn" onclick="saveShippingEdit(${id})">Save</button>
+      <button class="ph-btn-sm" onclick="renderShippingTable()" style="background:transparent;color:#666;border-color:#444;">✕</button>
+    </div>
+  `;
+  document.getElementById('sh-edit-' + id).focus();
+  document.getElementById('sh-edit-' + id).addEventListener('keydown', e => { if(e.key==='Enter') saveShippingEdit(id); if(e.key==='Escape') renderShippingTable(); });
+}
+
+async function saveShippingEdit(id) {
+  const inp = document.getElementById('sh-edit-' + id);
+  const amount = parseFloat(inp.value);
+  if (isNaN(amount) || amount < 0) { alert('Please enter a valid amount.'); return; }
+  inp.disabled = true;
+  try {
+    await sbFetch(`shipping_rates?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ amount, updated_at: new Date().toISOString() }) });
+    const r = allShippingRates.find(x => x.id === id);
+    if (r) r.amount = amount;
+    renderShippingTable();
+  } catch(e) {
+    alert('Save failed: ' + e.message);
+    inp.disabled = false;
+  }
+}
+
+function openAddShippingRow() {
+  document.getElementById('ph-shipping-add-form').style.display = 'block';
+  document.getElementById('ph-shipping-add-status').textContent = '';
+  document.getElementById('sh-add-name').focus();
+}
+
+async function saveNewShippingRate() {
+  const name = document.getElementById('sh-add-name').value.trim();
+  const code = document.getElementById('sh-add-code').value.trim().toUpperCase();
+  const amount = parseFloat(document.getElementById('sh-add-amount').value);
+  const currency = document.getElementById('sh-add-currency').value;
+  const status = document.getElementById('ph-shipping-add-status');
+  if (!name) { status.style.color = '#e05555'; status.textContent = 'Country name is required.'; return; }
+  if (!code || code.length !== 2) { status.style.color = '#e05555'; status.textContent = 'Enter a valid 2-letter country code.'; return; }
+  if (isNaN(amount) || amount < 0) { status.style.color = '#e05555'; status.textContent = 'Enter a valid amount.'; return; }
+  status.style.color = '#888'; status.textContent = 'Saving...';
+  try {
+    const result = await sbFetch('shipping_rates', { method: 'POST', body: JSON.stringify({ country_code: code, country_name: name, amount, currency }) });
+    if (Array.isArray(result) && result[0]) allShippingRates.push(result[0]);
+    allShippingRates.sort((a, b) => a.country_name.localeCompare(b.country_name));
+    renderShippingTable();
+    document.getElementById('ph-shipping-add-form').style.display = 'none';
+    ['sh-add-name','sh-add-code','sh-add-amount'].forEach(id => document.getElementById(id).value = '');
+    status.textContent = '';
+  } catch(e) {
+    status.style.color = '#e05555'; status.textContent = 'Save failed: ' + e.message;
+  }
+}
+
+async function deleteShippingRate(id, name) {
+  if (!confirm(`Delete shipping rate for "${name}"?`)) return;
+  try {
+    await sbFetch(`shipping_rates?id=eq.${id}`, { method: 'DELETE' });
+    allShippingRates = allShippingRates.filter(r => r.id !== id);
+    renderShippingTable();
+  } catch(e) {
+    alert('Delete failed: ' + e.message);
   }
 }
 

@@ -821,12 +821,12 @@ html{scroll-behavior:smooth;}
 // ---- SUPABASE ----
 const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
-// Shipping rates stored in each country's native currency
-const SHIPPING_RATES = {
+// Shipping rates — loaded from DB on startup, these are the fallback defaults
+let SHIPPING_RATES = {
   CA: { amount: 38,   cur: 'CAD' },
   US: { amount: 45,   cur: 'USD' },
   GB: { amount: 35,   cur: 'GBP' },
-  NG: { amount: 2, cur: 'NGN' },
+  NG: { amount: 2,    cur: 'NGN' },
   GH: { amount: 5000, cur: 'NGN' },
   AU: { amount: 50,   cur: 'CAD' },
 };
@@ -1941,6 +1941,14 @@ window.closeZoom = function(){
   const grid=document.getElementById('ph-grid');
   grid.innerHTML=Array(6).fill(0).map(()=>`<div class="ph-card-skel"><div class="ph-skel-img ph-shimmer"></div><div class="ph-skel-body"><div class="ph-skel-line ph-shimmer" style="height:11px;width:45%;"></div><div class="ph-skel-line ph-shimmer" style="height:17px;width:78%;"></div><div class="ph-skel-line ph-shimmer" style="height:11px;width:35%;margin-top:4px;"></div></div></div>`).join('');
   await initCurrency(); // ensure rates + currency are set before rendering prices
+  // Load shipping rates from DB (non-blocking — falls back to defaults on failure)
+  fetch(SB_URL+'/rest/v1/shipping_rates?select=*',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
+    .then(r=>r.json()).then(rows=>{
+      if(!Array.isArray(rows)||!rows.length) return;
+      const updated={};
+      rows.forEach(r=>{ updated[r.country_code]={amount:Number(r.amount),cur:r.currency}; });
+      SHIPPING_RATES=updated;
+    }).catch(()=>{});
   try {
     const res=await fetch(SB_URL+'/rest/v1/products?order=sort_order.asc,id.asc&select=*',{
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
