@@ -1219,6 +1219,10 @@ window.selectOpt=(type,value,btn)=>{
   btn.closest('.ph-options').querySelectorAll('.ph-opt').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   selection[type]=value;
+  // Which groups does this product actually have?
+  const _hasClosures=(selectedProduct.closures||[]).length>0;
+  const _hasColors=(selectedProduct.colors||[]).length>0;
+  const _hasWeights=(selectedProduct.weights||[]).length>0;
   // Parse helpers
   const _name=v=>v&&v.includes('|')?v.split('|')[0]:(v||'');
   const _saleDiscount=selectedProduct.sale_price!=null?Math.max(0,selectedProduct.price-selectedProduct.sale_price):0;
