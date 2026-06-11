@@ -579,7 +579,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
           <div class="ph-add-img-row" style="margin-top:6px;">
             <input type="url" id="f-video" placeholder="https://res.cloudinary.com/...mp4" style="flex:1;">
             <button type="button" class="ph-upload-btn" onclick="document.getElementById('f-video-file').click()">⬆ Upload Video</button>
-            <input type="file" id="f-video-file" accept="video/*" style="display:none" onchange="uploadVideoToCloudinary(this)">
+            <input type="file" id="f-video-file" accept="video/*,.mov,.mp4,.m4v,.avi,.webm,.mkv" style="display:none" onchange="uploadVideoToCloudinary(this)">
           </div>
           <span class="ph-hint">Upload any video format — auto-converted to MP4. If set, video plays instead of image on the shop page.</span>
         </div>
@@ -1176,6 +1176,7 @@ async function uploadVideoToCloudinary(input) {
 
   // Video: validate it's actually a video format
   const videoExt = file.name.split('.').pop().toLowerCase();
+  const isMovConvert = videoExt === 'mov' || videoExt === 'avi' || videoExt === 'mkv' || videoExt === 'wmv';
   const SUPPORTED_VIDEO_EXTS = new Set(['mp4','mov','avi','webm','mkv','m4v','3gp','wmv','flv']);
   if (!SUPPORTED_VIDEO_EXTS.has(videoExt) && !file.type.startsWith('video/')) {
     progressLabel.textContent = `Unsupported video format (.${videoExt}) — please use MP4, MOV, AVI, or WEBM.`;
@@ -1216,10 +1217,10 @@ async function uploadVideoToCloudinary(input) {
     });
 
     progressBar.style.width = '100%';
-    progressLabel.textContent = 'Done!';
+    progressLabel.textContent = isMovConvert ? 'Converted to MP4!' : 'Done!';
 
     // Force MP4 output — works for MOV, AVI, WEBM, MKV, etc.
-    const mp4Url = url.replace('/upload/', '/upload/f_mp4,q_auto/').replace(/\.[^.]+$/, '.mp4');
+    const mp4Url = url.replace('/upload/', '/upload/f_mp4,q_auto,w_700,h_900,c_fill/').replace(/\.[^.]+$/, '.mp4');
     document.getElementById('f-video').value = mp4Url;
 
     setTimeout(() => progressWrap.classList.remove('active'), 1200);
