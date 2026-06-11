@@ -1124,11 +1124,15 @@ window.openModal=(id)=>{
   // optLabel: strip |price from display, keep full string in data-val for price calc
   const optLabel=val=>val.includes('|')?val.split('|')[0]:val;
   const optBtn=(type,val)=>`<button class="ph-opt" data-type="${type}" data-val="${val.replace(/"/g,'&quot;')}" onclick="selectOpt(this.dataset.type,this.dataset.val,this)">${optLabel(val)}</button>`;
+  const _hasClosures=(selectedProduct.closures||[]).length>0;
+  const _hasColors=(selectedProduct.colors||[]).length>0;
+  const _hasWeights=(selectedProduct.weights||[]).length>0;
   document.getElementById('ph-modal-opts').innerHTML=`
     <div class="ph-option-group"><span class="ph-option-label">Length *</span><div class="ph-options">${(selectedProduct.lengths||[]).map(l=>optBtn('length',l)).join('')}</div></div>
-    <div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${(selectedProduct.closures||[]).map(c=>optBtn('closure',c)).join('')}</div></div>
-    <div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${(selectedProduct.colors||[]).map(c=>optBtn('color',c)).join('')}</div></div>
-    <div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${(selectedProduct.weights||[]).map(w=>optBtn('weight',w)).join('')}</div></div>`;
+    ${_hasClosures?`<div class="ph-option-group"><span class="ph-option-label">Closure Type *</span><div class="ph-options">${selectedProduct.closures.map(c=>optBtn('closure',c)).join('')}</div></div>`:''}
+    ${_hasColors?`<div class="ph-option-group"><span class="ph-option-label">Color *</span><div class="ph-options">${selectedProduct.colors.map(c=>optBtn('color',c)).join('')}</div></div>`:''}
+    ${_hasWeights?`<div class="ph-option-group" style="margin-bottom:1.5rem;"><span class="ph-option-label">Weight *</span><div class="ph-options">${selectedProduct.weights.map(w=>optBtn('weight',w)).join('')}</div></div>`:''}
+  `;
   // Auto-select any option group that has only one choice
   document.querySelectorAll('#ph-modal-opts .ph-option-group').forEach(group=>{
     const btns=group.querySelectorAll('.ph-opt');
@@ -1227,16 +1231,20 @@ window.selectOpt=(type,value,btn)=>{
   document.getElementById('ph-modal-price').textContent=formatPrice(total);
   const addBtn=document.getElementById('ph-add-btn');
   const sum=document.getElementById('ph-sel-summary');
-  const allSelected=selection.length&&selection.closure&&selection.color&&selection.weight;
+  const allSelected=selection.length
+    &&(!_hasClosures||selection.closure)
+    &&(!_hasColors||selection.color)
+    &&(!_hasWeights||selection.weight);
   if(allSelected){
+    const specParts=[_name(selection.length),_hasClosures?_name(selection.closure):null,_hasColors?_name(selection.color):null,_hasWeights?_name(selection.weight):null].filter(Boolean);
     sum.style.display='block';
-    sum.innerHTML=`<strong style="color:#d4af37;display:block;margin-bottom:0.5rem">Your Selection</strong>${_name(selection.length)} · ${_name(selection.closure)} · ${_name(selection.color)} · ${_name(selection.weight)}`;
+    sum.innerHTML=`<strong style="color:#d4af37;display:block;margin-bottom:0.5rem">Your Selection</strong>${specParts.join(' · ')}`;
     addBtn.disabled=false;
     addBtn.textContent='Add to Bag — '+formatPrice(total);
   } else {
     sum.style.display='none';
     addBtn.disabled=true;
-    const missing=!selection.length?'Length':!selection.closure?'Closure':!selection.color?'Color':'Weight';
+    const missing=!selection.length?'Length':(_hasClosures&&!selection.closure)?'Closure':(_hasColors&&!selection.color)?'Color':'Weight';
     addBtn.textContent='Select a '+missing+' to continue';
   }
 };
@@ -1803,7 +1811,10 @@ window.submitPayment = async (method) => {
 window.addToCart=()=>{
   if(!selectedProduct) return;
   const _name=v=>v&&v.includes('|')?v.split('|')[0]:(v||'');
-  const specs=`${_name(selection.length)} · ${_name(selection.closure)} · ${_name(selection.color)} · ${_name(selection.weight)}`;
+  const _hasCl=(selectedProduct.closures||[]).length>0;
+  const _hasCo=(selectedProduct.colors||[]).length>0;
+  const _hasWt=(selectedProduct.weights||[]).length>0;
+  const specs=[_name(selection.length),_hasCl?_name(selection.closure):null,_hasCo?_name(selection.color):null,_hasWt?_name(selection.weight):null].filter(Boolean).join(' · ');
   const finalPrice=selection._price||selectedProduct.price;
   const existing=cart.find(i=>i.id===selectedProduct.id&&i.specs===specs);
   if(existing){existing.qty++;}
