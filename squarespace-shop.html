@@ -716,7 +716,7 @@ html{scroll-behavior:smooth;}
           <div class="ph-co-field"><label>Province / State</label><input type="text" id="co-province" placeholder="ON"></div>
         </div>
         <div class="ph-co-row">
-          <div class="ph-co-field"><label>Postal Code</label><input type="text" id="co-postal" placeholder="M5V 1A1"></div>
+          <div class="ph-co-field" id="co-postal-wrap"><label>Postal Code</label><input type="text" id="co-postal" placeholder="M5V 1A1"></div>
           <div class="ph-co-field"><label>Country</label>
             <select id="co-country" onchange="onCountryChange()">
               <option value="CA">Canada</option>
@@ -1423,6 +1423,7 @@ window.onCountryChange = () => {
   document.getElementById('ps-payment-wrap').style.display  = isNG ? 'block' : 'none';
   document.getElementById('ph-co-pay-btn').style.display    = isNG ? 'none'  : '';
   document.getElementById('ph-co-pay-btn-ps').style.display = isNG ? ''      : 'none';
+  document.getElementById('co-postal-wrap').style.display   = isNG ? 'none'  : '';
   if (isNG) {
     psPendingOrder = null;
     const psBtn = document.getElementById('ph-co-pay-btn-ps');
@@ -1554,7 +1555,7 @@ window.psOpenPopup = function() {
     postal:    document.getElementById('co-postal').value.trim(),
     country:   'NG',
   };
-  if (!shipping.firstName || !shipping.lastName || !shipping.email || !shipping.address || !shipping.city) {
+  if (!shipping.firstName || !shipping.lastName || !shipping.email || !shipping.address || !shipping.city || !shipping.province) {
     errEl.textContent = 'Please fill in all delivery fields above.';
     errEl.style.display = 'block';
     document.getElementById('ph-co-right').scrollTop = 0;
