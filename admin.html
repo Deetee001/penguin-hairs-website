@@ -386,6 +386,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
               <tbody id="ph-orders-body"></tbody>
             </table>
           </div>
+          <div class="ph-mob-list" id="ph-orders-mob-list"></div>
           <div class="ph-empty" id="ph-orders-empty" style="display:none">No orders yet.</div>
         </div>
       </div>
@@ -1753,15 +1754,19 @@ async function loadOrders() {
 
 function renderOrders() {
   const tbody = document.getElementById('ph-orders-body');
+  const mobList = document.getElementById('ph-orders-mob-list');
   const empty = document.getElementById('ph-orders-empty');
   tbody.innerHTML = '';
+  mobList.innerHTML = '';
   empty.style.display = allOrders.length ? 'none' : 'block';
   allOrders.forEach(o => {
     const date = new Date(o.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
-    const ref = o.square_order_id ? o.square_order_id.slice(-8).toUpperCase() : '—';
+    const ref = o.square_order_id ? o.square_order_id.slice(-8).toUpperCase() : (o.paystack_reference ? o.paystack_reference.slice(-8).toUpperCase() : '—');
     const items = Array.isArray(o.items) ? o.items.map(i => `${i.name||''}${(i.quantity||1)>1?' ×'+i.quantity:''}`).join(', ') : '—';
     const ship = o.shipping_address ? (o.shipping_address.country || '') : '';
     const status = o.status || 'pending';
+
+    // Desktop row
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="white-space:nowrap">${escHtml(date)}</td>
@@ -1777,6 +1782,29 @@ function renderOrders() {
       <td><span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span></td>
     `;
     tbody.appendChild(tr);
+
+    // Mobile card
+    const card = document.createElement('div');
+    card.className = 'ph-mob-card';
+    card.innerHTML = `
+      <div class="ph-mob-card-top">
+        <div class="ph-mob-info">
+          <div style="font-weight:700;font-size:15px;">${escHtml(o.customer_name || '—')}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px;">${escHtml(o.customer_email || '')}</div>
+          <div style="font-size:12px;color:#555;margin-top:6px;">${escHtml(date)}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:4px;line-height:1.5;">${escHtml(items)}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+        <code style="font-size:12px;color:#d4af37;">#${escHtml(ref)}</code>
+        <span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a;">
+        <span style="font-size:12px;color:#666;">Shipping${ship ? ' ('+escHtml(ship)+')' : ''}: $${o.shipping_cost || 0}</span>
+        <span style="font-weight:700;color:#d4af37;font-size:15px;">$${o.total || 0}</span>
+      </div>
+    `;
+    mobList.appendChild(card);
   });
 }
 
