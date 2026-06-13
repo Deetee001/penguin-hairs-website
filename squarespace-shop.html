@@ -788,6 +788,20 @@ html{scroll-behavior:smooth;}
 // ---- SUPABASE ----
 const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
+// Returns the effective (post-discount) price for a given length price
+function applyDiscount(lengthPrice, product) {
+  if (product.sale_price == null) return lengthPrice;
+  if (product.sale_type === 'percent') return Math.round(lengthPrice * (1 - product.sale_price / 100));
+  // fixed: subtract (base - salePrice) from every length
+  return Math.max(0, lengthPrice - Math.max(0, product.price - product.sale_price));
+}
+// Returns the effective base price shown on cards
+function effectiveSaleBase(product) {
+  if (product.sale_price == null) return product.price;
+  if (product.sale_type === 'percent') return Math.round(product.price * (1 - product.sale_price / 100));
+  return product.sale_price;
+}
+
 // Shipping rates — loaded from DB on startup, these are the fallback defaults
 let SHIPPING_RATES = {
   CA: { amount: 38,   cur: 'CAD' },
@@ -819,8 +833,8 @@ function setCurrency(code) {
   renderProducts();
   updateCheckoutTotals();
   if (selectedProduct) {
-    const _sd=selectedProduct.sale_price!=null?Math.max(0,selectedProduct.price-selectedProduct.sale_price):0;
-    const mp = Math.max(0,(selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;}, selectedProduct.price)-_sd);
+    const _rawMp=(selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;}, selectedProduct.price);
+    const mp = applyDiscount(_rawMp, selectedProduct);
     document.getElementById('ph-modal-price').textContent = selection._price ? formatPrice(selection._price) : formatPrice(mp);
   }
 }
@@ -938,7 +952,7 @@ updateCartUI();
 // ---- RENDER PRODUCTS ----
 function renderProducts(){
   let products=[...filteredProducts];
-  const effPrice=p=>p.sale_price!=null?p.sale_price:p.price;
+  const effPrice=p=>effectiveSaleBase(p);
   if(currentSort==='price-asc')products.sort((a,b)=>effPrice(a)-effPrice(b));
   else if(currentSort==='price-desc')products.sort((a,b)=>effPrice(b)-effPrice(a));
   else if(currentSort==='name')products.sort((a,b)=>a.name.localeCompare(b.name));
@@ -967,7 +981,7 @@ function renderProducts(){
         <p class="ph-card-desc">${p.description||''}</p>
         <div class="ph-card-footer">
           <div class="ph-card-price">${p.sale_price!=null
-            ? `<small>From </small><span class="ph-orig-price">${formatPrice(p.price)}</span><span class="ph-sale-price">${formatPrice(p.sale_price)}</span>`
+            ? `<small>From </small><span class="ph-orig-price">${formatPrice(p.price)}</span><span class="ph-sale-price">${formatPrice(effectiveSaleBase(p))}</span>`
             : `<small>From </small>${formatPrice(p.price)}`
           }</div>
           <button class="ph-quick-btn" ${soldOut?'disabled':''} onclick="event.stopPropagation();${soldOut?'':` openModal(${p.id})`}">${soldOut?'Sold Out':'Customize'}</button>
@@ -1083,8 +1097,7 @@ window.openModal=(id)=>{
   document.getElementById('ph-modal-desc').textContent=selectedProduct.description||'';
   // Show min length price as starting price, applying sale discount if active
   const _rawMin=(selectedProduct.lengths||[]).reduce((min,v)=>{const p=parseInt(v.split('|')[1],10);return!isNaN(p)&&p<min?p:min;},selectedProduct.price);
-  const _saleDiscount=selectedProduct.sale_price!=null?Math.max(0,selectedProduct.price-selectedProduct.sale_price):0;
-  document.getElementById('ph-modal-price').textContent=formatPrice(Math.max(0,_rawMin-_saleDiscount));
+  document.getElementById('ph-modal-price').textContent=formatPrice(applyDiscount(_rawMin,selectedProduct));
   document.getElementById('ph-sel-summary').style.display='none';
   document.getElementById('ph-add-btn').disabled=true;
   document.getElementById('ph-add-btn').textContent='Select All Options to Add to Bag';
@@ -1192,11 +1205,10 @@ window.selectOpt=(type,value,btn)=>{
   const _hasWeights=(selectedProduct.weights||[]).length>0;
   // Parse helpers
   const _name=v=>v&&v.includes('|')?v.split('|')[0]:(v||'');
-  const _saleDiscount=selectedProduct.sale_price!=null?Math.max(0,selectedProduct.price-selectedProduct.sale_price):0;
-  const _base=v=>v&&v.includes('|')?Math.max(0,(parseInt(v.split('|')[1],10)||0)-_saleDiscount):selectedProduct.sale_price??selectedProduct.price;
+  const _base=v=>v&&v.includes('|')?applyDiscount(parseInt(v.split('|')[1],10)||0,selectedProduct):effectiveSaleBase(selectedProduct);
   const _up=v=>v&&v.includes('|')?parseInt(v.split('|')[1],10)||0:0;
   // Always compute and show live price
-  const base=selection.length?_base(selection.length):selectedProduct.sale_price??selectedProduct.price;
+  const base=selection.length?_base(selection.length):effectiveSaleBase(selectedProduct);
   const total=base+_up(selection.closure)+_up(selection.color)+_up(selection.weight);
   selection._price=total;
   document.getElementById('ph-modal-price').textContent=formatPrice(total);

@@ -602,11 +602,21 @@ tr:hover td{background:rgba(212,175,55,.04);}
             </label>
           </label>
           <div id="f-sale-wrap" style="display:none;margin-top:0.6rem;">
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-              <span style="color:rgba(255,255,255,0.5);font-size:0.9rem;">CA$</span>
-              <input type="number" id="f-sale-price" min="0" placeholder="e.g. 180" style="flex:1;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+              <select id="f-sale-type" onchange="updateSaleTypeUI()" style="width:140px;">
+                <option value="fixed">Fixed Price</option>
+                <option value="percent">% Off</option>
+              </select>
+              <div id="f-sale-fixed-row" style="display:flex;align-items:center;gap:0.5rem;flex:1;">
+                <span style="color:rgba(255,255,255,0.5);font-size:0.9rem;">CA$</span>
+                <input type="number" id="f-sale-price" min="0" placeholder="e.g. 180" style="flex:1;">
+              </div>
+              <div id="f-sale-pct-row" style="display:none;align-items:center;gap:0.5rem;flex:1;">
+                <input type="number" id="f-sale-pct" min="1" max="99" placeholder="e.g. 15" style="flex:1;">
+                <span style="color:rgba(255,255,255,0.5);font-size:0.9rem;">% off</span>
+              </div>
             </div>
-            <span class="ph-hint" style="color:#e05555;">Customers will see the original price crossed out and this sale price on the card.</span>
+            <span class="ph-hint" style="color:#e05555;">Customers see the original price crossed out with the discounted price.</span>
           </div>
         </div>
       </div>
@@ -1417,7 +1427,13 @@ function minGroupPrice(tableId) {
 function toggleSaleField() {
   const on = document.getElementById('f-on-sale').checked;
   document.getElementById('f-sale-wrap').style.display = on ? 'block' : 'none';
-  if (!on) document.getElementById('f-sale-price').value = '';
+  if (!on) { document.getElementById('f-sale-price').value = ''; document.getElementById('f-sale-pct').value = ''; }
+}
+
+function updateSaleTypeUI() {
+  const isFixed = document.getElementById('f-sale-type').value === 'fixed';
+  document.getElementById('f-sale-fixed-row').style.display = isFixed ? 'flex' : 'none';
+  document.getElementById('f-sale-pct-row').style.display  = isFixed ? 'none'  : 'flex';
 }
 
 function updatePricePreview() {
@@ -1459,7 +1475,10 @@ function openAddModal() {
   updatePricePreview();
   document.getElementById('f-on-sale').checked = false;
   document.getElementById('f-sale-price').value = '';
+  document.getElementById('f-sale-pct').value = '';
+  document.getElementById('f-sale-type').value = 'fixed';
   document.getElementById('f-sale-wrap').style.display = 'none';
+  updateSaleTypeUI();
   document.getElementById('f-featured').checked = false;
   document.getElementById('f-in-stock').checked = true;
   document.getElementById('ph-save-status').textContent = '';
@@ -1485,9 +1504,13 @@ function openEditModal(id) {
   buildPricingUI('weights', p.weights || []);
   updatePricePreview();
   const onSale = p.sale_price != null;
+  const saleType = p.sale_type || 'fixed';
   document.getElementById('f-on-sale').checked = onSale;
-  document.getElementById('f-sale-price').value = onSale ? p.sale_price : '';
+  document.getElementById('f-sale-type').value = saleType;
+  document.getElementById('f-sale-price').value = (onSale && saleType === 'fixed') ? p.sale_price : '';
+  document.getElementById('f-sale-pct').value   = (onSale && saleType === 'percent') ? p.sale_price : '';
   document.getElementById('f-sale-wrap').style.display = onSale ? 'block' : 'none';
+  updateSaleTypeUI();
   document.getElementById('f-featured').checked = !!p.featured;
   document.getElementById('f-in-stock').checked = !!p.in_stock;
   document.getElementById('ph-save-status').textContent = '';
@@ -1531,13 +1554,27 @@ async function saveProduct() {
   const imageUrls = currentImages.filter(u => u && u.trim());
 
   const onSale = document.getElementById('f-on-sale').checked;
-  const salePriceVal = onSale ? (parseInt(document.getElementById('f-sale-price').value, 10) || null) : null;
+  const saleType = document.getElementById('f-sale-type').value;
+  let salePriceVal = null;
+  if (onSale) {
+    if (saleType === 'percent') {
+      const pct = parseInt(document.getElementById('f-sale-pct').value, 10);
+      if (!pct || pct < 1 || pct > 99) { alert('Please enter a valid percentage (1–99).'); return; }
+      salePriceVal = pct;
+    } else {
+      const fp = parseInt(document.getElementById('f-sale-price').value, 10);
+      if (isNaN(fp) || fp <= 0) { alert('Please enter a valid sale price.'); return; }
+      if (fp >= finalPrice) { alert('Sale price must be lower than the base price (CA$' + finalPrice + ').'); return; }
+      salePriceVal = fp;
+    }
+  }
 
   const payload = {
     name,
     category: document.getElementById('f-category').value,
     price: finalPrice,
     sale_price: salePriceVal,
+    sale_type: onSale ? saleType : 'fixed',
     sort_order: parseInt(document.getElementById('f-sort').value, 10) || 0,
     description: document.getElementById('f-desc').value.trim() || null,
     image_url: imageUrls[0] || null,   // keep legacy field in sync
