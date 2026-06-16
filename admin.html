@@ -272,13 +272,28 @@ tr:hover td{background:rgba(212,175,55,.04);}
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="ph-login" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:#0a0a0a;">
+  <div style="background:#111;border:1px solid #2a2a2a;border-radius:14px;padding:40px;width:100%;max-width:400px;">
+    <h1 style="font-family:'Cormorant Garamond',serif;color:#d4af37;font-size:28px;font-weight:400;letter-spacing:2px;text-align:center;margin-bottom:6px;">PENGUIN HAIRS</h1>
+    <p style="text-align:center;color:#555;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:32px;">Admin</p>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="ph-form-group"><label>Email</label><input type="email" id="login-email" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+      <div class="ph-form-group"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+      <div id="login-err" style="display:none;color:#e05555;font-size:13px;text-align:center;padding:8px;background:rgba(224,85,85,.1);border-radius:6px;"></div>
+      <button class="ph-btn ph-btn-gold" id="login-btn" style="width:100%;padding:14px;font-size:15px;" onclick="adminLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADMIN SHELL -->
-<div id="ph-admin">
+<div id="ph-admin" style="display:none;">
   <div class="ph-topbar">
     <h1>PENGUIN HAIRS &mdash; ADMIN</h1>
     <div class="ph-topbar-r">
       <span class="ph-status" id="ph-db-status">Connecting...</span>
       <button class="ph-btn ph-btn-gold" onclick="openAddModal()">+ Add Product</button>
+      <button class="ph-btn ph-btn-outline" onclick="adminLogout()" style="font-size:12px;padding:8px 14px;">Sign Out</button>
     </div>
   </div>
 
@@ -889,13 +904,90 @@ tr:hover td{background:rgba(212,175,55,.04);}
 const SUPABASE_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
 
+// ---- AUTH ----
+let authToken = null;
+let authRefreshToken = null;
+
+async function adminLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  const btn = document.getElementById('login-btn');
+  errEl.style.display = 'none';
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+    authToken = data.access_token;
+    authRefreshToken = data.refresh_token;
+    localStorage.setItem('ph_admin_token', authToken);
+    localStorage.setItem('ph_admin_refresh', authRefreshToken);
+    document.getElementById('ph-login').style.display = 'none';
+    document.getElementById('ph-admin').style.display = 'block';
+    loadProducts();
+    prefetchCounts();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+  btn.textContent = 'Sign In';
+  btn.disabled = false;
+}
+
+async function adminLogout() {
+  try {
+    await fetch(SUPABASE_URL + '/auth/v1/logout', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authToken }
+    });
+  } catch(e) {}
+  authToken = null;
+  authRefreshToken = null;
+  localStorage.removeItem('ph_admin_token');
+  localStorage.removeItem('ph_admin_refresh');
+  document.getElementById('ph-admin').style.display = 'none';
+  document.getElementById('ph-login').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+async function tryRestoreSession() {
+  const refresh = localStorage.getItem('ph_admin_refresh');
+  if (!refresh) return false;
+  try {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refresh })
+    });
+    if (!res.ok) throw new Error('expired');
+    const data = await res.json();
+    authToken = data.access_token;
+    authRefreshToken = data.refresh_token;
+    localStorage.setItem('ph_admin_token', authToken);
+    localStorage.setItem('ph_admin_refresh', authRefreshToken);
+    return true;
+  } catch(e) {
+    localStorage.removeItem('ph_admin_token');
+    localStorage.removeItem('ph_admin_refresh');
+    return false;
+  }
+}
+
 // ---- SUPABASE API ----
 async function sbFetch(path, options = {}) {
+  const token = authToken || SUPABASE_ANON_KEY;
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
     ...options,
     headers: {
       'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + token,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation',
       ...(options.headers || {})
@@ -1686,7 +1778,7 @@ async function saveApptChanges() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + (authToken || SUPABASE_ANON_KEY),
       },
       body: JSON.stringify({
         booking_id: currentApptId,
@@ -2364,9 +2456,17 @@ async function deleteShippingRate(id, name) {
   }
 }
 
-// Load products on page start
-loadProducts();
-prefetchCounts();
+// ---- INIT: restore session or show login ----
+(async function init() {
+  const loggedIn = await tryRestoreSession();
+  if (loggedIn) {
+    document.getElementById('ph-login').style.display = 'none';
+    document.getElementById('ph-admin').style.display = 'block';
+    loadProducts();
+    prefetchCounts();
+  }
+  // else: login screen is already visible
+})();
 </script>
 </body>
 </html>
