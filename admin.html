@@ -384,6 +384,20 @@ tr:hover td{background:rgba(212,175,55,.04);}
           <div>Loading orders...</div>
         </div>
         <div id="ph-orders-container" style="display:none">
+          <div id="ph-orders-summary" style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #1a1a1a;background:#0d0d0d;">
+            <div style="flex:1;min-width:120px;text-align:center;">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#d4af37;" id="ord-sum-revenue">—</div>
+              <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Total Revenue</div>
+            </div>
+            <div style="flex:1;min-width:120px;text-align:center;">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#e0e0e0;" id="ord-sum-count">—</div>
+              <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Orders</div>
+            </div>
+            <div style="flex:1;min-width:120px;text-align:center;">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#e0e0e0;" id="ord-sum-avg">—</div>
+              <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Avg Order</div>
+            </div>
+          </div>
           <div class="ph-scroll-table">
             <table>
               <thead>
@@ -478,6 +492,14 @@ tr:hover td{background:rgba(212,175,55,.04);}
         <button class="ph-btn ph-analytics-period active" data-days="7" onclick="setAnalyticsPeriod(7,this)">7 Days</button>
         <button class="ph-btn ph-analytics-period" data-days="30" onclick="setAnalyticsPeriod(30,this)">30 Days</button>
         <button class="ph-btn ph-analytics-period" data-days="0" onclick="setAnalyticsPeriod(0,this)">All Time</button>
+      </div>
+
+      <!-- Sales summary -->
+      <h3 style="color:#d4af37;font-family:'Cormorant Garamond',serif;font-size:20px;margin:0 0 14px;">Sales</h3>
+      <div class="ph-stats" style="margin-bottom:28px;">
+        <div class="ph-stat"><div class="ph-stat-num" id="an-rev-total">—</div><div class="ph-stat-label">Revenue</div></div>
+        <div class="ph-stat"><div class="ph-stat-num" id="an-rev-orders">—</div><div class="ph-stat-label">Orders</div></div>
+        <div class="ph-stat"><div class="ph-stat-num" id="an-rev-avg">—</div><div class="ph-stat-label">Avg Order</div></div>
       </div>
 
       <!-- Page views -->
@@ -1851,6 +1873,13 @@ function renderOrders() {
   tbody.innerHTML = '';
   mobList.innerHTML = '';
   empty.style.display = allOrders.length ? 'none' : 'block';
+
+  // Revenue summary
+  const totalRev = allOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+  const avgOrder = allOrders.length ? totalRev / allOrders.length : 0;
+  document.getElementById('ord-sum-revenue').textContent = '$' + totalRev.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('ord-sum-count').textContent = allOrders.length;
+  document.getElementById('ord-sum-avg').textContent = allOrders.length ? '$' + avgOrder.toFixed(2) : '—';
   allOrders.forEach(o => {
     const date = new Date(o.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
     const ref = o.square_order_id ? o.square_order_id.slice(-8).toUpperCase() : (o.paystack_reference ? o.paystack_reference.slice(-8).toUpperCase() : '—');
@@ -2279,9 +2308,16 @@ async function loadAnalytics() {
     document.getElementById('an-pv-styling').textContent  = pageViews.filter(e => e.page === 'styling').length;
     document.getElementById('an-pv-total').textContent    = pageViews.length;
 
+    // Sales summary
+    const productPurchases = events.filter(e => e.event_type === 'purchase');
+    const totalRevenue = productPurchases.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+    const avgOrderVal = productPurchases.length ? totalRevenue / productPurchases.length : 0;
+    document.getElementById('an-rev-total').textContent = '$' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    document.getElementById('an-rev-orders').textContent = productPurchases.length;
+    document.getElementById('an-rev-avg').textContent = productPurchases.length ? '$' + avgOrderVal.toFixed(2) : '—';
+
     // Product views and purchases — group by product_id
     const productViews    = events.filter(e => e.event_type === 'product_view');
-    const productPurchases = events.filter(e => e.event_type === 'purchase');
 
     // Aggregate
     const map = {};
