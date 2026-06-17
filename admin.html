@@ -2299,7 +2299,10 @@ async function loadAnalytics() {
   }
 
   try {
-    const events = await sbFetch(`analytics_events?select=event_type,page,product_id,product_name,amount${dateFilter}&order=created_at.desc`);
+    const [events, periodOrders] = await Promise.all([
+      sbFetch(`analytics_events?select=event_type,page,product_id,product_name${dateFilter}&order=created_at.desc`),
+      sbFetch(`orders?select=total${dateFilter}`)
+    ]);
 
     // Page views
     const pageViews = events.filter(e => e.event_type === 'page_view');
@@ -2308,16 +2311,16 @@ async function loadAnalytics() {
     document.getElementById('an-pv-styling').textContent  = pageViews.filter(e => e.page === 'styling').length;
     document.getElementById('an-pv-total').textContent    = pageViews.length;
 
-    // Sales summary
-    const productPurchases = events.filter(e => e.event_type === 'purchase');
-    const totalRevenue = productPurchases.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-    const avgOrderVal = productPurchases.length ? totalRevenue / productPurchases.length : 0;
+    // Sales summary — from actual orders table
+    const totalRevenue = periodOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    const avgOrderVal = periodOrders.length ? totalRevenue / periodOrders.length : 0;
     document.getElementById('an-rev-total').textContent = '$' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-    document.getElementById('an-rev-orders').textContent = productPurchases.length;
-    document.getElementById('an-rev-avg').textContent = productPurchases.length ? '$' + avgOrderVal.toFixed(2) : '—';
+    document.getElementById('an-rev-orders').textContent = periodOrders.length;
+    document.getElementById('an-rev-avg').textContent = periodOrders.length ? '$' + avgOrderVal.toFixed(2) : '—';
 
     // Product views and purchases — group by product_id
-    const productViews    = events.filter(e => e.event_type === 'product_view');
+    const productViews     = events.filter(e => e.event_type === 'product_view');
+    const productPurchases = events.filter(e => e.event_type === 'purchase');
 
     // Aggregate
     const map = {};
