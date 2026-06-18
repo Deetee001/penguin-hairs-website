@@ -19,9 +19,7 @@
 <meta name="twitter:image" content="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
 <script src="https://js.paystack.co/v1/inline.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInput.min.js"></script>
 
 <style>
 /* ---- OVERLAY APPROACH: sits fixed on top of all Squarespace UI ---- */
@@ -253,21 +251,14 @@ html{scroll-behavior:smooth;}
 .ph-co-field input::placeholder{color:rgba(255,255,255,0.35);}
 .ph-co-field select{cursor:pointer;background:#1a1a1a;color:white;color-scheme:dark;}
 .ph-co-field select option{background:#1a1a1a;color:white;}
-/* intl-tel-input dark theme */
-.iti{width:100%;}
-.iti__tel-input{width:100%;padding:10px 12px 10px 52px !important;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:white;font-family:'Lato',sans-serif;font-size:0.82rem;border-radius:8px;outline:none;transition:border-color 0.2s;}
-.iti__tel-input:focus{border-color:#d4af37;}
-.iti__tel-input::placeholder{color:rgba(255,255,255,0.35);}
-.iti__flag-container{background:transparent;}
-.iti__selected-dial-code{color:rgba(255,255,255,0.7);font-size:0.8rem;}
-.iti__dropdown-content{background:#1a1a1a;border:1px solid #333;border-radius:8px;}
-.iti__search-input{background:#111;border:1px solid #333;color:white;border-radius:6px;padding:6px 10px;}
-.iti__search-input::placeholder{color:#555;}
-.iti__country{color:#e0e0e0;}
-.iti__country:hover,.iti__country.iti__highlight{background:#2a2a2a;}
-.iti__dial-code{color:#888;}
-.iti__country-name{color:#e0e0e0;}
-.iti__selected-country-primary{background:rgba(255,255,255,0.05);border-radius:8px 0 0 8px;}
+/* phone dial code + number row */
+.ph-phone-row{display:flex;gap:8px;}
+.ph-phone-dial{width:110px;flex-shrink:0;padding:10px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:white;font-family:'Lato',sans-serif;font-size:0.82rem;border-radius:8px;outline:none;cursor:pointer;background-color:#111;color-scheme:dark;}
+.ph-phone-dial:focus{border-color:#d4af37;}
+.ph-phone-num{flex:1;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:white;font-family:'Lato',sans-serif;font-size:0.82rem;border-radius:8px;outline:none;transition:border-color 0.2s;}
+.ph-phone-num:focus{border-color:#d4af37;}
+.ph-phone-num::placeholder{color:rgba(255,255,255,0.35);}
+@media(max-width:500px){.ph-phone-dial{width:90px;font-size:0.78rem;}}
 #sq-card-container{min-height:90px;background:#fff;border:1px solid rgba(212,175,55,0.35);padding:4px;border-radius:3px;}
 #sq-card-container.focused{border-color:#d4af37;}
 .ph-co-pay-btn{width:100%;padding:1.1rem;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;border:none;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;margin-top:1rem;}
@@ -726,7 +717,39 @@ html{scroll-behavior:smooth;}
           <div class="ph-co-field"><label>Email</label><input type="email" id="co-email" placeholder="jane@example.com"></div>
         </div>
         <div class="ph-co-row full">
-          <div class="ph-co-field"><label>Phone Number</label><input type="tel" id="co-phone" placeholder="416 555 0100"></div>
+          <div class="ph-co-field">
+            <label>Phone Number</label>
+            <div class="ph-phone-row">
+              <select id="co-phone-dial" class="ph-phone-dial">
+                <option value="+1">🇨🇦 +1</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+61">🇦🇺 +61</option>
+                <option value="+234">🇳🇬 +234</option>
+                <option value="+233">🇬🇭 +233</option>
+                <option value="+27">🇿🇦 +27</option>
+                <option value="+254">🇰🇪 +254</option>
+                <option value="+251">🇪🇹 +251</option>
+                <option value="+212">🇲🇦 +212</option>
+                <option value="+20">🇪🇬 +20</option>
+                <option value="+49">🇩🇪 +49</option>
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+34">🇪🇸 +34</option>
+                <option value="+31">🇳🇱 +31</option>
+                <option value="+32">🇧🇪 +32</option>
+                <option value="+1">🇹🇹 +1</option>
+                <option value="+1">🇯🇲 +1</option>
+                <option value="+1">🇧🇧 +1</option>
+                <option value="+91">🇮🇳 +91</option>
+                <option value="+86">🇨🇳 +86</option>
+                <option value="+971">🇦🇪 +971</option>
+                <option value="+966">🇸🇦 +966</option>
+                <option value="+55">🇧🇷 +55</option>
+              </select>
+              <input type="tel" id="co-phone-num" class="ph-phone-num" placeholder="416 555 0100">
+            </div>
+          </div>
         </div>
         <div class="ph-co-row full">
           <div class="ph-co-field"><label>Street Address</label><input type="text" id="co-address" placeholder="123 Main Street"></div>
@@ -810,29 +833,24 @@ const SB_URL = 'https://plfcipgceshrozsdcgjq.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZmNpcGdjZXNocm96c2RjZ2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU4NzcsImV4cCI6MjA4OTczMTg3N30.QFle4OcXQbHH-7F50MOmue0ModkCDXN1O5aTKzTMyWU';
 
 // ---- PHONE INPUT ----
-let itiPhone = null;
-document.addEventListener('DOMContentLoaded', function() {
-  const phoneInput = document.getElementById('co-phone');
-  if (phoneInput && window.intlTelInput) {
-    itiPhone = window.intlTelInput(phoneInput, {
-      initialCountry: 'ca',
-      loadUtilsOnFormFactor: 'all',
-      utilsScript: 'https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/utils.js',
-      separateDialCode: true,
-    });
-  }
-});
-
 function getPhoneNumber() {
-  if (itiPhone) return itiPhone.getNumber(); // full E.164 e.g. +14165550100
-  return document.getElementById('co-phone').value.trim();
+  const dial = (document.getElementById('co-phone-dial').value || '').trim();
+  const num = (document.getElementById('co-phone-num').value || '').replace(/\D/g,'').trim();
+  return dial + num;
 }
 
 function validatePhone(errEl) {
-  if (!itiPhone) return true;
-  const val = document.getElementById('co-phone').value.trim();
-  if (!val) { errEl.textContent = 'Please enter your phone number.'; errEl.style.display = 'block'; return false; }
-  if (!itiPhone.isValidNumber()) { errEl.textContent = 'Please enter a valid phone number for the selected country.'; errEl.style.display = 'block'; return false; }
+  const num = (document.getElementById('co-phone-num').value || '').replace(/\D/g,'');
+  if (!num) {
+    errEl.textContent = 'Please enter your phone number.';
+    errEl.style.display = 'block';
+    return false;
+  }
+  if (num.length < 7 || num.length > 15) {
+    errEl.textContent = 'Please enter a valid phone number.';
+    errEl.style.display = 'block';
+    return false;
+  }
   return true;
 }
 // Returns the effective (post-discount) price for a given length price
