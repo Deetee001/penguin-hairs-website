@@ -763,7 +763,15 @@ tr:hover td{background:rgba(212,175,55,.04);}
     <div class="ph-modal-body">
       <input type="hidden" id="pm-product-id">
       <div class="ph-prc-modal-name" id="pm-product-name"></div>
-      <div id="pm-current-price" style="font-size:12px;color:#666;margin-bottom:6px;"></div>
+
+      <div id="pm-length-section" style="display:none;margin-bottom:14px;">
+        <div class="ph-prc-section-label">Select Length</div>
+        <select id="pm-length-select" onchange="pmLengthChange()" style="width:100%;background:#1a1a1a;border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;padding:10px 12px;font-size:14px;font-family:'Lato',sans-serif;cursor:pointer;">
+          <option value="">-- Pick a length --</option>
+        </select>
+      </div>
+
+      <div id="pm-current-price" style="font-size:12px;color:#888;margin-bottom:12px;min-height:16px;"></div>
 
       <div class="ph-prc-section-label">Cost Price</div>
       <div class="ph-prc-input-row">
@@ -2830,7 +2838,7 @@ async function loadPricing() {
   } catch(e) {}
 
   try {
-    allPricingProducts = await sbFetch('products?select=id,name,price,sale_price,sale_type,cost_price,cost_price_original,cost_currency&order=sort_order.asc,id.asc');
+    allPricingProducts = await sbFetch('products?select=id,name,price,sale_price,sale_type,cost_price,cost_price_original,cost_currency,lengths,length_costs&order=sort_order.asc,id.asc');
     renderPricingTable();
     renderPricingSummary();
     document.getElementById('prc-loading').style.display = 'none';
@@ -2956,17 +2964,36 @@ function openPricingModal(id) {
   const p = allPricingProducts.find(x => x.id === id);
   if (!p) return;
 
-  const sellPrice = getSellingPrice(p);
-
   document.getElementById('pm-product-id').value = id;
   document.getElementById('pm-product-name').textContent = p.name;
-  document.getElementById('pm-current-price').textContent = 'Current sale price: $' + sellPrice.toFixed(2) + ' CAD';
 
-  // Prefill cost fields from existing data
-  document.getElementById('pm-cost-amt').value = p.cost_price_original != null ? p.cost_price_original : '';
-  document.getElementById('pm-cost-cur').value = p.cost_currency || 'CAD';
+  const lengths = p.lengths || [];
+  const lengthSection = document.getElementById('pm-length-section');
+  const lengthSelect = document.getElementById('pm-length-select');
 
-  // Reset margin target inputs
+  if (lengths.length > 0) {
+    lengthSection.style.display = 'block';
+    lengthSelect.innerHTML = '<option value="">-- Pick a length --</option>';
+    lengths.forEach(l => {
+      const parts = l.split('|');
+      const len = parts[0];
+      const price = parts[1] || '';
+      const opt = document.createElement('option');
+      opt.value = len;
+      opt.textContent = len + '" — $' + price + ' CAD';
+      opt.dataset.price = price;
+      lengthSelect.appendChild(opt);
+    });
+    lengthSelect.selectedIndex = 1;
+    pmLengthChange();
+  } else {
+    lengthSection.style.display = 'none';
+    const sellPrice = getSellingPrice(p);
+    document.getElementById('pm-current-price').textContent = 'Current sale price: $' + sellPrice.toFixed(2) + ' CAD';
+    document.getElementById('pm-cost-amt').value = p.cost_price_original != null ? p.cost_price_original : '';
+    document.getElementById('pm-cost-cur').value = p.cost_currency || 'CAD';
+  }
+
   document.getElementById('pm-target-margin').value = '';
   document.getElementById('pm-target-price').value = '';
   document.getElementById('pm-margin-output').textContent = '';
@@ -2975,12 +3002,51 @@ function openPricingModal(id) {
   document.getElementById('pm-status').textContent = '';
   document.getElementById('pm-save-both-btn').disabled = true;
 
-  // Reset mode to margin
   setPmMode('margin');
   pmCalc();
 
   document.getElementById('ph-pricing-modal').classList.add('open');
   setTimeout(() => document.getElementById('pm-cost-amt').focus(), 80);
+}
+
+function pmLengthChange() {
+  const id = parseInt(document.getElementById('pm-product-id').value, 10);
+  const p = allPricingProducts.find(x => x.id === id);
+  if (!p) return;
+
+  const select = document.getElementById('pm-length-select');
+  const len = select.value;
+  const lengthCosts = p.length_costs || {};
+
+  if (!len) {
+    document.getElementById('pm-current-price').textContent = '';
+    document.getElementById('pm-cost-amt').value = '';
+    return;
+  }
+
+  const selectedOpt = select.options[select.selectedIndex];
+  const price = selectedOpt.dataset.price;
+  document.getElementById('pm-current-price').textContent = 'Current price for ' + len + '": $' + price + ' CAD';
+
+  // Load per-length cost if saved, otherwise fall back to product-level cost
+  const costData = lengthCosts[len];
+  if (costData) {
+    document.getElementById('pm-cost-amt').value = costData.original != null ? costData.original : (costData.cost || '');
+    document.getElementById('pm-cost-cur').value = costData.currency || 'CAD';
+  } else {
+    document.getElementById('pm-cost-amt').value = p.cost_price_original != null ? p.cost_price_original : '';
+    document.getElementById('pm-cost-cur').value = p.cost_currency || 'CAD';
+  }
+
+  document.getElementById('pm-target-margin').value = '';
+  document.getElementById('pm-target-price').value = '';
+  document.getElementById('pm-margin-output').textContent = '';
+  document.getElementById('pm-price-output').textContent = '';
+  document.getElementById('pm-profit-strip').style.display = 'none';
+  document.getElementById('pm-save-both-btn').disabled = true;
+  document.getElementById('pm-status').textContent = '';
+
+  pmCalc();
 }
 
 function closePricingModal() {
@@ -3059,16 +3125,28 @@ async function pmSave(includePrice) {
   const amt = parseFloat(document.getElementById('pm-cost-amt').value);
   const cur = document.getElementById('pm-cost-cur').value;
   const statusEl = document.getElementById('pm-status');
+  const p = allPricingProducts.find(x => x.id === id);
 
   if (isNaN(amt) || amt < 0) { alert('Please enter a valid cost amount.'); return; }
-  const cadCost = toCad(amt, cur);
 
-  const payload = {
-    cost_price: cadCost,
-    cost_price_original: amt,
-    cost_currency: cur,
-    updated_at: new Date().toISOString()
-  };
+  const cadCost = toCad(amt, cur);
+  const hasLengths = (p.lengths || []).length > 0;
+  const selectedLen = hasLengths ? document.getElementById('pm-length-select').value : null;
+
+  if (hasLengths && !selectedLen) { alert('Please select a length first.'); return; }
+
+  const payload = { updated_at: new Date().toISOString() };
+
+  // Save cost: per-length into length_costs JSONB, or product-level for single-price products
+  const newLengthCosts = Object.assign({}, p.length_costs || {});
+  if (hasLengths) {
+    newLengthCosts[selectedLen] = { cost: cadCost, original: amt, currency: cur };
+    payload.length_costs = newLengthCosts;
+  } else {
+    payload.cost_price = cadCost;
+    payload.cost_price_original = amt;
+    payload.cost_currency = cur;
+  }
 
   if (includePrice) {
     let suggestedPrice = null;
@@ -3082,8 +3160,21 @@ async function pmSave(includePrice) {
       if (!isNaN(tp) && tp > 0) suggestedPrice = Math.round(tp);
     }
     if (suggestedPrice == null) { alert('Enter a margin target or target price first.'); return; }
-    payload.sale_price = suggestedPrice;
-    payload.sale_type = 'fixed';
+
+    if (hasLengths) {
+      // Rebuild lengths array: update just this length's price
+      const newLengths = (p.lengths || []).map(l => {
+        const parts = l.split('|');
+        return parts[0] === selectedLen ? (selectedLen + '|' + suggestedPrice) : l;
+      });
+      payload.lengths = newLengths;
+      // Keep price column = lowest length price
+      const allPrices = newLengths.map(l => parseInt(l.split('|')[1])).filter(n => !isNaN(n));
+      if (allPrices.length > 0) payload.price = Math.min(...allPrices);
+    } else {
+      payload.sale_price = suggestedPrice;
+      payload.sale_type = 'fixed';
+    }
   }
 
   statusEl.textContent = 'Saving...';
@@ -3091,14 +3182,28 @@ async function pmSave(includePrice) {
 
   try {
     await sbFetch('products?id=eq.' + id, { method: 'PATCH', body: JSON.stringify(payload) });
-    const p = allPricingProducts.find(x => x.id === id);
-    if (p) {
+
+    // Update local cache
+    if (hasLengths) {
+      p.length_costs = newLengthCosts;
+      if (includePrice) {
+        p.lengths = payload.lengths;
+        if (payload.price != null) p.price = payload.price;
+        // Update dropdown option text and current-price label
+        const select = document.getElementById('pm-length-select');
+        const opt = select.options[select.selectedIndex];
+        opt.textContent = selectedLen + '" — $' + payload.lengths.find(l => l.startsWith(selectedLen + '|')).split('|')[1] + ' CAD';
+        opt.dataset.price = payload.lengths.find(l => l.startsWith(selectedLen + '|')).split('|')[1];
+        document.getElementById('pm-current-price').textContent = 'Current price for ' + selectedLen + '": $' + opt.dataset.price + ' CAD';
+      }
+    } else {
       p.cost_price = cadCost;
       p.cost_price_original = amt;
       p.cost_currency = cur;
       if (includePrice) { p.sale_price = payload.sale_price; p.sale_type = 'fixed'; }
     }
     productCostMap[id] = cadCost;
+
     statusEl.textContent = 'Saved!';
     statusEl.className = 'ph-save-status saved';
     renderPricingTable();
