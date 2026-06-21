@@ -185,6 +185,52 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-confirm-msg{font-size:14px;color:#aaa;line-height:1.6;}
 .ph-confirm-name{color:#e0e0e0;font-weight:700;}
 
+/* ---- PRICING TAB ---- */
+.ph-pricing-card{background:#111;border:1px solid #222;border-radius:12px;padding:20px 24px;margin-bottom:20px;}
+.ph-pricing-card h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:#d4af37;margin-bottom:14px;}
+.ph-pricing-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;}
+.ph-pricing-stat{background:#111;border:1px solid #222;border-radius:10px;padding:16px;text-align:center;}
+.ph-pricing-stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;color:#d4af37;}
+.ph-pricing-stat-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+.ph-pricing-stat-sub{font-size:12px;color:#888;margin-top:2px;}
+.ph-rate-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.ph-fee-info{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:10px 14px;font-size:12px;color:#888;line-height:1.7;}
+.ph-calc-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:12px;}
+.ph-calc-row .ph-form-group{flex:1;min-width:120px;}
+.ph-calc-result{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:10px 14px;font-size:13px;color:#aaa;margin-top:10px;}
+.ph-calc-result strong{color:#d4af37;}
+.ph-margin-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+.ph-margin-green{background:#4caf50;}
+.ph-margin-amber{background:#d4af37;}
+.ph-margin-red{background:#e05555;}
+.ph-profit-pos{color:#4caf50;}
+.ph-profit-neg{color:#e05555;}
+.ph-cost-inline-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.ph-cost-inline-form input{width:90px;padding:6px 10px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:6px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;}
+.ph-cost-inline-form input:focus{border-color:#d4af37;}
+.ph-cost-inline-form select{padding:6px 10px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:6px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;cursor:pointer;}
+.ph-cost-inline-form select:focus{border-color:#d4af37;}
+.ph-cost-preview{font-size:11px;color:#888;margin-top:3px;}
+/* Pricing table — desktop */
+.ph-cost-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.ph-cost-table-wrap table{min-width:700px;}
+/* Pricing mob cards */
+.ph-cost-mob-list{display:none;flex-direction:column;border-top:1px solid #1a1a1a;}
+.ph-cost-mob-card{background:#111;border-bottom:1px solid #1a1a1a;padding:14px 16px;}
+.ph-cost-mob-name{font-size:15px;font-weight:700;color:#e0e0e0;margin-bottom:4px;}
+.ph-cost-mob-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#aaa;margin-top:6px;}
+.ph-cost-mob-label{color:#666;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+@media(max-width:700px){
+  .ph-cost-table-wrap{display:none;}
+  .ph-cost-mob-list{display:flex;}
+  .ph-pricing-summary{grid-template-columns:1fr 1fr;}
+  .ph-rate-row{flex-direction:column;align-items:stretch;}
+}
+/* Margin calculator toggle */
+.ph-calc-mode{display:flex;gap:0;border:1px solid #333;border-radius:8px;overflow:hidden;width:fit-content;}
+.ph-calc-mode-btn{padding:7px 16px;background:transparent;border:none;color:#666;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:all .2s;}
+.ph-calc-mode-btn.active{background:#d4af37;color:#0a0a0a;}
+
 /* ---- SERVICES ---- */
 .ph-svc-icon{width:40px;height:40px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#d4af37;font-size:16px;}
 .ph-icon-preview{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:#1a1a1a;border-radius:8px;color:#d4af37;font-size:20px;margin-top:6px;}
@@ -330,6 +376,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <button class="ph-tab" onclick="switchTab('services')">Services</button>
       <button class="ph-tab" onclick="switchTab('analytics')">Analytics</button>
       <button class="ph-tab" onclick="switchTab('shipping')">Shipping</button>
+      <button class="ph-tab" onclick="switchTab('pricing')">Pricing</button>
     </div>
 
     <!-- Products Tab -->
@@ -397,6 +444,10 @@ tr:hover td{background:rgba(212,175,55,.04);}
               <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#e0e0e0;" id="ord-sum-avg">—</div>
               <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Avg Order</div>
             </div>
+            <div style="flex:1;min-width:120px;text-align:center;">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#4caf50;" id="ord-sum-profit">—</div>
+              <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Total Profit</div>
+            </div>
           </div>
           <div class="ph-scroll-table">
             <table>
@@ -409,6 +460,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
                   <th>Subtotal</th>
                   <th>Shipping</th>
                   <th>Total</th>
+                  <th>Profit</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -500,6 +552,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
         <div class="ph-stat"><div class="ph-stat-num" id="an-rev-total">—</div><div class="ph-stat-label">Revenue</div></div>
         <div class="ph-stat"><div class="ph-stat-num" id="an-rev-orders">—</div><div class="ph-stat-label">Orders</div></div>
         <div class="ph-stat"><div class="ph-stat-num" id="an-rev-avg">—</div><div class="ph-stat-label">Avg Order</div></div>
+        <div class="ph-stat"><div class="ph-stat-num" id="an-rev-profit" style="color:#4caf50;">—</div><div class="ph-stat-label">Profit</div></div>
       </div>
 
       <!-- Page views -->
@@ -532,6 +585,122 @@ tr:hover td{background:rgba(212,175,55,.04);}
           <div class="ph-empty" id="ph-an-empty" style="display:none">No data yet for this period.</div>
         </div>
       </div>
+    </div>
+
+    <!-- Pricing Tab -->
+    <div id="tab-pricing" style="display:none">
+
+      <!-- Summary Cards -->
+      <div class="ph-pricing-summary" id="pricing-summary-cards">
+        <div class="ph-pricing-stat"><div class="ph-pricing-stat-num" id="prc-cost-set">—</div><div class="ph-pricing-stat-label">Cost Set</div><div class="ph-pricing-stat-sub" id="prc-cost-set-sub"></div></div>
+        <div class="ph-pricing-stat"><div class="ph-pricing-stat-num" id="prc-avg-margin">—</div><div class="ph-pricing-stat-label">Avg Margin</div><div class="ph-pricing-stat-sub">products with cost</div></div>
+        <div class="ph-pricing-stat"><div class="ph-pricing-stat-num" id="prc-best-name" style="font-size:14px;line-height:1.3;margin-top:4px;"></div><div class="ph-pricing-stat-label">Highest Margin</div><div class="ph-pricing-stat-sub" id="prc-best-pct" style="color:#4caf50;font-weight:700;font-size:15px;"></div></div>
+        <div class="ph-pricing-stat"><div class="ph-pricing-stat-num" id="prc-worst-name" style="font-size:14px;line-height:1.3;margin-top:4px;"></div><div class="ph-pricing-stat-label">Lowest Margin</div><div class="ph-pricing-stat-sub" id="prc-worst-pct" style="color:#e05555;font-weight:700;font-size:15px;"></div></div>
+      </div>
+
+      <!-- Section A: Exchange Rate & Fees -->
+      <div class="ph-pricing-card">
+        <h3>Exchange Rate &amp; Fees</h3>
+        <div class="ph-rate-row">
+          <div>
+            <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">NGN Black Market Rate (CA$1 = &#8358;X)</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:13px;color:#888;">CA$1 = &#8358;</span>
+              <input type="number" id="prc-ngn-input" placeholder="e.g. 1025" min="1" style="width:110px;padding:7px 10px;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#e0e0e0;font-size:13px;font-family:'Lato',sans-serif;outline:none;">
+              <button onclick="savePricingNgnRate()" class="ph-btn ph-btn-gold" style="padding:7px 16px;font-size:12px;">Save</button>
+              <span id="prc-ngn-status" style="font-size:12px;color:#888;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="ph-fee-info" style="margin-top:16px;">
+          <strong style="color:#aaa;">Payment Fees (reference only)</strong><br>
+          Square: 2.65% + CA$0.15 per transaction<br>
+          Paystack: 1.5% NGN (capped at &#8358;2,000)
+        </div>
+        <div style="margin-top:16px;">
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Net After Fees Calculator</div>
+          <div class="ph-calc-row">
+            <div class="ph-form-group" style="flex:1;min-width:130px;">
+              <label>Amount</label>
+              <input type="number" id="prc-fee-amount" placeholder="e.g. 250" min="0" oninput="calcFeeNet()">
+            </div>
+            <div class="ph-form-group" style="flex:1;min-width:100px;">
+              <label>Currency</label>
+              <select id="prc-fee-currency" onchange="calcFeeNet()" style="padding:10px 14px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;">
+                <option value="CAD">CAD</option>
+                <option value="NGN">NGN</option>
+              </select>
+            </div>
+          </div>
+          <div class="ph-calc-result" id="prc-fee-result" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Section B: Product Cost & Margin Table -->
+      <div class="ph-pricing-card">
+        <h3>Product Cost &amp; Margin</h3>
+        <div class="ph-loading" id="prc-loading"><div class="ph-loading-spin"></div><div>Loading products...</div></div>
+        <div id="prc-table-wrap" style="display:none">
+          <div class="ph-cost-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Sale Price (CA$)</th>
+                  <th>Cost Price</th>
+                  <th>Currency</th>
+                  <th>Cost in CA$</th>
+                  <th>Gross Profit</th>
+                  <th>Margin %</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="prc-tbody"></tbody>
+            </table>
+          </div>
+          <div class="ph-cost-mob-list" id="prc-mob-list"></div>
+        </div>
+      </div>
+
+      <!-- Section C: Margin Calculator -->
+      <div class="ph-pricing-card">
+        <h3>Margin Calculator</h3>
+        <div class="ph-calc-row">
+          <div class="ph-form-group" style="flex:1;min-width:120px;">
+            <label>Cost Amount</label>
+            <input type="number" id="mc-cost" placeholder="e.g. 80" min="0" oninput="calcMargin()">
+          </div>
+          <div class="ph-form-group" style="flex:1;min-width:100px;">
+            <label>Currency</label>
+            <select id="mc-currency" onchange="calcMargin()" style="padding:10px 14px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;">
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+              <option value="NGN">NGN</option>
+              <option value="GBP">GBP</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#666;">Mode</label>
+            <div class="ph-calc-mode">
+              <button class="ph-calc-mode-btn active" id="mc-mode-margin" onclick="setCalcMode('margin')">Target Margin</button>
+              <button class="ph-calc-mode-btn" id="mc-mode-price" onclick="setCalcMode('price')">Target Price</button>
+            </div>
+          </div>
+        </div>
+        <div class="ph-calc-row" style="margin-top:4px;">
+          <div class="ph-form-group" id="mc-margin-group" style="flex:1;min-width:120px;">
+            <label>Target Margin %</label>
+            <input type="number" id="mc-target-margin" placeholder="e.g. 50" min="1" max="99" oninput="calcMargin()">
+          </div>
+          <div class="ph-form-group" id="mc-price-group" style="display:none;flex:1;min-width:120px;">
+            <label>Target Sale Price (CA$)</label>
+            <input type="number" id="mc-target-price" placeholder="e.g. 200" min="0" oninput="calcMargin()">
+          </div>
+        </div>
+        <div class="ph-calc-result" id="mc-result" style="display:none"></div>
+      </div>
+
     </div>
 
     <!-- Shipping Tab -->
@@ -1835,7 +2004,7 @@ document.getElementById('ph-confirm-modal').addEventListener('click', function(e
 document.getElementById('ph-appt-modal').addEventListener('click', function(e){ if(e.target===this) closeApptModal(); });
 
 // ---- TABS ----
-const TAB_NAMES = ['products','orders','appointments','services','analytics','shipping'];
+const TAB_NAMES = ['products','orders','appointments','services','analytics','shipping','pricing'];
 function switchTab(tab) {
   TAB_NAMES.forEach((t, i) => {
     document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
@@ -1846,15 +2015,23 @@ function switchTab(tab) {
   if (tab === 'services' && !servicesLoaded) loadServices();
   if (tab === 'analytics') loadAnalytics();
   if (tab === 'shipping' && !shippingLoaded) loadShipping();
+  if (tab === 'pricing' && !pricingLoaded) loadPricing();
 }
 
 // ---- ORDERS ----
 let ordersLoaded = false;
 let allOrders = [];
+let productCostMap = {}; // id -> cost_price (CAD)
 
 async function loadOrders() {
   try {
-    allOrders = await sbFetch('orders?order=created_at.desc&select=*');
+    const [orders, costProds] = await Promise.all([
+      sbFetch('orders?order=created_at.desc&select=*'),
+      sbFetch('products?select=id,name,cost_price&order=id.asc')
+    ]);
+    allOrders = orders;
+    productCostMap = {};
+    costProds.forEach(p => { if (p.cost_price != null) productCostMap[p.id] = parseFloat(p.cost_price); });
     ordersLoaded = true;
     document.getElementById('stat-orders').textContent = allOrders.length;
     renderOrders();
@@ -1864,6 +2041,20 @@ async function loadOrders() {
     document.getElementById('ph-orders-loading').innerHTML = '<p style="color:#e05555;padding:20px">Failed to load orders. Check console.</p>';
     console.error(e);
   }
+}
+
+function calcOrderProfit(order) {
+  if (!Array.isArray(order.items) || order.items.length === 0) return null;
+  let totalCost = 0;
+  let anyMissing = false;
+  for (const item of order.items) {
+    const pid = item.product_id || item.id;
+    if (pid == null || productCostMap[pid] == null) { anyMissing = true; continue; }
+    const qty = item.quantity || item.qty || 1;
+    totalCost += productCostMap[pid] * qty;
+  }
+  if (anyMissing && totalCost === 0) return null; // no cost data at all
+  return (parseFloat(order.total) || 0) - totalCost;
 }
 
 function renderOrders() {
@@ -1880,12 +2071,28 @@ function renderOrders() {
   document.getElementById('ord-sum-revenue').textContent = '$' + totalRev.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById('ord-sum-count').textContent = allOrders.length;
   document.getElementById('ord-sum-avg').textContent = allOrders.length ? '$' + avgOrder.toFixed(2) : '—';
+
+  // Profit summary — only count orders where we have cost data
+  let totalProfit = 0;
+  let profitCount = 0;
+  allOrders.forEach(o => {
+    const p = calcOrderProfit(o);
+    if (p != null) { totalProfit += p; profitCount++; }
+  });
+  document.getElementById('ord-sum-profit').textContent = profitCount > 0
+    ? '$' + totalProfit.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
+    : '—';
+
   allOrders.forEach(o => {
     const date = new Date(o.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
     const ref = o.square_order_id ? o.square_order_id.slice(-8).toUpperCase() : (o.paystack_reference ? o.paystack_reference.slice(-8).toUpperCase() : '—');
-    const items = Array.isArray(o.items) ? o.items.map(i => `${i.name||''}${(i.quantity||1)>1?' ×'+i.quantity:''}`).join(', ') : '—';
+    const items = Array.isArray(o.items) ? o.items.map(i => `${i.name||''}${(i.quantity||1)>1?' \u00d7'+i.quantity:''}`).join(', ') : '—';
     const ship = o.shipping_address ? (o.shipping_address.country || '') : '';
     const status = o.status || 'pending';
+    const profit = calcOrderProfit(o);
+    const profitStr = profit != null
+      ? `<span style="color:${profit >= 0 ? '#4caf50' : '#e05555'};font-weight:600;">$${profit.toFixed(2)}</span>`
+      : '<span style="color:#444;">—</span>';
 
     // Desktop row
     const tr = document.createElement('tr');
@@ -1901,6 +2108,7 @@ function renderOrders() {
       <td>$${o.subtotal || 0}</td>
       <td>$${o.shipping_cost || 0}${ship ? ' <span style="font-size:10px;color:#555">('+escHtml(ship)+')</span>' : ''}</td>
       <td style="font-weight:700;color:#d4af37">$${o.total || 0}</td>
+      <td>${profitStr}</td>
       <td><span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span></td>
     `;
     tbody.appendChild(tr);
@@ -1925,6 +2133,10 @@ function renderOrders() {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a;">
         <span style="font-size:12px;color:#666;">Shipping${ship ? ' ('+escHtml(ship)+')' : ''}: $${o.shipping_cost || 0}</span>
         <span style="font-weight:700;color:#d4af37;font-size:15px;">$${o.total || 0}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+        <span style="font-size:12px;color:#666;">Profit</span>
+        ${profitStr}
       </div>
     `;
     mobList.appendChild(card);
@@ -2301,10 +2513,15 @@ async function loadAnalytics() {
   }
 
   try {
-    const [events, periodOrders] = await Promise.all([
+    const [events, periodOrders, anCostProds] = await Promise.all([
       sbFetch(`analytics_events?select=event_type,page,product_id,product_name${dateFilter}&order=created_at.desc`),
-      sbFetch(`orders?select=total${dateFilter}`)
+      sbFetch(`orders?select=total,items${dateFilter}`),
+      sbFetch('products?select=id,cost_price&order=id.asc')
     ]);
+
+    // Build cost map for analytics profit calc
+    const anCostMap = {};
+    anCostProds.forEach(p => { if (p.cost_price != null) anCostMap[p.id] = parseFloat(p.cost_price); });
 
     // Page views
     const pageViews = events.filter(e => e.event_type === 'page_view');
@@ -2319,6 +2536,23 @@ async function loadAnalytics() {
     document.getElementById('an-rev-total').textContent = '$' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
     document.getElementById('an-rev-orders').textContent = periodOrders.length;
     document.getElementById('an-rev-avg').textContent = periodOrders.length ? '$' + avgOrderVal.toFixed(2) : '—';
+
+    // Profit for period
+    let anTotalProfit = 0;
+    let anProfitCount = 0;
+    periodOrders.forEach(o => {
+      if (!Array.isArray(o.items)) return;
+      let cost = 0; let missing = false;
+      o.items.forEach(item => {
+        const pid = item.product_id || item.id;
+        if (pid == null || anCostMap[pid] == null) { missing = true; return; }
+        cost += anCostMap[pid] * (item.quantity || item.qty || 1);
+      });
+      if (!missing || cost > 0) { anTotalProfit += (parseFloat(o.total) || 0) - cost; anProfitCount++; }
+    });
+    document.getElementById('an-rev-profit').textContent = anProfitCount > 0
+      ? '$' + anTotalProfit.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
+      : '—';
 
     // Product views and purchases — group by product_id
     const productViews     = events.filter(e => e.event_type === 'product_view');
@@ -2494,6 +2728,317 @@ async function deleteShippingRate(id, name) {
     renderShippingTable();
   } catch(e) {
     alert('Delete failed: ' + e.message);
+  }
+}
+
+// ---- PRICING TAB ----
+let pricingLoaded = false;
+let allPricingProducts = [];
+
+// Hardcoded approximate rates to CAD
+const FX_TO_CAD = { CAD: 1, USD: 1.36, GBP: 1.73, EUR: 1.48, NGN: 1 / 1025 };
+
+function toCad(amount, currency) {
+  const rate = FX_TO_CAD[currency] || 1;
+  return amount * rate;
+}
+
+function marginColor(pct) {
+  if (pct < 20) return 'ph-margin-red';
+  if (pct < 40) return 'ph-margin-amber';
+  return 'ph-margin-green';
+}
+
+async function loadPricing() {
+  pricingLoaded = true;
+  document.getElementById('prc-loading').style.display = 'flex';
+  document.getElementById('prc-table-wrap').style.display = 'none';
+
+  // Load NGN rate into the pricing tab rate field
+  try {
+    const rows = await sbFetch('settings?key=eq.ngn_black_market_rate&select=value');
+    if (rows[0]?.value) {
+      document.getElementById('prc-ngn-input').value = rows[0].value;
+      const r = parseFloat(rows[0].value);
+      if (!isNaN(r)) FX_TO_CAD['NGN'] = 1 / r;
+    }
+  } catch(e) {}
+
+  try {
+    allPricingProducts = await sbFetch('products?select=id,name,price,sale_price,sale_type,cost_price,cost_price_original,cost_currency&order=sort_order.asc,id.asc');
+    renderPricingTable();
+    renderPricingSummary();
+    document.getElementById('prc-loading').style.display = 'none';
+    document.getElementById('prc-table-wrap').style.display = 'block';
+  } catch(e) {
+    document.getElementById('prc-loading').innerHTML = '<p style="color:#e05555;padding:20px">Failed to load products. Check console.</p>';
+    console.error(e);
+  }
+}
+
+function getSellingPrice(p) {
+  if (p.sale_price != null) {
+    if (p.sale_type === 'percent') return p.price * (1 - p.sale_price / 100);
+    return parseFloat(p.sale_price);
+  }
+  return parseFloat(p.price) || 0;
+}
+
+function renderPricingTable() {
+  const tbody = document.getElementById('prc-tbody');
+  const mobList = document.getElementById('prc-mob-list');
+  tbody.innerHTML = '';
+  mobList.innerHTML = '';
+
+  allPricingProducts.forEach(p => {
+    const sellPrice = getSellingPrice(p);
+    const hasCost = p.cost_price != null;
+    const costCad = hasCost ? parseFloat(p.cost_price) : null;
+    const grossProfit = hasCost ? sellPrice - costCad : null;
+    const marginPct = hasCost && sellPrice > 0 ? (grossProfit / sellPrice) * 100 : null;
+
+    const profitHtml = grossProfit != null
+      ? `<span class="${grossProfit >= 0 ? 'ph-profit-pos' : 'ph-profit-neg'}">$${grossProfit.toFixed(2)}</span>`
+      : '<span style="color:#444">—</span>';
+    const marginHtml = marginPct != null
+      ? `<span class="${marginColor(marginPct)} ph-margin-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle;"></span>${marginPct.toFixed(1)}%`
+      : '—';
+
+    const costDisplay = hasCost
+      ? `CA$${costCad.toFixed(2)}${p.cost_currency && p.cost_currency !== 'CAD' ? ` <span style="font-size:10px;color:#555">(${p.cost_price_original || ''} ${p.cost_currency})</span>` : ''}`
+      : '<span style="color:#444">Not set</span>';
+
+    const tr = document.createElement('tr');
+    tr.id = `prc-row-${p.id}`;
+    tr.innerHTML = `
+      <td style="font-weight:600">${escHtml(p.name)}</td>
+      <td>$${sellPrice.toFixed(2)}</td>
+      <td id="prc-cost-cell-${p.id}">${costDisplay}</td>
+      <td style="color:#888">${escHtml(p.cost_currency || '—')}</td>
+      <td>${hasCost ? `$${costCad.toFixed(2)}` : '—'}</td>
+      <td>${profitHtml}</td>
+      <td>${marginHtml}</td>
+      <td><button class="ph-btn-sm ph-edit-btn" onclick="openCostEdit(${p.id})">Edit</button></td>
+    `;
+    tbody.appendChild(tr);
+
+    // Mobile card
+    const card = document.createElement('div');
+    card.className = 'ph-cost-mob-card';
+    card.id = `prc-mob-${p.id}`;
+    card.innerHTML = `
+      <div class="ph-cost-mob-name">${escHtml(p.name)}</div>
+      <div class="ph-cost-mob-row">
+        <span class="ph-cost-mob-label">Sale Price</span>
+        <span style="color:#d4af37;font-weight:700;">$${sellPrice.toFixed(2)}</span>
+      </div>
+      <div class="ph-cost-mob-row">
+        <span class="ph-cost-mob-label">Cost (CA$)</span>
+        <span>${hasCost ? `$${costCad.toFixed(2)}` : '<span style="color:#444">Not set</span>'}</span>
+      </div>
+      <div class="ph-cost-mob-row">
+        <span class="ph-cost-mob-label">Gross Profit</span>
+        <span>${profitHtml}</span>
+      </div>
+      <div class="ph-cost-mob-row">
+        <span class="ph-cost-mob-label">Margin</span>
+        <span>${marginHtml}</span>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="ph-btn-sm ph-edit-btn" style="width:100%;padding:10px;" onclick="openCostEdit(${p.id})">Edit Cost</button>
+      </div>
+    `;
+    mobList.appendChild(card);
+  });
+}
+
+function renderPricingSummary() {
+  const withCost = allPricingProducts.filter(p => p.cost_price != null);
+  document.getElementById('prc-cost-set').textContent = withCost.length;
+  document.getElementById('prc-cost-set-sub').textContent = `of ${allPricingProducts.length} products`;
+
+  if (!withCost.length) {
+    document.getElementById('prc-avg-margin').textContent = '—';
+    document.getElementById('prc-best-name').textContent = '—';
+    document.getElementById('prc-best-pct').textContent = '';
+    document.getElementById('prc-worst-name').textContent = '—';
+    document.getElementById('prc-worst-pct').textContent = '';
+    return;
+  }
+
+  const margins = withCost.map(p => {
+    const sell = getSellingPrice(p);
+    const profit = sell - parseFloat(p.cost_price);
+    return { name: p.name, pct: sell > 0 ? (profit / sell) * 100 : 0 };
+  });
+
+  const avg = margins.reduce((s, m) => s + m.pct, 0) / margins.length;
+  document.getElementById('prc-avg-margin').textContent = avg.toFixed(1) + '%';
+
+  const best = margins.reduce((a, b) => a.pct > b.pct ? a : b);
+  const worst = margins.reduce((a, b) => a.pct < b.pct ? a : b);
+
+  document.getElementById('prc-best-name').textContent = best.name;
+  document.getElementById('prc-best-pct').textContent = best.pct.toFixed(1) + '%';
+  document.getElementById('prc-worst-name').textContent = worst.name;
+  document.getElementById('prc-worst-pct').textContent = worst.pct.toFixed(1) + '%';
+}
+
+function openCostEdit(id) {
+  const p = allPricingProducts.find(x => x.id === id);
+  if (!p) return;
+
+  const desktopCell = document.getElementById('prc-cost-cell-' + id);
+  const mobCard = document.getElementById('prc-mob-' + id);
+
+  const editFormHtml = (suffix) => `
+    <div class="ph-cost-inline-form" id="cost-edit-form-${id}-${suffix}">
+      <input type="number" id="cost-orig-${id}-${suffix}" placeholder="Amount" min="0" step="0.01"
+        value="${p.cost_price_original != null ? p.cost_price_original : ''}"
+        oninput="previewCostCad(${id},'${suffix}')">
+      <select id="cost-cur-${id}-${suffix}" onchange="previewCostCad(${id},'${suffix}')">
+        ${['CAD','USD','NGN','GBP','EUR'].map(c => `<option value="${c}" ${p.cost_currency===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <button class="ph-btn-sm ph-edit-btn" onclick="saveCostPrice(${id},'${suffix}')">Save</button>
+      <button class="ph-btn-sm" onclick="renderPricingTable();renderPricingSummary()" style="background:transparent;color:#666;border:1px solid #333;">Cancel</button>
+    </div>
+    <div class="ph-cost-preview" id="cost-preview-${id}-${suffix}">Enter amount to see CA$ equivalent</div>
+  `;
+
+  if (desktopCell) desktopCell.innerHTML = editFormHtml('d');
+  if (mobCard) {
+    const costRow = mobCard.querySelector('.ph-cost-mob-row:nth-child(2)');
+    if (costRow) costRow.innerHTML = `<span class="ph-cost-mob-label">Cost</span><div style="flex:1;padding-left:10px;">${editFormHtml('m')}</div>`;
+  }
+
+  // Focus first input
+  const firstInp = document.getElementById(`cost-orig-${id}-d`) || document.getElementById(`cost-orig-${id}-m`);
+  if (firstInp) {
+    firstInp.focus();
+    firstInp.select();
+    previewCostCad(id, firstInp.id.endsWith('-d') ? 'd' : 'm');
+  }
+}
+
+function previewCostCad(id, suffix) {
+  const amtEl = document.getElementById(`cost-orig-${id}-${suffix}`);
+  const curEl = document.getElementById(`cost-cur-${id}-${suffix}`);
+  const prevEl = document.getElementById(`cost-preview-${id}-${suffix}`);
+  if (!amtEl || !curEl || !prevEl) return;
+  const amt = parseFloat(amtEl.value);
+  if (isNaN(amt) || amt < 0) { prevEl.textContent = 'Enter amount to see CA$ equivalent'; return; }
+  const cad = toCad(amt, curEl.value);
+  prevEl.textContent = `\u2248 CA$${cad.toFixed(2)}`;
+}
+
+async function saveCostPrice(id, suffix) {
+  const amtEl = document.getElementById(`cost-orig-${id}-${suffix}`);
+  const curEl = document.getElementById(`cost-cur-${id}-${suffix}`);
+  const prevEl = document.getElementById(`cost-preview-${id}-${suffix}`);
+  if (!amtEl || !curEl) return;
+  const origAmt = parseFloat(amtEl.value);
+  if (isNaN(origAmt) || origAmt < 0) { alert('Please enter a valid cost amount.'); return; }
+  const currency = curEl.value;
+  const cadCost = toCad(origAmt, currency);
+  amtEl.disabled = true;
+  curEl.disabled = true;
+  if (prevEl) prevEl.textContent = 'Saving...';
+  try {
+    await sbFetch(`products?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ cost_price: cadCost, cost_price_original: origAmt, cost_currency: currency, updated_at: new Date().toISOString() })
+    });
+    const p = allPricingProducts.find(x => x.id === id);
+    if (p) { p.cost_price = cadCost; p.cost_price_original = origAmt; p.cost_currency = currency; }
+    // Also sync productCostMap so orders profit stays current
+    productCostMap[id] = cadCost;
+    renderPricingTable();
+    renderPricingSummary();
+  } catch(e) {
+    alert('Save failed: ' + e.message);
+    amtEl.disabled = false;
+    curEl.disabled = false;
+    if (prevEl) prevEl.textContent = '';
+  }
+}
+
+async function savePricingNgnRate() {
+  const val = parseFloat(document.getElementById('prc-ngn-input').value);
+  const statusEl = document.getElementById('prc-ngn-status');
+  if (!val || val < 1) { statusEl.textContent = 'Invalid rate.'; return; }
+  statusEl.textContent = 'Saving...';
+  try {
+    await sbFetch('settings?key=eq.ngn_black_market_rate', {
+      method: 'PATCH',
+      body: JSON.stringify({ value: String(val), updated_at: new Date().toISOString() })
+    });
+    FX_TO_CAD['NGN'] = 1 / val;
+    // Sync the main NGN rate display
+    document.getElementById('ngn-rate-display').textContent = val.toLocaleString();
+    document.getElementById('ngn-rate-input').value = val;
+    statusEl.style.color = '#4caf50';
+    statusEl.textContent = 'Saved!';
+    setTimeout(() => { statusEl.textContent = ''; statusEl.style.color = '#888'; }, 3000);
+  } catch(e) {
+    statusEl.textContent = 'Error saving.';
+  }
+}
+
+function calcFeeNet() {
+  const amt = parseFloat(document.getElementById('prc-fee-amount').value);
+  const cur = document.getElementById('prc-fee-currency').value;
+  const res = document.getElementById('prc-fee-result');
+  if (isNaN(amt) || amt <= 0) { res.style.display = 'none'; return; }
+  res.style.display = 'block';
+
+  if (cur === 'CAD') {
+    const squareNet = amt - (amt * 0.0265 + 0.15);
+    const squareFee = amt - squareNet;
+    res.innerHTML = `
+      <strong>Square:</strong> Net = CA$${squareNet.toFixed(2)} <span style="color:#555;">(fee: $${squareFee.toFixed(2)})</span><br>
+      <strong>Paystack:</strong> Not applicable for CAD transactions
+    `;
+  } else {
+    const paystackFee = Math.min(amt * 0.015, 2000);
+    const paystackNet = amt - paystackFee;
+    res.innerHTML = `
+      <strong>Paystack:</strong> Net = &#8358;${paystackNet.toLocaleString('en-US', {maximumFractionDigits:0})} <span style="color:#555;">(fee: &#8358;${paystackFee.toLocaleString('en-US', {maximumFractionDigits:0})})</span><br>
+      <strong>Square:</strong> Not applicable for NGN transactions
+    `;
+  }
+}
+
+let mcMode = 'margin';
+function setCalcMode(mode) {
+  mcMode = mode;
+  document.getElementById('mc-mode-margin').classList.toggle('active', mode === 'margin');
+  document.getElementById('mc-mode-price').classList.toggle('active', mode === 'price');
+  document.getElementById('mc-margin-group').style.display = mode === 'margin' ? 'block' : 'none';
+  document.getElementById('mc-price-group').style.display = mode === 'price' ? 'block' : 'none';
+  calcMargin();
+}
+
+function calcMargin() {
+  const cost = parseFloat(document.getElementById('mc-cost').value);
+  const currency = document.getElementById('mc-currency').value;
+  const res = document.getElementById('mc-result');
+  if (isNaN(cost) || cost < 0) { res.style.display = 'none'; return; }
+  const costCad = toCad(cost, currency);
+  if (mcMode === 'margin') {
+    const target = parseFloat(document.getElementById('mc-target-margin').value);
+    if (isNaN(target) || target <= 0 || target >= 100) { res.style.display = 'none'; return; }
+    const salePrice = costCad / (1 - target / 100);
+    const profit = salePrice - costCad;
+    res.style.display = 'block';
+    res.innerHTML = `Cost in CA$: <strong>$${costCad.toFixed(2)}</strong> &nbsp; Suggested sale price: <strong style="color:#d4af37;">$${salePrice.toFixed(2)}</strong> &nbsp; Profit: <strong class="ph-profit-pos">$${profit.toFixed(2)}</strong>`;
+  } else {
+    const salePrice = parseFloat(document.getElementById('mc-target-price').value);
+    if (isNaN(salePrice) || salePrice <= 0) { res.style.display = 'none'; return; }
+    const profit = salePrice - costCad;
+    const margin = salePrice > 0 ? (profit / salePrice) * 100 : 0;
+    const mClass = margin < 20 ? 'ph-profit-neg' : margin < 40 ? '' : 'ph-profit-pos';
+    res.style.display = 'block';
+    res.innerHTML = `Cost in CA$: <strong>$${costCad.toFixed(2)}</strong> &nbsp; Profit: <strong class="${mClass}">$${profit.toFixed(2)}</strong> &nbsp; Margin: <strong class="${mClass}">${margin.toFixed(1)}%</strong>`;
   }
 }
 
