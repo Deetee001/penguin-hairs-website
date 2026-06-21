@@ -103,6 +103,14 @@ All prices are placeholders for now — the admin page is where real pricing wil
 - If a product has a `video` field, the card renders a video instead of an image
 - Bob wigs go under category: 'Short'
 
+## Writing Rules (all copy, product descriptions, emails, content)
+
+- Never use em dashes (— or –). Use a comma or period instead.
+- Write like a human. Vary sentence length. Use contractions. Sound natural.
+- No AI filler: no "Certainly!", "Absolutely!", "Great question!", "I'd be happy to".
+- No corporate fluff: "leverage", "synergy", "utilize", "cutting-edge", "robust" are banned.
+- Cut throat-clearing. Say it directly in fewer words.
+
 ## Design Rules
 
 - Background is always dark: #0a0a0a

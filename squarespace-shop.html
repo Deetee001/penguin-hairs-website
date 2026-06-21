@@ -1599,7 +1599,7 @@ async function psOrderSuccess(reference) {
         reference, cart,
         shipping: o.shipping, shippingCost: o.shippingInfo.cadAmount,
         subtotalCAD: o.subtotalCAD, totalCAD: o.totalCAD, totalNGN: o.totalNGN,
-        discountCode: appliedPromo ? appliedPromo.code : null
+        promoCode: appliedPromo ? appliedPromo.code : null
       })
     });
     const data = await res.json();
@@ -1695,7 +1695,7 @@ async function processPayment(token) {
     const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ cart, sourceId: token, shipping, shippingCost, discountCode: appliedPromo ? appliedPromo.code : null, discountAmount: appliedPromo ? (function(){ var s=cart.reduce(function(a,i){return a+i.price*i.qty;},0); var d=appliedPromo.discount_type==='percent'?s*appliedPromo.discount_value/100:Math.min(appliedPromo.discount_value,s); return Math.round(d*100)/100; })() : 0 })
+      body: JSON.stringify({ cart, sourceId: token, shipping, shippingCost, promoCode: appliedPromo ? appliedPromo.code : null })
     });
     const data = await res.json();
     if (data.success) {

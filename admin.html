@@ -1234,12 +1234,15 @@ async function tryRestoreSession() {
 
 // ---- SUPABASE API ----
 async function sbFetch(path, options = {}) {
-  const token = authToken || SUPABASE_ANON_KEY;
+  if (!authToken) {
+    adminLogout();
+    throw new Error('Session expired. Please log in again.');
+  }
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
     ...options,
     headers: {
       'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + token,
+      'Authorization': 'Bearer ' + authToken,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation',
       ...(options.headers || {})
@@ -2030,7 +2033,7 @@ async function saveApptChanges() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + (authToken || SUPABASE_ANON_KEY),
+        'Authorization': 'Bearer ' + authToken,
       },
       body: JSON.stringify({
         booking_id: currentApptId,
