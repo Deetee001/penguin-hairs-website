@@ -231,6 +231,35 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-calc-mode-btn{padding:7px 16px;background:transparent;border:none;color:#666;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:all .2s;}
 .ph-calc-mode-btn.active{background:#d4af37;color:#0a0a0a;}
 
+/* ---- PRICING MODAL ---- */
+.ph-prc-modal-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#d4af37;margin-bottom:4px;}
+.ph-prc-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#666;margin:18px 0 8px;}
+.ph-prc-input-row{display:flex;gap:10px;align-items:flex-start;}
+.ph-prc-input-row input,.ph-prc-input-row select{padding:10px 14px;background:#1a1a1a;border:1px solid rgba(212,175,55,.3);border-radius:6px;color:#e8e0d0;font-family:'Lato',sans-serif;font-size:14px;outline:none;transition:border-color .2s;}
+.ph-prc-input-row input:focus,.ph-prc-input-row select:focus{border-color:#d4af37;}
+.ph-prc-input-row input[type=number]{flex:1;min-width:0;}
+.ph-prc-input-row select{width:100px;flex-shrink:0;}
+.ph-prc-cad-preview{font-size:12px;color:#888;margin-top:5px;min-height:16px;}
+.ph-prc-pill-toggle{display:flex;gap:0;border:1px solid rgba(212,175,55,.3);border-radius:8px;overflow:hidden;width:fit-content;margin-bottom:10px;}
+.ph-prc-pill-btn{padding:8px 18px;background:transparent;border:none;color:#666;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:all .2s;}
+.ph-prc-pill-btn.active{background:#d4af37;color:#0a0a0a;}
+.ph-prc-target-input{display:flex;align-items:center;gap:8px;}
+.ph-prc-target-input input{padding:10px 14px;background:#1a1a1a;border:1px solid rgba(212,175,55,.3);border-radius:6px;color:#e8e0d0;font-family:'Lato',sans-serif;font-size:14px;outline:none;width:140px;}
+.ph-prc-target-input input:focus{border-color:#d4af37;}
+.ph-prc-target-prefix{font-size:13px;color:#888;}
+.ph-prc-output{font-size:13px;color:#aaa;margin-top:6px;min-height:18px;}
+.ph-prc-output strong{color:#d4af37;}
+.ph-prc-profit-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.15);border-radius:8px;overflow:hidden;margin-top:16px;}
+.ph-prc-profit-cell{background:#111;padding:12px;text-align:center;}
+.ph-prc-profit-val{font-family:'Cormorant Garamond',serif;font-size:20px;}
+.ph-prc-profit-lbl{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.8px;margin-top:2px;}
+@media(max-width:700px){
+  #ph-pricing-modal.ph-modal-bg{padding:0;align-items:flex-end;}
+  #ph-pricing-modal .ph-modal{border-radius:18px 18px 0 0;max-height:90vh;max-width:100%;overflow-x:hidden;}
+  #ph-pricing-modal .ph-modal-foot{flex-direction:column;gap:10px;}
+  #ph-pricing-modal .ph-modal-foot .ph-btn{width:100%;padding:14px;font-size:15px;}
+}
+
 /* ---- SERVICES ---- */
 .ph-svc-icon{width:40px;height:40px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#d4af37;font-size:16px;}
 .ph-icon-preview{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:#1a1a1a;border-radius:8px;color:#d4af37;font-size:20px;margin-top:6px;}
@@ -662,45 +691,6 @@ tr:hover td{background:rgba(212,175,55,.04);}
         </div>
       </div>
 
-      <!-- Section C: Margin Calculator -->
-      <div class="ph-pricing-card">
-        <h3>Margin Calculator</h3>
-        <div class="ph-calc-row">
-          <div class="ph-form-group" style="flex:1;min-width:120px;">
-            <label>Cost Amount</label>
-            <input type="number" id="mc-cost" placeholder="e.g. 80" min="0" oninput="calcMargin()">
-          </div>
-          <div class="ph-form-group" style="flex:1;min-width:100px;">
-            <label>Currency</label>
-            <select id="mc-currency" onchange="calcMargin()" style="padding:10px 14px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-family:'Lato',sans-serif;font-size:13px;outline:none;">
-              <option value="CAD">CAD</option>
-              <option value="USD">USD</option>
-              <option value="NGN">NGN</option>
-              <option value="GBP">GBP</option>
-              <option value="EUR">EUR</option>
-            </select>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#666;">Mode</label>
-            <div class="ph-calc-mode">
-              <button class="ph-calc-mode-btn active" id="mc-mode-margin" onclick="setCalcMode('margin')">Target Margin</button>
-              <button class="ph-calc-mode-btn" id="mc-mode-price" onclick="setCalcMode('price')">Target Price</button>
-            </div>
-          </div>
-        </div>
-        <div class="ph-calc-row" style="margin-top:4px;">
-          <div class="ph-form-group" id="mc-margin-group" style="flex:1;min-width:120px;">
-            <label>Target Margin %</label>
-            <input type="number" id="mc-target-margin" placeholder="e.g. 50" min="1" max="99" oninput="calcMargin()">
-          </div>
-          <div class="ph-form-group" id="mc-price-group" style="display:none;flex:1;min-width:120px;">
-            <label>Target Sale Price (CA$)</label>
-            <input type="number" id="mc-target-price" placeholder="e.g. 200" min="0" oninput="calcMargin()">
-          </div>
-        </div>
-        <div class="ph-calc-result" id="mc-result" style="display:none"></div>
-      </div>
-
     </div>
 
     <!-- Shipping Tab -->
@@ -760,6 +750,77 @@ tr:hover td{background:rgba(212,175,55,.04);}
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- Product Pricing Modal -->
+<div class="ph-modal-bg" id="ph-pricing-modal">
+  <div class="ph-modal" style="max-width:480px;">
+    <div class="ph-modal-head">
+      <h2 style="font-size:16px;color:#888;font-family:'Lato',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Cost &amp; Pricing</h2>
+      <button class="ph-modal-close" onclick="closePricingModal()">&times;</button>
+    </div>
+    <div class="ph-modal-body">
+      <input type="hidden" id="pm-product-id">
+      <div class="ph-prc-modal-name" id="pm-product-name"></div>
+      <div id="pm-current-price" style="font-size:12px;color:#666;margin-bottom:6px;"></div>
+
+      <div class="ph-prc-section-label">Cost Price</div>
+      <div class="ph-prc-input-row">
+        <input type="number" id="pm-cost-amt" placeholder="Amount" min="0" step="0.01" oninput="pmCalc()">
+        <select id="pm-cost-cur" onchange="pmCalc()">
+          <option value="CAD">CAD</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+          <option value="EUR">EUR</option>
+          <option value="NGN">NGN</option>
+        </select>
+      </div>
+      <div class="ph-prc-cad-preview" id="pm-cad-preview"></div>
+
+      <div class="ph-prc-section-label">Margin Target</div>
+      <div class="ph-prc-pill-toggle">
+        <button class="ph-prc-pill-btn active" id="pm-mode-margin" onclick="setPmMode('margin')">Target margin %</button>
+        <button class="ph-prc-pill-btn" id="pm-mode-price" onclick="setPmMode('price')">Target price</button>
+      </div>
+
+      <div id="pm-margin-group">
+        <div class="ph-prc-target-input">
+          <span class="ph-prc-target-prefix">%</span>
+          <input type="number" id="pm-target-margin" placeholder="e.g. 60" min="1" max="99" oninput="pmCalc()">
+        </div>
+        <div class="ph-prc-output" id="pm-margin-output"></div>
+      </div>
+
+      <div id="pm-price-group" style="display:none;">
+        <div class="ph-prc-target-input">
+          <span class="ph-prc-target-prefix">CA$</span>
+          <input type="number" id="pm-target-price" placeholder="e.g. 299" min="0" oninput="pmCalc()">
+        </div>
+        <div class="ph-prc-output" id="pm-price-output"></div>
+      </div>
+
+      <div class="ph-prc-profit-strip" id="pm-profit-strip" style="display:none;">
+        <div class="ph-prc-profit-cell">
+          <div class="ph-prc-profit-val" id="pm-strip-profit">—</div>
+          <div class="ph-prc-profit-lbl">Gross Profit</div>
+        </div>
+        <div class="ph-prc-profit-cell">
+          <div class="ph-prc-profit-val" id="pm-strip-margin">—</div>
+          <div class="ph-prc-profit-lbl">Margin %</div>
+        </div>
+        <div class="ph-prc-profit-cell">
+          <div class="ph-prc-profit-val" id="pm-strip-net">—</div>
+          <div class="ph-prc-profit-lbl">Net after Square fees</div>
+        </div>
+      </div>
+    </div>
+    <div class="ph-modal-foot" style="justify-content:flex-end;gap:10px;">
+      <span class="ph-save-status" id="pm-status"></span>
+      <button class="ph-btn ph-btn-outline" onclick="closePricingModal()">Cancel</button>
+      <button class="ph-btn ph-btn-outline" id="pm-save-cost-btn" onclick="pmSaveCostOnly()">Save cost only</button>
+      <button class="ph-btn ph-btn-gold" id="pm-save-both-btn" onclick="pmSaveBoth()" disabled>Save cost + apply price</button>
+    </div>
   </div>
 </div>
 
@@ -2002,6 +2063,7 @@ async function saveApptChanges() {
 document.getElementById('ph-edit-modal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
 document.getElementById('ph-confirm-modal').addEventListener('click', function(e){ if(e.target===this) closeConfirm(); });
 document.getElementById('ph-appt-modal').addEventListener('click', function(e){ if(e.target===this) closeApptModal(); });
+document.getElementById('ph-pricing-modal').addEventListener('click', function(e){ if(e.target===this) closePricingModal(); });
 
 // ---- TABS ----
 const TAB_NAMES = ['products','orders','appointments','services','analytics','shipping','pricing'];
@@ -2818,7 +2880,7 @@ function renderPricingTable() {
       <td>${hasCost ? `$${costCad.toFixed(2)}` : '—'}</td>
       <td>${profitHtml}</td>
       <td>${marginHtml}</td>
-      <td><button class="ph-btn-sm ph-edit-btn" onclick="openCostEdit(${p.id})">Edit</button></td>
+      <td><button class="ph-btn-sm ph-edit-btn" onclick="openPricingModal(${p.id})">Edit</button></td>
     `;
     tbody.appendChild(tr);
 
@@ -2845,7 +2907,7 @@ function renderPricingTable() {
         <span>${marginHtml}</span>
       </div>
       <div style="margin-top:10px;">
-        <button class="ph-btn-sm ph-edit-btn" style="width:100%;padding:10px;" onclick="openCostEdit(${p.id})">Edit Cost</button>
+        <button class="ph-btn-sm ph-edit-btn" style="width:100%;padding:10px;" onclick="openPricingModal(${p.id})">Edit Cost</button>
       </div>
     `;
     mobList.appendChild(card);
@@ -2884,83 +2946,172 @@ function renderPricingSummary() {
   document.getElementById('prc-worst-pct').textContent = worst.pct.toFixed(1) + '%';
 }
 
-function openCostEdit(id) {
+// ---- PRODUCT PRICING MODAL ----
+let pmMode = 'margin';
+
+function openPricingModal(id) {
   const p = allPricingProducts.find(x => x.id === id);
   if (!p) return;
 
-  const desktopCell = document.getElementById('prc-cost-cell-' + id);
-  const mobCard = document.getElementById('prc-mob-' + id);
+  const sellPrice = getSellingPrice(p);
 
-  const editFormHtml = (suffix) => `
-    <div class="ph-cost-inline-form" id="cost-edit-form-${id}-${suffix}">
-      <input type="number" id="cost-orig-${id}-${suffix}" placeholder="Amount" min="0" step="0.01"
-        value="${p.cost_price_original != null ? p.cost_price_original : ''}"
-        oninput="previewCostCad(${id},'${suffix}')">
-      <select id="cost-cur-${id}-${suffix}" onchange="previewCostCad(${id},'${suffix}')">
-        ${['CAD','USD','NGN','GBP','EUR'].map(c => `<option value="${c}" ${p.cost_currency===c?'selected':''}>${c}</option>`).join('')}
-      </select>
-      <button class="ph-btn-sm ph-edit-btn" onclick="saveCostPrice(${id},'${suffix}')">Save</button>
-      <button class="ph-btn-sm" onclick="renderPricingTable();renderPricingSummary()" style="background:transparent;color:#666;border:1px solid #333;">Cancel</button>
-    </div>
-    <div class="ph-cost-preview" id="cost-preview-${id}-${suffix}">Enter amount to see CA$ equivalent</div>
-  `;
+  document.getElementById('pm-product-id').value = id;
+  document.getElementById('pm-product-name').textContent = p.name;
+  document.getElementById('pm-current-price').textContent = 'Current sale price: $' + sellPrice.toFixed(2) + ' CAD';
 
-  if (desktopCell) desktopCell.innerHTML = editFormHtml('d');
-  if (mobCard) {
-    const costRow = mobCard.querySelector('.ph-cost-mob-row:nth-child(2)');
-    if (costRow) costRow.innerHTML = `<span class="ph-cost-mob-label">Cost</span><div style="flex:1;padding-left:10px;">${editFormHtml('m')}</div>`;
+  // Prefill cost fields from existing data
+  document.getElementById('pm-cost-amt').value = p.cost_price_original != null ? p.cost_price_original : '';
+  document.getElementById('pm-cost-cur').value = p.cost_currency || 'CAD';
+
+  // Reset margin target inputs
+  document.getElementById('pm-target-margin').value = '';
+  document.getElementById('pm-target-price').value = '';
+  document.getElementById('pm-margin-output').textContent = '';
+  document.getElementById('pm-price-output').textContent = '';
+  document.getElementById('pm-profit-strip').style.display = 'none';
+  document.getElementById('pm-status').textContent = '';
+  document.getElementById('pm-save-both-btn').disabled = true;
+
+  // Reset mode to margin
+  setPmMode('margin');
+  pmCalc();
+
+  document.getElementById('ph-pricing-modal').classList.add('open');
+  setTimeout(() => document.getElementById('pm-cost-amt').focus(), 80);
+}
+
+function closePricingModal() {
+  document.getElementById('ph-pricing-modal').classList.remove('open');
+}
+
+function setPmMode(mode) {
+  pmMode = mode;
+  document.getElementById('pm-mode-margin').classList.toggle('active', mode === 'margin');
+  document.getElementById('pm-mode-price').classList.toggle('active', mode === 'price');
+  document.getElementById('pm-margin-group').style.display = mode === 'margin' ? 'block' : 'none';
+  document.getElementById('pm-price-group').style.display = mode === 'price' ? 'block' : 'none';
+  pmCalc();
+}
+
+function pmCalc() {
+  const amt = parseFloat(document.getElementById('pm-cost-amt').value);
+  const cur = document.getElementById('pm-cost-cur').value;
+  const cadPreviewEl = document.getElementById('pm-cad-preview');
+  const stripEl = document.getElementById('pm-profit-strip');
+  const saveBothBtn = document.getElementById('pm-save-both-btn');
+
+  // CAD preview
+  if (!isNaN(amt) && amt >= 0) {
+    const cad = toCad(amt, cur);
+    cadPreviewEl.textContent = cur === 'CAD' ? '' : '\u2248 $' + cad.toFixed(2) + ' CAD';
+  } else {
+    cadPreviewEl.textContent = '';
   }
 
-  // Focus first input
-  const firstInp = document.getElementById(`cost-orig-${id}-d`) || document.getElementById(`cost-orig-${id}-m`);
-  if (firstInp) {
-    firstInp.focus();
-    firstInp.select();
-    previewCostCad(id, firstInp.id.endsWith('-d') ? 'd' : 'm');
+  const costCad = (!isNaN(amt) && amt >= 0) ? toCad(amt, cur) : null;
+  let suggestedPrice = null;
+
+  if (pmMode === 'margin') {
+    const targetPct = parseFloat(document.getElementById('pm-target-margin').value);
+    const outputEl = document.getElementById('pm-margin-output');
+    if (costCad != null && !isNaN(targetPct) && targetPct > 0 && targetPct < 100) {
+      suggestedPrice = costCad / (1 - targetPct / 100);
+      outputEl.innerHTML = 'Suggested price: <strong>$' + suggestedPrice.toFixed(2) + ' CAD</strong>';
+    } else {
+      outputEl.textContent = costCad != null ? 'Enter a target margin to see the suggested price.' : '';
+    }
+  } else {
+    const targetPrice = parseFloat(document.getElementById('pm-target-price').value);
+    const outputEl = document.getElementById('pm-price-output');
+    if (costCad != null && !isNaN(targetPrice) && targetPrice > 0) {
+      suggestedPrice = targetPrice;
+      const margin = ((targetPrice - costCad) / targetPrice) * 100;
+      const mClass = margin < 0 ? 'color:#e05555' : margin < 40 ? 'color:#d4af37' : 'color:#4caf50';
+      outputEl.innerHTML = 'Margin: <strong style="' + mClass + '">' + margin.toFixed(1) + '%</strong>';
+    } else {
+      outputEl.textContent = costCad != null ? 'Enter a target price to see the margin.' : '';
+    }
+  }
+
+  // Profit strip
+  if (costCad != null && suggestedPrice != null) {
+    const grossProfit = suggestedPrice - costCad;
+    const marginPct = suggestedPrice > 0 ? (grossProfit / suggestedPrice) * 100 : 0;
+    const squareNet = suggestedPrice - (suggestedPrice * 0.0265 + 0.15);
+    const profitColor = grossProfit >= 0 ? '#4caf50' : '#e05555';
+    const mColor = marginPct >= 40 ? '#4caf50' : marginPct >= 20 ? '#d4af37' : '#e05555';
+    document.getElementById('pm-strip-profit').innerHTML = '<span style="color:' + profitColor + '">$' + grossProfit.toFixed(2) + '</span>';
+    document.getElementById('pm-strip-margin').innerHTML = '<span style="color:' + mColor + '">' + marginPct.toFixed(1) + '%</span>';
+    document.getElementById('pm-strip-net').innerHTML = '<span style="color:' + (squareNet >= 0 ? '#4caf50' : '#e05555') + '">$' + squareNet.toFixed(2) + '</span>';
+    stripEl.style.display = 'grid';
+    saveBothBtn.disabled = false;
+  } else {
+    stripEl.style.display = 'none';
+    saveBothBtn.disabled = true;
   }
 }
 
-function previewCostCad(id, suffix) {
-  const amtEl = document.getElementById(`cost-orig-${id}-${suffix}`);
-  const curEl = document.getElementById(`cost-cur-${id}-${suffix}`);
-  const prevEl = document.getElementById(`cost-preview-${id}-${suffix}`);
-  if (!amtEl || !curEl || !prevEl) return;
-  const amt = parseFloat(amtEl.value);
-  if (isNaN(amt) || amt < 0) { prevEl.textContent = 'Enter amount to see CA$ equivalent'; return; }
-  const cad = toCad(amt, curEl.value);
-  prevEl.textContent = `\u2248 CA$${cad.toFixed(2)}`;
-}
+async function pmSave(includePrice) {
+  const id = parseInt(document.getElementById('pm-product-id').value, 10);
+  const amt = parseFloat(document.getElementById('pm-cost-amt').value);
+  const cur = document.getElementById('pm-cost-cur').value;
+  const statusEl = document.getElementById('pm-status');
 
-async function saveCostPrice(id, suffix) {
-  const amtEl = document.getElementById(`cost-orig-${id}-${suffix}`);
-  const curEl = document.getElementById(`cost-cur-${id}-${suffix}`);
-  const prevEl = document.getElementById(`cost-preview-${id}-${suffix}`);
-  if (!amtEl || !curEl) return;
-  const origAmt = parseFloat(amtEl.value);
-  if (isNaN(origAmt) || origAmt < 0) { alert('Please enter a valid cost amount.'); return; }
-  const currency = curEl.value;
-  const cadCost = toCad(origAmt, currency);
-  amtEl.disabled = true;
-  curEl.disabled = true;
-  if (prevEl) prevEl.textContent = 'Saving...';
+  if (isNaN(amt) || amt < 0) { alert('Please enter a valid cost amount.'); return; }
+  const cadCost = toCad(amt, cur);
+
+  const payload = {
+    cost_price: cadCost,
+    cost_price_original: amt,
+    cost_currency: cur,
+    updated_at: new Date().toISOString()
+  };
+
+  if (includePrice) {
+    let suggestedPrice = null;
+    if (pmMode === 'margin') {
+      const targetPct = parseFloat(document.getElementById('pm-target-margin').value);
+      if (!isNaN(targetPct) && targetPct > 0 && targetPct < 100) {
+        suggestedPrice = Math.round(cadCost / (1 - targetPct / 100));
+      }
+    } else {
+      const tp = parseFloat(document.getElementById('pm-target-price').value);
+      if (!isNaN(tp) && tp > 0) suggestedPrice = Math.round(tp);
+    }
+    if (suggestedPrice == null) { alert('Enter a margin target or target price first.'); return; }
+    payload.sale_price = suggestedPrice;
+    payload.sale_type = 'fixed';
+  }
+
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'ph-save-status saving';
+
   try {
-    await sbFetch(`products?id=eq.${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ cost_price: cadCost, cost_price_original: origAmt, cost_currency: currency, updated_at: new Date().toISOString() })
-    });
+    await sbFetch('products?id=eq.' + id, { method: 'PATCH', body: JSON.stringify(payload) });
     const p = allPricingProducts.find(x => x.id === id);
-    if (p) { p.cost_price = cadCost; p.cost_price_original = origAmt; p.cost_currency = currency; }
-    // Also sync productCostMap so orders profit stays current
+    if (p) {
+      p.cost_price = cadCost;
+      p.cost_price_original = amt;
+      p.cost_currency = cur;
+      if (includePrice) { p.sale_price = payload.sale_price; p.sale_type = 'fixed'; }
+    }
     productCostMap[id] = cadCost;
+    statusEl.textContent = 'Saved!';
+    statusEl.className = 'ph-save-status saved';
     renderPricingTable();
     renderPricingSummary();
+    setTimeout(closePricingModal, 700);
   } catch(e) {
-    alert('Save failed: ' + e.message);
-    amtEl.disabled = false;
-    curEl.disabled = false;
-    if (prevEl) prevEl.textContent = '';
+    let msg = e.message || 'Unknown error';
+    try { const pe = JSON.parse(msg); msg = pe.message || pe.details || pe.hint || msg; } catch(_) {}
+    statusEl.textContent = 'Error: ' + msg;
+    statusEl.className = 'ph-save-status error';
+    console.error(e);
   }
 }
+
+function pmSaveCostOnly() { pmSave(false); }
+function pmSaveBoth() { pmSave(true); }
 
 async function savePricingNgnRate() {
   const val = parseFloat(document.getElementById('prc-ngn-input').value);
@@ -3008,39 +3159,6 @@ function calcFeeNet() {
   }
 }
 
-let mcMode = 'margin';
-function setCalcMode(mode) {
-  mcMode = mode;
-  document.getElementById('mc-mode-margin').classList.toggle('active', mode === 'margin');
-  document.getElementById('mc-mode-price').classList.toggle('active', mode === 'price');
-  document.getElementById('mc-margin-group').style.display = mode === 'margin' ? 'block' : 'none';
-  document.getElementById('mc-price-group').style.display = mode === 'price' ? 'block' : 'none';
-  calcMargin();
-}
-
-function calcMargin() {
-  const cost = parseFloat(document.getElementById('mc-cost').value);
-  const currency = document.getElementById('mc-currency').value;
-  const res = document.getElementById('mc-result');
-  if (isNaN(cost) || cost < 0) { res.style.display = 'none'; return; }
-  const costCad = toCad(cost, currency);
-  if (mcMode === 'margin') {
-    const target = parseFloat(document.getElementById('mc-target-margin').value);
-    if (isNaN(target) || target <= 0 || target >= 100) { res.style.display = 'none'; return; }
-    const salePrice = costCad / (1 - target / 100);
-    const profit = salePrice - costCad;
-    res.style.display = 'block';
-    res.innerHTML = `Cost in CA$: <strong>$${costCad.toFixed(2)}</strong> &nbsp; Suggested sale price: <strong style="color:#d4af37;">$${salePrice.toFixed(2)}</strong> &nbsp; Profit: <strong class="ph-profit-pos">$${profit.toFixed(2)}</strong>`;
-  } else {
-    const salePrice = parseFloat(document.getElementById('mc-target-price').value);
-    if (isNaN(salePrice) || salePrice <= 0) { res.style.display = 'none'; return; }
-    const profit = salePrice - costCad;
-    const margin = salePrice > 0 ? (profit / salePrice) * 100 : 0;
-    const mClass = margin < 20 ? 'ph-profit-neg' : margin < 40 ? '' : 'ph-profit-pos';
-    res.style.display = 'block';
-    res.innerHTML = `Cost in CA$: <strong>$${costCad.toFixed(2)}</strong> &nbsp; Profit: <strong class="${mClass}">$${profit.toFixed(2)}</strong> &nbsp; Margin: <strong class="${mClass}">${margin.toFixed(1)}%</strong>`;
-  }
-}
 
 // ---- INIT: restore session or show login ----
 (async function init() {
