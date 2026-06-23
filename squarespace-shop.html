@@ -1487,26 +1487,36 @@ function updateCheckoutTotals() {
   var discAmt=document.getElementById('ph-co-discount-amt');
   if(discRow){ discRow.style.display=discount>0?'flex':'none'; }
   if(discAmt && discount>0){ discAmt.textContent='-'+formatPrice(discount); }
-  const payBtn = document.getElementById('ph-co-pay-btn');
-  if (payBtn && payBtn.style.display !== 'none' && !payBtn.disabled) {
-    payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
+  // Update Paystack button amount (Square is disabled; Paystack handles all customers)
+  const psBtn = document.getElementById('ph-co-pay-btn-ps');
+  if (psBtn && psBtn.style.display !== 'none' && !psBtn.disabled) {
+    const country = document.getElementById('co-country') ? document.getElementById('co-country').value : 'CA';
+    const { totalNGN, totalCAD } = psNgnTotals();
+    if (country === 'NG') {
+      psBtn.textContent = 'Pay ₦' + totalNGN.toLocaleString() + ' with Paystack';
+    } else {
+      psBtn.textContent = 'Pay ₦' + totalNGN.toLocaleString() + ' (≈ CA$' + totalCAD.toFixed(2) + ') with Paystack';
+    }
   }
 }
 
 window.onCountryChange = () => {
   updateCheckoutTotals();
-  const isNG = document.getElementById('co-country').value === 'NG';
-  document.getElementById('sq-payment-wrap').style.display  = isNG ? 'none'  : 'block';
-  document.getElementById('ps-payment-wrap').style.display  = isNG ? 'block' : 'none';
-  document.getElementById('ph-co-pay-btn').style.display    = isNG ? 'none'  : '';
-  document.getElementById('ph-co-pay-btn-ps').style.display = isNG ? ''      : 'none';
-  document.getElementById('co-postal-wrap').style.display   = isNG ? 'none'  : '';
-  if (isNG) {
-    psPendingOrder = null;
-    const psBtn = document.getElementById('ph-co-pay-btn-ps');
-    const { totalNGN } = psNgnTotals();
-    psBtn.disabled = false;
+  const country = document.getElementById('co-country').value;
+  // Square is temporarily disabled — route all customers through Paystack
+  document.getElementById('sq-payment-wrap').style.display  = 'none';
+  document.getElementById('ps-payment-wrap').style.display  = 'block';
+  document.getElementById('ph-co-pay-btn').style.display    = 'none';
+  document.getElementById('ph-co-pay-btn-ps').style.display = '';
+  document.getElementById('co-postal-wrap').style.display   = country === 'NG' ? 'none' : '';
+  psPendingOrder = null;
+  const psBtn = document.getElementById('ph-co-pay-btn-ps');
+  const { totalNGN, totalCAD } = psNgnTotals();
+  psBtn.disabled = false;
+  if (country === 'NG') {
     psBtn.textContent = 'Pay ₦' + totalNGN.toLocaleString() + ' with Paystack';
+  } else {
+    psBtn.textContent = 'Pay ₦' + totalNGN.toLocaleString() + ' (≈ CA$' + totalCAD.toFixed(2) + ') with Paystack';
   }
 };
 
@@ -1536,8 +1546,8 @@ window.startCheckout = () => {
   document.body.style.overflow = 'hidden';
   document.getElementById('ph-co-right').scrollTop = 0;
 
-  // Attach Square card after modal is visible
-  setTimeout(() => { attachSquareCard(); }, 150);
+  // Initialise payment UI (Square disabled — Paystack handles all customers)
+  setTimeout(() => { onCountryChange(); }, 150);
 };
 
 window.closeCheckout = () => {
