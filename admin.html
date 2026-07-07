@@ -1488,18 +1488,16 @@ function addImageUrl() {
     document.getElementById('f-img-gallery').lastElementChild.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-// ---- CLOUDINARY UPLOAD ----
-const CLOUDINARY_CLOUD = 'dzbzox0x8';
-const CLOUDINARY_PRESET = 'Penguin-Uploads';
+// ---- IMAGEKIT UPLOAD ----
+const IMAGEKIT_PRIVATE_KEY = 'private_x0TEc57xyUeLm6flaerqvXHdD/Y=';
+const IMAGEKIT_AUTH_HEADER = 'Basic ' + btoa(IMAGEKIT_PRIVATE_KEY + ':');
+const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
 
-// Image formats Cloudinary can process and convert to JPEG
 const SUPPORTED_IMAGE_EXTS = new Set([
   'jpg','jpeg','png','gif','webp','avif','bmp','tiff','tif','svg',
-  'heic','heif', // iPhone
-  'dng',         // Adobe Digital Negative (Google Pixel, some Androids)
+  'heic','heif','dng',
 ]);
 
-// Formats that look like images but Cloudinary can't process
 const UNSUPPORTED_IMAGE_EXTS = {
   cr2:'Canon RAW', cr3:'Canon RAW', nef:'Nikon RAW',
   arw:'Sony RAW',  orf:'Olympus RAW', rw2:'Panasonic RAW',
@@ -1514,7 +1512,7 @@ function validateImageFile(file, progressLabel) {
     return false;
   }
   if (!SUPPORTED_IMAGE_EXTS.has(ext) && !file.type.startsWith('image/')) {
-    progressLabel.textContent = `Unsupported file type (.${ext}) — please use JPEG, PNG, HEIC, DNG, or WebP.`;
+    progressLabel.textContent = `Unsupported file type (.${ext}) — please use JPEG, PNG, HEIC, or WebP.`;
     return false;
   }
   return true;
@@ -1541,16 +1539,15 @@ async function uploadToCloudinary(input) {
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_PRESET);
-
-  // Folder: penguin-hairs/products
-  formData.append('folder', 'penguin-hairs/products');
+  formData.append('fileName', file.name);
+  formData.append('folder', '/penguin-hairs/products');
+  formData.append('useUniqueFileName', 'true');
 
   try {
-    // Use XHR so we can show real progress
     const url = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+      xhr.open('POST', IMAGEKIT_UPLOAD_URL);
+      xhr.setRequestHeader('Authorization', IMAGEKIT_AUTH_HEADER);
 
       xhr.upload.onprogress = function(e) {
         if (e.lengthComputable) {
@@ -1562,8 +1559,7 @@ async function uploadToCloudinary(input) {
 
       xhr.onload = function() {
         if (xhr.status === 200) {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data.secure_url);
+          resolve(JSON.parse(xhr.responseText).url);
         } else {
           reject(new Error('Upload failed: ' + xhr.responseText));
         }
@@ -1575,12 +1571,8 @@ async function uploadToCloudinary(input) {
 
     progressBar.style.width = '100%';
     progressLabel.textContent = 'Done!';
-
-    // Auto-convert any format (HEIC, TIFF, etc.) to browser-compatible format via Cloudinary
-    const compatUrl = url.replace('/upload/', '/upload/f_auto,q_auto/');
-    currentImages.push(compatUrl);
+    currentImages.push(url);
     renderImageGallery();
-
     setTimeout(() => progressWrap.classList.remove('active'), 1200);
   } catch(e) {
     progressLabel.textContent = 'Upload failed. Try again.';
@@ -1590,7 +1582,7 @@ async function uploadToCloudinary(input) {
   }
 }
 
-// ---- CLOUDINARY VIDEO UPLOAD ----
+// ---- IMAGEKIT VIDEO UPLOAD ----
 async function uploadVideoToCloudinary(input) {
   const file = input.files[0];
   if (!file) return;
@@ -1604,9 +1596,7 @@ async function uploadVideoToCloudinary(input) {
   progressBar.style.width = '0%';
   progressLabel.textContent = 'Uploading...';
 
-  // Video: validate it's actually a video format
   const videoExt = file.name.split('.').pop().toLowerCase();
-  const isMovConvert = videoExt === 'mov' || videoExt === 'avi' || videoExt === 'mkv' || videoExt === 'wmv';
   const SUPPORTED_VIDEO_EXTS = new Set(['mp4','mov','avi','webm','mkv','m4v','3gp','wmv','flv']);
   if (!SUPPORTED_VIDEO_EXTS.has(videoExt) && !file.type.startsWith('video/')) {
     progressLabel.textContent = `Unsupported video format (.${videoExt}) — please use MP4, MOV, AVI, or WEBM.`;
@@ -1617,13 +1607,15 @@ async function uploadVideoToCloudinary(input) {
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_PRESET);
-  formData.append('folder', 'penguin-hairs/products');
+  formData.append('fileName', file.name);
+  formData.append('folder', '/penguin-hairs/products');
+  formData.append('useUniqueFileName', 'true');
 
   try {
     const url = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`);
+      xhr.open('POST', IMAGEKIT_UPLOAD_URL);
+      xhr.setRequestHeader('Authorization', IMAGEKIT_AUTH_HEADER);
 
       xhr.upload.onprogress = function(e) {
         if (e.lengthComputable) {
@@ -1635,8 +1627,7 @@ async function uploadVideoToCloudinary(input) {
 
       xhr.onload = function() {
         if (xhr.status === 200) {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data.secure_url);
+          resolve(JSON.parse(xhr.responseText).url);
         } else {
           reject(new Error('Upload failed: ' + xhr.responseText));
         }
@@ -1647,12 +1638,8 @@ async function uploadVideoToCloudinary(input) {
     });
 
     progressBar.style.width = '100%';
-    progressLabel.textContent = isMovConvert ? 'Converted to MP4!' : 'Done!';
-
-    // Force MP4 output — works for MOV, AVI, WEBM, MKV, etc.
-    const mp4Url = url.replace('/upload/', '/upload/f_mp4,q_auto,w_700,h_900,c_fill/').replace(/\.[^.]+$/, '.mp4');
-    document.getElementById('f-video').value = mp4Url;
-
+    progressLabel.textContent = 'Done!';
+    document.getElementById('f-video').value = url;
     setTimeout(() => progressWrap.classList.remove('active'), 1200);
   } catch(e) {
     progressLabel.textContent = 'Upload failed. Try again.';
@@ -1662,7 +1649,7 @@ async function uploadVideoToCloudinary(input) {
   }
 }
 
-// ---- CLOUDINARY SERVICE IMAGE UPLOAD ----
+// ---- IMAGEKIT SERVICE IMAGE UPLOAD ----
 async function uploadServiceImage(input) {
   const file = input.files[0];
   if (!file) return;
@@ -1684,13 +1671,15 @@ async function uploadServiceImage(input) {
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_PRESET);
-  formData.append('folder', 'penguin-hairs/services');
+  formData.append('fileName', file.name);
+  formData.append('folder', '/penguin-hairs/services');
+  formData.append('useUniqueFileName', 'true');
 
   try {
     const url = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+      xhr.open('POST', IMAGEKIT_UPLOAD_URL);
+      xhr.setRequestHeader('Authorization', IMAGEKIT_AUTH_HEADER);
       xhr.upload.onprogress = function(e) {
         if (e.lengthComputable) {
           const pct = Math.round((e.loaded / e.total) * 90);
@@ -1699,7 +1688,7 @@ async function uploadServiceImage(input) {
         }
       };
       xhr.onload = function() {
-        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText).secure_url);
+        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText).url);
         else reject(new Error('Upload failed: ' + xhr.responseText));
       };
       xhr.onerror = () => reject(new Error('Network error during upload'));
