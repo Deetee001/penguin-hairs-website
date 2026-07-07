@@ -1449,15 +1449,15 @@ window.applyPromo=function(){
   var msg=document.getElementById('ph-promo-msg');
   if(!code){ msg.style.color='#e05555'; msg.textContent='Enter a promo code.'; return; }
   msg.style.color='rgba(255,255,255,0.4)'; msg.textContent='Checking...';
-  fetch(SB_URL+'/rest/v1/promo_codes?code=eq.'+encodeURIComponent(code)+'&active=eq.true&select=*',{
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  fetch(SB_URL+'/rest/v1/rpc/validate_promo',{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({input_code:code.toUpperCase().trim()})
   })
   .then(function(r){ return r.json(); })
   .then(function(rows){
     if(!rows||rows.length===0){ msg.style.color='#e05555'; msg.textContent='Invalid or expired code.'; appliedPromo=null; updateCheckoutTotals(); return; }
     var promo=rows[0];
-    if(promo.expires_at&&new Date(promo.expires_at)<new Date()){ msg.style.color='#e05555'; msg.textContent='This code has expired.'; appliedPromo=null; updateCheckoutTotals(); return; }
-    if(promo.max_uses&&promo.uses_count>=promo.max_uses){ msg.style.color='#e05555'; msg.textContent='This code has reached its limit.'; appliedPromo=null; updateCheckoutTotals(); return; }
     var sub=cart.reduce(function(s,i){ return s+(i.price*(i.qty||1)); },0);
     if(sub<promo.min_order){ msg.style.color='#e05555'; msg.textContent='Minimum order '+formatPrice(promo.min_order)+' required for this code.'; appliedPromo=null; updateCheckoutTotals(); return; }
     appliedPromo=promo;

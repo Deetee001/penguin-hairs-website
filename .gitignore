@@ -1,2 +1,8 @@
 .mcp.json
 *.txt
+.claude/settings.local.json
+supabase/.temp/
+.env
+.env.*
+node_modules/
+*.log

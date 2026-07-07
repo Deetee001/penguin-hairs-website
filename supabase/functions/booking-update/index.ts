@@ -22,6 +22,19 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
   try {
+    // Verify admin auth token
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { "Authorization": `Bearer ${token}`, "apikey": SUPABASE_SERVICE_KEY }
+    });
+    if (!userRes.ok) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+
     const {
       booking_id,
       customer_name,

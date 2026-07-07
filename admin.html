@@ -1488,10 +1488,8 @@ function addImageUrl() {
     document.getElementById('f-img-gallery').lastElementChild.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-// ---- IMAGEKIT UPLOAD ----
-const IMAGEKIT_PRIVATE_KEY = 'private_x0TEc57xyUeLm6flaerqvXHdD/Y=';
-const IMAGEKIT_AUTH_HEADER = 'Basic ' + btoa(IMAGEKIT_PRIVATE_KEY + ':');
-const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
+// ---- IMAGEKIT UPLOAD (via server-side edge function) ----
+const IMAGEKIT_UPLOAD_URL = SUPABASE_URL + '/functions/v1/imagekit-upload';
 
 const SUPPORTED_IMAGE_EXTS = new Set([
   'jpg','jpeg','png','gif','webp','avif','bmp','tiff','tif','svg',
@@ -1547,7 +1545,8 @@ async function uploadToCloudinary(input) {
     const url = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', IMAGEKIT_UPLOAD_URL);
-      xhr.setRequestHeader('Authorization', IMAGEKIT_AUTH_HEADER);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
 
       xhr.upload.onprogress = function(e) {
         if (e.lengthComputable) {
@@ -1615,7 +1614,8 @@ async function uploadVideoToCloudinary(input) {
     const url = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', IMAGEKIT_UPLOAD_URL);
-      xhr.setRequestHeader('Authorization', IMAGEKIT_AUTH_HEADER);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
 
       xhr.upload.onprogress = function(e) {
         if (e.lengthComputable) {
@@ -1679,7 +1679,8 @@ async function uploadServiceImage(input) {
     const url = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', IMAGEKIT_UPLOAD_URL);
-      xhr.setRequestHeader('Authorization', IMAGEKIT_AUTH_HEADER);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       xhr.upload.onprogress = function(e) {
         if (e.lengthComputable) {
           const pct = Math.round((e.loaded / e.total) * 90);
@@ -2644,7 +2645,7 @@ async function loadAnalytics() {
           ? ((r.purchases / r.views) * 100).toFixed(1) + '%'
           : '—';
         tbody.innerHTML += `<tr>
-          <td style="text-align:left;">${r.name || '—'}</td>
+          <td style="text-align:left;">${escHtml(r.name || '—')}</td>
           <td style="text-align:center;">${r.views}</td>
           <td style="text-align:center;">${r.purchases}</td>
           <td style="text-align:center;">${conv}</td>
@@ -2687,10 +2688,10 @@ function renderShippingTable() {
   }
   tbody.innerHTML = allShippingRates.map(r => `
     <tr id="sh-row-${r.id}">
-      <td>${r.country_name}</td>
-      <td><span style="font-family:monospace;background:#1a1a1a;padding:2px 8px;border-radius:4px;font-size:12px;">${r.country_code}</span></td>
-      <td id="sh-amt-${r.id}">${r.amount}</td>
-      <td style="color:rgba(255,255,255,0.5);">${r.currency}</td>
+      <td>${escHtml(r.country_name)}</td>
+      <td><span style="font-family:monospace;background:#1a1a1a;padding:2px 8px;border-radius:4px;font-size:12px;">${escHtml(r.country_code)}</span></td>
+      <td id="sh-amt-${r.id}">${escHtml(String(r.amount))}</td>
+      <td style="color:rgba(255,255,255,0.5);">${escHtml(r.currency)}</td>
       <td>
         <div class="ph-actions">
           <button class="ph-btn-sm ph-edit-btn" onclick="editShippingRate(${r.id})">Edit</button>
@@ -2703,9 +2704,9 @@ function renderShippingTable() {
     <div class="ph-mob-card" id="sh-mob-${r.id}">
       <div class="ph-mob-card-top">
         <div class="ph-mob-info">
-          <div style="font-weight:700;font-size:15px;">${r.country_name}</div>
-          <div style="font-size:12px;color:#888;margin-top:3px;">${r.country_code} &middot; ${r.currency}</div>
-          <div id="sh-mob-amt-${r.id}" style="font-size:15px;color:#d4af37;margin-top:6px;">${r.amount} ${r.currency}</div>
+          <div style="font-weight:700;font-size:15px;">${escHtml(r.country_name)}</div>
+          <div style="font-size:12px;color:#888;margin-top:3px;">${escHtml(r.country_code)} &middot; ${escHtml(r.currency)}</div>
+          <div id="sh-mob-amt-${r.id}" style="font-size:15px;color:#d4af37;margin-top:6px;">${escHtml(String(r.amount))} ${escHtml(r.currency)}</div>
         </div>
       </div>
       <div class="ph-mob-actions">
