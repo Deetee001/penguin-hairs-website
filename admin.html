@@ -258,6 +258,8 @@ tr:hover td{background:rgba(212,175,55,.04);}
   #ph-pricing-modal .ph-modal{border-radius:18px 18px 0 0;max-height:90vh;max-width:100%;overflow-x:hidden;}
   #ph-pricing-modal .ph-modal-foot{flex-direction:column;gap:10px;}
   #ph-pricing-modal .ph-modal-foot .ph-btn{width:100%;padding:14px;font-size:15px;}
+  #ph-order-modal.ph-modal-bg{padding:0;align-items:flex-end;}
+  #ph-order-modal .ph-modal{border-radius:18px 18px 0 0;max-height:92vh;max-width:100%;overflow-x:hidden;}
 }
 
 /* ---- SERVICES ---- */
@@ -460,6 +462,11 @@ tr:hover td{background:rgba(212,175,55,.04);}
           <div>Loading orders...</div>
         </div>
         <div id="ph-orders-container" style="display:none">
+          <!-- Search bar -->
+          <div style="padding:12px 20px;border-bottom:1px solid #1a1a1a;background:#0d0d0d;">
+            <input id="ord-search" type="text" placeholder="Search orders — customer, email, item, reference, city..." oninput="filterOrders()"
+              style="width:100%;box-sizing:border-box;background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;padding:10px 14px;font-size:14px;font-family:'Lato',sans-serif;outline:none;">
+          </div>
           <div id="ph-orders-summary" style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #1a1a1a;background:#0d0d0d;">
             <div style="flex:1;min-width:120px;text-align:center;">
               <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#d4af37;" id="ord-sum-revenue">—</div>
@@ -828,6 +835,88 @@ tr:hover td{background:rgba(212,175,55,.04);}
       <button class="ph-btn ph-btn-outline" onclick="closePricingModal()">Cancel</button>
       <button class="ph-btn ph-btn-outline" id="pm-save-cost-btn" onclick="pmSaveCostOnly()">Save cost only</button>
       <button class="ph-btn ph-btn-gold" id="pm-save-both-btn" onclick="pmSaveBoth()" disabled>Save cost + apply price</button>
+    </div>
+  </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="ph-modal-bg" id="ph-order-modal">
+  <div class="ph-modal" style="max-width:560px;">
+    <div class="ph-modal-head">
+      <div>
+        <h2 id="om-ref" style="font-size:15px;color:#d4af37;font-family:'Lato',sans-serif;font-weight:700;letter-spacing:1px;"></h2>
+        <div id="om-date" style="font-size:11px;color:#555;margin-top:2px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="om-status-badge"></span>
+        <button class="ph-modal-close" onclick="closeOrderModal()">&times;</button>
+      </div>
+    </div>
+    <div class="ph-modal-body" style="padding:0;">
+
+      <!-- Customer & Shipping -->
+      <div style="padding:16px 20px;border-bottom:1px solid #1a1a1a;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:8px;">Customer</div>
+        <div style="font-weight:700;font-size:15px;" id="om-name"></div>
+        <div style="font-size:13px;color:#aaa;margin-top:3px;" id="om-email"></div>
+        <div style="font-size:13px;color:#888;margin-top:2px;" id="om-phone"></div>
+      </div>
+
+      <div style="padding:16px 20px;border-bottom:1px solid #1a1a1a;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:8px;">Delivery Address</div>
+        <div style="font-size:14px;line-height:1.7;color:#e0e0e0;" id="om-address"></div>
+      </div>
+
+      <!-- Items -->
+      <div style="padding:16px 20px;border-bottom:1px solid #1a1a1a;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:10px;">Order Items</div>
+        <div id="om-items"></div>
+      </div>
+
+      <!-- Totals -->
+      <div style="padding:16px 20px;border-bottom:1px solid #1a1a1a;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:#888;">Subtotal</span>
+          <span style="font-size:13px;" id="om-subtotal"></span>
+        </div>
+        <div id="om-discount-row" style="display:none;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:#888;">Discount</span>
+          <span style="font-size:13px;color:#4caf50;" id="om-discount"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:#888;" id="om-ship-label">Shipping</span>
+          <span style="font-size:13px;" id="om-shipping"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid #1a1a1a;">
+          <span style="font-weight:700;font-size:15px;">Total</span>
+          <span style="font-weight:700;font-size:15px;color:#d4af37;" id="om-total"></span>
+        </div>
+        <div id="om-profit-row" style="display:none;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:12px;color:#555;">Estimated Profit</span>
+          <span style="font-size:12px;" id="om-profit"></span>
+        </div>
+      </div>
+
+      <!-- Payment -->
+      <div style="padding:16px 20px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:8px;">Payment</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:13px;color:#888;">Method</span>
+          <span style="font-size:13px;" id="om-payment-method"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:13px;color:#888;">Reference</span>
+          <code style="font-size:12px;color:#d4af37;" id="om-payment-ref"></code>
+        </div>
+        <div id="om-ngn-row" style="display:none;justify-content:space-between;margin-top:4px;">
+          <span style="font-size:13px;color:#888;">Charged (NGN)</span>
+          <span style="font-size:13px;color:#aaa;" id="om-ngn"></span>
+        </div>
+      </div>
+
+    </div>
+    <div class="ph-modal-foot" style="justify-content:flex-end;">
+      <button class="ph-btn ph-btn-outline" onclick="closeOrderModal()">Close</button>
     </div>
   </div>
 </div>
@@ -2120,25 +2209,43 @@ function calcOrderProfit(order) {
   return (parseFloat(order.total) || 0) - totalCost;
 }
 
+let ordersQuery = '';
+
+function filterOrders() {
+  ordersQuery = (document.getElementById('ord-search').value || '').toLowerCase().trim();
+  renderOrders();
+}
+
 function renderOrders() {
   const tbody = document.getElementById('ph-orders-body');
   const mobList = document.getElementById('ph-orders-mob-list');
   const empty = document.getElementById('ph-orders-empty');
   tbody.innerHTML = '';
   mobList.innerHTML = '';
-  empty.style.display = allOrders.length ? 'none' : 'block';
 
-  // Revenue summary
-  const totalRev = allOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
-  const avgOrder = allOrders.length ? totalRev / allOrders.length : 0;
+  const filtered = ordersQuery ? allOrders.filter(o => {
+    const addr = o.shipping_address || {};
+    const items = Array.isArray(o.items) ? o.items.map(i => (i.name||'') + ' ' + (i.specs||'')).join(' ') : '';
+    const ref = o.square_order_id || o.paystack_reference || '';
+    const haystack = [
+      o.customer_name, o.customer_email, o.customer_phone,
+      addr.address1, addr.city, addr.province, addr.country, addr.postal,
+      items, ref, o.status, String(o.total || '')
+    ].join(' ').toLowerCase();
+    return haystack.includes(ordersQuery);
+  }) : allOrders;
+
+  empty.style.display = filtered.length ? 'none' : 'block';
+
+  // Summary reflects filtered set
+  const totalRev = filtered.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+  const avgOrder = filtered.length ? totalRev / filtered.length : 0;
   document.getElementById('ord-sum-revenue').textContent = '$' + totalRev.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-  document.getElementById('ord-sum-count').textContent = allOrders.length;
-  document.getElementById('ord-sum-avg').textContent = allOrders.length ? '$' + avgOrder.toFixed(2) : '—';
+  document.getElementById('ord-sum-count').textContent = filtered.length + (ordersQuery ? ' of ' + allOrders.length : '');
+  document.getElementById('ord-sum-avg').textContent = filtered.length ? '$' + avgOrder.toFixed(2) : '—';
 
-  // Profit summary — only count orders where we have cost data
-  let totalProfit = 0;
-  let profitCount = 0;
-  allOrders.forEach(o => {
+  let totalProfit = 0, profitCount = 0;
+  filtered.forEach(o => {
     const p = calcOrderProfit(o);
     if (p != null) { totalProfit += p; profitCount++; }
   });
@@ -2146,7 +2253,7 @@ function renderOrders() {
     ? '$' + totalProfit.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
     : '—';
 
-  allOrders.forEach(o => {
+  filtered.forEach(o => {
     const date = new Date(o.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
     const ref = o.square_order_id ? o.square_order_id.slice(-8).toUpperCase() : (o.paystack_reference ? o.paystack_reference.slice(-8).toUpperCase() : '—');
     const items = Array.isArray(o.items) ? o.items.map(i => `${i.name||''}${(i.quantity||1)>1?' \u00d7'+i.quantity:''}`).join(', ') : '—';
@@ -2159,6 +2266,9 @@ function renderOrders() {
 
     // Desktop row
     const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.title = 'Click to view full order details';
+    tr.onclick = () => openOrderModal(o);
     tr.innerHTML = `
       <td style="white-space:nowrap">${escHtml(date)}</td>
       <td><code style="font-size:12px;color:#d4af37">#${escHtml(ref)}</code></td>
@@ -2179,6 +2289,8 @@ function renderOrders() {
     // Mobile card
     const card = document.createElement('div');
     card.className = 'ph-mob-card';
+    card.style.cursor = 'pointer';
+    card.onclick = () => openOrderModal(o);
     card.innerHTML = `
       <div class="ph-mob-card-top">
         <div class="ph-mob-info">
@@ -2201,6 +2313,7 @@ function renderOrders() {
         <span style="font-size:12px;color:#666;">Profit</span>
         ${profitStr}
       </div>
+      <div style="margin-top:10px;text-align:center;font-size:12px;color:#d4af37;letter-spacing:0.5px;">Tap to view full details</div>
     `;
     mobList.appendChild(card);
   });
@@ -3042,6 +3155,76 @@ function pmLengthChange() {
 function closePricingModal() {
   document.getElementById('ph-pricing-modal').classList.remove('open');
 }
+
+function openOrderModal(o) {
+  const ref = o.square_order_id ? o.square_order_id.slice(-8).toUpperCase() : (o.paystack_reference ? o.paystack_reference.slice(-8).toUpperCase() : o.id);
+  const date = new Date(o.created_at).toLocaleString('en-US', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const addr = o.shipping_address || {};
+
+  document.getElementById('om-ref').textContent = 'Order #' + ref;
+  document.getElementById('om-date').textContent = date;
+  document.getElementById('om-status-badge').innerHTML = '<span class="ph-sbadge ph-sbadge-' + escHtml(o.status||'pending') + '">' + escHtml(o.status||'pending') + '</span>';
+  document.getElementById('om-name').textContent = o.customer_name || '—';
+  document.getElementById('om-email').textContent = o.customer_email || '';
+  document.getElementById('om-phone').textContent = o.customer_phone || '';
+
+  const addrParts = [addr.address1||addr.address, addr.address2, addr.city, addr.province, addr.postal, addr.country].filter(Boolean);
+  document.getElementById('om-address').textContent = addrParts.join(', ') || '—';
+
+  const itemsEl = document.getElementById('om-items');
+  if (Array.isArray(o.items) && o.items.length) {
+    itemsEl.innerHTML = o.items.map(i => `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #111;">
+        <div>
+          <div style="font-size:13px;font-weight:600;">${escHtml(i.name||'')}</div>
+          ${i.specs ? '<div style="font-size:11px;color:#777;margin-top:2px;">' + escHtml(i.specs) + '</div>' : ''}
+        </div>
+        <div style="text-align:right;white-space:nowrap;margin-left:12px;">
+          <div style="font-size:13px;">${((i.price||0)*(i.quantity||i.qty||1)).toFixed(2)}</div>
+          ${(i.quantity||i.qty||1)>1 ? '<div style="font-size:11px;color:#666;">x'+(i.quantity||i.qty)+'</div>' : ''}
+        </div>
+      </div>`).join('');
+  } else {
+    itemsEl.innerHTML = '<div style="color:#555;font-size:13px;">No item details available.</div>';
+  }
+
+  document.getElementById('om-subtotal').textContent = (parseFloat(o.subtotal)||0).toFixed(2) + ' CAD';
+  const shipLabel = addr.country ? 'Shipping (' + addr.country + ')' : 'Shipping';
+  document.getElementById('om-ship-label').textContent = shipLabel;
+  document.getElementById('om-shipping').textContent = (parseFloat(o.shipping_cost)||0).toFixed(2) + ' CAD';
+  document.getElementById('om-total').textContent = (parseFloat(o.total)||0).toFixed(2) + ' CAD';
+
+  const discRow = document.getElementById('om-discount-row');
+  if (o.discount_amount && parseFloat(o.discount_amount) > 0) {
+    document.getElementById('om-discount').textContent = '-' + parseFloat(o.discount_amount).toFixed(2) + ' CAD';
+    discRow.style.display = 'flex';
+  } else { discRow.style.display = 'none'; }
+
+  const profit = calcOrderProfit(o);
+  const profitRow = document.getElementById('om-profit-row');
+  if (profit != null) {
+    document.getElementById('om-profit').innerHTML = '<span style="color:' + (profit>=0?'#4caf50':'#e05555') + ';font-weight:600;">' + profit.toFixed(2) + ' CAD</span>';
+    profitRow.style.display = 'flex';
+  } else { profitRow.style.display = 'none'; }
+
+  const method = o.payment_method || 'unknown';
+  document.getElementById('om-payment-method').textContent = method === 'paystack' ? 'Paystack (NGN)' : method === 'square' ? 'Square (CAD)' : method;
+  const fullRef = o.square_order_id || o.paystack_reference || o.square_payment_id || '—';
+  document.getElementById('om-payment-ref').textContent = fullRef;
+  const ngnRow = document.getElementById('om-ngn-row');
+  if (o.total_ngn) {
+    document.getElementById('om-ngn').textContent = '₦' + Math.round(o.total_ngn).toLocaleString();
+    ngnRow.style.display = 'flex';
+  } else { ngnRow.style.display = 'none'; }
+
+  document.getElementById('ph-order-modal').classList.add('open');
+}
+
+function closeOrderModal() {
+  document.getElementById('ph-order-modal').classList.remove('open');
+}
+
+document.getElementById('ph-order-modal').addEventListener('click', function(e) { if(e.target===this) closeOrderModal(); });
 
 function setPmMode(mode) {
   pmMode = mode;
