@@ -650,8 +650,8 @@ tr:hover td{background:rgba(212,175,55,.04);}
         </div>
         <div class="ph-fee-info" style="margin-top:16px;">
           <strong style="color:#aaa;">Payment Fees (reference only)</strong><br>
-          Square: 2.65% + CA$0.15 per transaction<br>
-          Paystack: 1.5% NGN (capped at &#8358;2,000)
+          Stripe: 2.9% + CA$0.30 per transaction<br>
+          Paystack (historical orders): 1.5% NGN (capped at &#8358;2,000)
         </div>
         <div style="margin-top:16px;">
           <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Net After Fees Calculator</div>
@@ -826,7 +826,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
         </div>
         <div class="ph-prc-profit-cell">
           <div class="ph-prc-profit-val" id="pm-strip-net">—</div>
-          <div class="ph-prc-profit-lbl">Net after Square fees</div>
+          <div class="ph-prc-profit-lbl">Net after Stripe fees</div>
         </div>
       </div>
     </div>
@@ -3208,7 +3208,7 @@ function openOrderModal(o) {
   } else { profitRow.style.display = 'none'; }
 
   const method = o.payment_method || 'unknown';
-  document.getElementById('om-payment-method').textContent = method === 'paystack' ? 'Paystack (NGN)' : method === 'square' ? 'Square (CAD)' : method;
+  document.getElementById('om-payment-method').textContent = method === 'stripe' ? 'Stripe (CAD)' : method === 'paystack' ? 'Paystack (NGN)' : method === 'square' ? 'Square (CAD)' : method;
   const fullRef = o.square_order_id || o.paystack_reference || o.square_payment_id || '—';
   document.getElementById('om-payment-ref').textContent = fullRef;
   const ngnRow = document.getElementById('om-ngn-row');
@@ -3279,12 +3279,12 @@ function pmCalc() {
   if (costCad != null && suggestedPrice != null) {
     const grossProfit = suggestedPrice - costCad;
     const marginPct = suggestedPrice > 0 ? (grossProfit / suggestedPrice) * 100 : 0;
-    const squareNet = suggestedPrice - (suggestedPrice * 0.0265 + 0.15);
+    const stripeNet = suggestedPrice - (suggestedPrice * 0.029 + 0.30);
     const profitColor = grossProfit >= 0 ? '#4caf50' : '#e05555';
     const mColor = marginPct >= 40 ? '#4caf50' : marginPct >= 20 ? '#d4af37' : '#e05555';
     document.getElementById('pm-strip-profit').innerHTML = '<span style="color:' + profitColor + '">$' + grossProfit.toFixed(2) + '</span>';
     document.getElementById('pm-strip-margin').innerHTML = '<span style="color:' + mColor + '">' + marginPct.toFixed(1) + '%</span>';
-    document.getElementById('pm-strip-net').innerHTML = '<span style="color:' + (squareNet >= 0 ? '#4caf50' : '#e05555') + '">$' + squareNet.toFixed(2) + '</span>';
+    document.getElementById('pm-strip-net').innerHTML = '<span style="color:' + (stripeNet >= 0 ? '#4caf50' : '#e05555') + '">$' + stripeNet.toFixed(2) + '</span>';
     stripEl.style.display = 'grid';
     saveBothBtn.disabled = false;
   } else {
@@ -3424,18 +3424,16 @@ function calcFeeNet() {
   res.style.display = 'block';
 
   if (cur === 'CAD') {
-    const squareNet = amt - (amt * 0.0265 + 0.15);
-    const squareFee = amt - squareNet;
+    const stripeNet = amt - (amt * 0.029 + 0.30);
+    const stripeFee = amt - stripeNet;
     res.innerHTML = `
-      <strong>Square:</strong> Net = CA$${squareNet.toFixed(2)} <span style="color:#555;">(fee: $${squareFee.toFixed(2)})</span><br>
-      <strong>Paystack:</strong> Not applicable for CAD transactions
+      <strong>Stripe:</strong> Net = CA$${stripeNet.toFixed(2)} <span style="color:#555;">(fee: $${stripeFee.toFixed(2)})</span>
     `;
   } else {
     const paystackFee = Math.min(amt * 0.015, 2000);
     const paystackNet = amt - paystackFee;
     res.innerHTML = `
-      <strong>Paystack:</strong> Net = &#8358;${paystackNet.toLocaleString('en-US', {maximumFractionDigits:0})} <span style="color:#555;">(fee: &#8358;${paystackFee.toLocaleString('en-US', {maximumFractionDigits:0})})</span><br>
-      <strong>Square:</strong> Not applicable for NGN transactions
+      <strong>Paystack (historical orders only):</strong> Net = &#8358;${paystackNet.toLocaleString('en-US', {maximumFractionDigits:0})} <span style="color:#555;">(fee: &#8358;${paystackFee.toLocaleString('en-US', {maximumFractionDigits:0})})</span>
     `;
   }
 }

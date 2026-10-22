@@ -19,7 +19,7 @@
 <meta name="twitter:image" content="https://static1.squarespace.com/static/698fe4e57f5bac110842b2bc/t/6990f14ced0d1b01825f9daf/1771106639116/IMG_3432.JPG">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
 
 <style>
 /* ---- OVERLAY APPROACH: sits fixed on top of all Squarespace UI ---- */
@@ -259,8 +259,8 @@ html{scroll-behavior:smooth;}
 .ph-phone-num:focus{border-color:#d4af37;}
 .ph-phone-num::placeholder{color:rgba(255,255,255,0.35);}
 @media(max-width:500px){.ph-phone-dial{width:90px;font-size:0.78rem;}}
-#sq-card-container{min-height:90px;background:#fff;border:1px solid rgba(212,175,55,0.35);padding:4px;border-radius:3px;}
-#sq-card-container.focused{border-color:#d4af37;}
+#stripe-card-element{min-height:40px;background:#fff;border:1px solid rgba(212,175,55,0.35);padding:12px 10px;border-radius:3px;}
+#stripe-card-element.StripeElement--focus{border-color:#d4af37;}
 .ph-co-pay-btn{width:100%;padding:1.1rem;background:linear-gradient(135deg,#d4af37,#f4d03f);color:#000;border:none;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;margin-top:1rem;}
 .ph-co-pay-btn:hover{opacity:0.9;}
 .ph-co-pay-btn:disabled{opacity:0.4;cursor:not-allowed;}
@@ -775,19 +775,13 @@ html{scroll-behavior:smooth;}
 
       <div class="ph-co-section">
         <h3>Payment</h3>
-        <!-- Square (all countries except Nigeria) -->
-        <div id="sq-payment-wrap">
-          <div id="sq-card-container"></div>
-        </div>
-        <!-- Paystack popup trigger (Nigeria) — no card form needed, popup handles everything -->
-        <div id="ps-payment-wrap" style="display:none;">
-          <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);margin-bottom:0.5rem;">You'll be taken to Paystack's secure payment page to complete your order in ₦ Naira.</p>
+        <div id="stripe-payment-wrap">
+          <div id="stripe-card-element"></div>
         </div>
         <div class="ph-co-error" id="ph-co-error"></div>
       </div>
 
-      <button class="ph-co-pay-btn" id="ph-co-pay-btn" onclick="submitPayment('card')">Pay Now</button>
-      <button class="ph-co-pay-btn" id="ph-co-pay-btn-ps" onclick="psOpenPopup()" style="display:none;background:linear-gradient(135deg,#00c3f7,#0093e9);border-color:#00c3f7;color:#fff;">Pay with Paystack</button>
+      <button class="ph-co-pay-btn" id="ph-co-pay-btn" onclick="submitPayment()">Pay Now</button>
 
       <!-- Success state -->
       <div class="ph-co-success" id="ph-co-success">
@@ -1297,149 +1291,50 @@ window.selectOpt=(type,value,btn)=>{
   }
 };
 // ---- CHECKOUT ----
-const SQ_APP_ID = 'sq0idp-Yyblofqvg3UKO-dVCx0D6g';
-const SQ_LOCATION_ID = 'LMF690XAMSZCZ';
-let sqPayments = null;
-let sqCard = null;
-let sqCardAttached = false;
-let sqTotalStr = 'CA$0.00'; // stored so we can restore button text without reading from DOM
+// Stripe test publishable key — swap for the live pk_live_... key when going live
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51USgTBEE6DAFwG6TdBddMgy0zdS33Eqp4fEY3MLL5vKqpHY6GzdIiEyTXosaKxyibqPExd1Bgmp5S7u3WSeeEnZC00i5QPhKqs';
+let stripe = null;
+let stripeElements = null;
+let stripeCard = null;
+let stripeCardReady = false;
+let payTotalStr = 'CA$0.00'; // stored so we can restore button text without reading from DOM
 
-// Single shared promise — prevents two concurrent Square.payments() calls
-let sqInitPromise = null;
-
-async function ensureSquarePayments() {
-  if (sqPayments) return;
-  if (sqInitPromise) { await sqInitPromise; return; }
-
-  sqInitPromise = (async () => {
-    // Lazy-load square.js on demand so onload fires in user-gesture context,
-    // giving the SDK the best chance to complete its internal async init.
-    if (!window.Square) {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://web.squarecdn.com/v1/square.js';
-        s.onload = resolve;
-        s.onerror = () => reject(new Error('Square library failed to load. Please refresh and try again.'));
-        document.head.appendChild(s);
-      });
-    }
-
-    // Give the SDK a moment to finish its own async setup after onload
-    await new Promise(r => setTimeout(r, 800));
-
-    let lastErr;
-    for (let i = 0; i < 3; i++) {
-      try {
-        sqPayments = window.Square.payments(SQ_APP_ID, SQ_LOCATION_ID);
-        return;
-      } catch(e) {
-        lastErr = e;
-        sqPayments = null;
-        if (i < 2) await new Promise(r => setTimeout(r, 2000));
-      }
-    }
-    sqInitPromise = null;
-    throw lastErr;
-  })();
-
-  await sqInitPromise;
-}
-
-async function attachSquareCard() {
-  if (sqCardAttached) return;
+async function attachStripeCard() {
+  if (stripeCardReady) return;
   const errEl = document.getElementById('ph-co-error');
   errEl.style.cssText = 'display:block;color:#d4af37;background:rgba(212,175,55,0.08);border-color:rgba(212,175,55,0.3);border-left-color:#d4af37;';
   errEl.textContent = 'Loading payment form…';
   try {
-    await ensureSquarePayments();
-    sqCard = await sqPayments.card({
+    if (!stripe) stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+    stripeElements = stripe.elements();
+    stripeCard = stripeElements.create('card', {
+      hidePostalCode: true, // we already collect the full address, incl. postal/zip, in our own form — Stripe's built-in field assumes US ZIP format and mangles Canadian/international postal codes
       style: {
-        '.input-container': { borderColor: '#333', borderRadius: '0px' },
-        '.input-container.is-focus': { borderColor: '#d4af37' },
-        '.input-container.is-error': { borderColor: '#e05555' },
-        'input': { color: '#111111', fontSize: '14px' },
-        'input::placeholder': { color: '#aaaaaa' },
-        '.message-text': { color: '#e05555' },
-        '.message-icon': { color: '#e05555' },
+        base: { color: '#111111', fontSize: '14px', fontFamily: "'Lato', sans-serif", '::placeholder': { color: '#aaaaaa' } },
+        invalid: { color: '#e05555' },
       }
     });
-    await sqCard.attach(document.getElementById('sq-card-container'));
-    sqCardAttached = true;
+    stripeCard.mount('#stripe-card-element');
+    stripeCardReady = true;
     errEl.style.display = 'none';
     errEl.style.cssText = ''; // reset inline styles
   } catch(e) {
-    sqCard = null;
-    sqCardAttached = false;
-    sqPayments = null;
-    sqInitPromise = null; // allow fresh retry next time checkout opens
+    stripeCard = null;
+    stripeCardReady = false;
     errEl.style.cssText = '';
     errEl.textContent = 'Payment form failed to load — please close and reopen checkout to try again.';
     errEl.style.display = 'block';
   }
 }
 
-async function attachExpressPayments(totalStr) {
-  if (!sqPayments) return;
-  const paymentRequest = sqPayments.paymentRequest({
-    countryCode: 'CA',
-    currencyCode: 'CAD',
-    requestShippingAddress: false,
-    requestBillingInfo: false,
-    total: { amount: totalStr, label: 'Penguin Hairs' },
-  });
-
-  // Google Pay
-  try {
-    const gp = await sqPayments.googlePay(paymentRequest);
-    await gp.attach('#sq-google-pay');
-    document.getElementById('sq-google-pay-wrapper').style.display = 'block';
-    gp.addEventListener('ontokenization', async (e) => {
-      const { tokenResult } = e.detail;
-      const errEl = document.getElementById('ph-co-error');
-      if (tokenResult.status === 'OK') {
-        await processPayment(tokenResult.token);
-      } else {
-        errEl.textContent = tokenResult.errors ? tokenResult.errors.map(er => er.message).join(', ') : 'Google Pay payment was cancelled.';
-        errEl.style.display = 'block';
-      }
-    });
-  } catch(e) { /* Google Pay not available on this device/browser */ }
-
-  // Apple Pay
-  try {
-    const ap = await sqPayments.applePay(paymentRequest);
-    await ap.attach('#sq-apple-pay');
-    document.getElementById('sq-apple-pay-wrapper').style.display = 'block';
-    ap.addEventListener('ontokenization', async (e) => {
-      const { tokenResult } = e.detail;
-      const errEl = document.getElementById('ph-co-error');
-      if (tokenResult.status === 'OK') {
-        await processPayment(tokenResult.token);
-      } else {
-        errEl.textContent = tokenResult.errors ? tokenResult.errors.map(er => er.message).join(', ') : 'Apple Pay payment was cancelled.';
-        errEl.style.display = 'block';
-      }
-    });
-  } catch(e) { /* Apple Pay not available on this device/browser */ }
-
-  // Show divider if any express method available
-  const hasExpress = document.getElementById('sq-google-pay-wrapper').style.display !== 'none'
-                  || document.getElementById('sq-apple-pay-wrapper').style.display !== 'none';
-  document.getElementById('sq-divider').style.display = hasExpress ? 'block' : 'none';
-}
-
 function getShippingCost() {
   const country = (document.getElementById('co-country').value || 'CA');
   const rate = SHIPPING_RATES[country] || { amount: 38, cur: 'CAD' };
-  // Convert native amount to CAD for Square charge
+  // Convert native amount to CAD — Stripe charges everyone in CAD
   const cadAmount = rate.cur === 'CAD' ? rate.amount : rate.amount / (fxRates[rate.cur] || 1);
-  // Format display in the rate's native currency (always show what the customer actually pays)
-  let display;
-  if (rate.cur === 'NGN') display = '₦' + Math.round(rate.amount).toLocaleString();
-  else if (rate.cur === 'GBP') display = '£' + rate.amount.toFixed(2);
-  else if (rate.cur === 'USD') display = 'US$' + rate.amount.toFixed(2);
-  else display = 'CA$' + rate.amount.toFixed(2);
-  return { cadAmount: Math.round(cadAmount * 100) / 100, display };
+  const rounded = Math.round(cadAmount * 100) / 100;
+  // Display in the visitor's selected currency, same as subtotal/total — this is what they're actually charged
+  return { cadAmount: rounded, display: formatPrice(rounded) };
 }
 
 // ---- PROMO CODES ----
@@ -1479,45 +1374,24 @@ function updateCheckoutTotals() {
     discount=Math.round(discount*100)/100;
   }
   const total = subtotal - discount + shipping.cadAmount;
-  sqTotalStr = 'CA$' + total.toFixed(2);
+  payTotalStr = 'CA$' + total.toFixed(2);
   document.getElementById('ph-co-subtotal-amt').textContent = formatPrice(subtotal);
   document.getElementById('ph-co-shipping-amt').textContent = shipping.display;
-  document.getElementById('ph-co-total-amt').textContent = formatPrice(total) + (currentCurrency !== 'CAD' ? ' ≈ ' + sqTotalStr : '');
+  document.getElementById('ph-co-total-amt').textContent = formatPrice(total) + (currentCurrency !== 'CAD' ? ' ≈ ' + payTotalStr : '');
   var discRow=document.getElementById('ph-co-discount-row');
   var discAmt=document.getElementById('ph-co-discount-amt');
   if(discRow){ discRow.style.display=discount>0?'flex':'none'; }
   if(discAmt && discount>0){ discAmt.textContent='-'+formatPrice(discount); }
-  // Update Paystack button amount (Square is disabled; Paystack handles all customers)
-  const psBtn = document.getElementById('ph-co-pay-btn-ps');
-  if (psBtn && psBtn.style.display !== 'none' && !psBtn.disabled) {
-    const country = document.getElementById('co-country') ? document.getElementById('co-country').value : 'CA';
-    const { totalNGN, totalCAD } = psNgnTotals();
-    if (country === 'NG') {
-      psBtn.textContent = 'Pay ₦' + totalNGN.toLocaleString() + ' with Paystack';
-    } else {
-      psBtn.textContent = 'Pay ₦' + totalNGN.toLocaleString() + ' (≈ CA$' + totalCAD.toFixed(2) + ') with Paystack';
-    }
+  const payBtn = document.getElementById('ph-co-pay-btn');
+  if (payBtn && !payBtn.disabled) {
+    payBtn.textContent = 'Pay ' + payTotalStr + ' CAD';
   }
 }
 
 window.onCountryChange = () => {
   updateCheckoutTotals();
   const country = document.getElementById('co-country').value;
-  // Square is temporarily disabled — route all customers through Paystack
-  document.getElementById('sq-payment-wrap').style.display  = 'none';
-  document.getElementById('ps-payment-wrap').style.display  = 'block';
-  document.getElementById('ph-co-pay-btn').style.display    = 'none';
-  document.getElementById('ph-co-pay-btn-ps').style.display = '';
-  document.getElementById('co-postal-wrap').style.display   = country === 'NG' ? 'none' : '';
-  psPendingOrder = null;
-  const psBtn = document.getElementById('ph-co-pay-btn-ps');
-  const { totalNGN, totalCAD } = psNgnTotals();
-  psBtn.disabled = false;
-  if (country === 'NG') {
-    psBtn.textContent = 'Pay ₦' + totalNGN.toLocaleString() + ' with Paystack';
-  } else {
-    psBtn.textContent = 'Pay ₦' + totalNGN.toLocaleString() + ' (≈ CA$' + totalCAD.toFixed(2) + ') with Paystack';
-  }
+  document.getElementById('co-postal-wrap').style.display = country === 'NG' ? 'none' : '';
 };
 
 window.startCheckout = () => {
@@ -1541,13 +1415,13 @@ window.startCheckout = () => {
   const payBtn = document.getElementById('ph-co-pay-btn');
   payBtn.style.display = 'block';
   payBtn.disabled = false;
-  payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
+  payBtn.textContent = 'Pay ' + payTotalStr + ' CAD';
   document.getElementById('ph-co-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
   document.getElementById('ph-co-right').scrollTop = 0;
 
-  // Initialise payment UI (Square disabled — Paystack handles all customers)
-  setTimeout(() => { onCountryChange(); }, 150);
+  onCountryChange();
+  attachStripeCard();
 };
 
 window.closeCheckout = () => {
@@ -1577,207 +1451,87 @@ async function getShipping() {
   return shipping;
 }
 
-// ---- PAYSTACK POPUP (Nigeria) ----
-const PS_PUBLIC_KEY = 'pk_live_559b7d94d98acdb6c45eca920fdf914010c77ab2';
-const PS_VERIFY_URL = 'https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/verify-paystack';
-let psPendingOrder = null;
+window.submitPayment = async () => {
+  const errEl = document.getElementById('ph-co-error');
+  const payBtn = document.getElementById('ph-co-pay-btn');
+  errEl.style.display = 'none';
 
-function psNgnTotals() {
-  const subtotalCAD = cart.reduce((s,i) => s + i.price * (i.qty||1), 0);
-  const shippingInfo = getShippingCost();
-  let discount = 0;
-  if (appliedPromo) {
-    discount = appliedPromo.discount_type === 'percent'
-      ? subtotalCAD * appliedPromo.discount_value / 100
-      : Math.min(appliedPromo.discount_value, subtotalCAD);
-    discount = Math.round(discount * 100) / 100;
+  if (!stripeCardReady) {
+    errEl.textContent = 'Payment form is not ready yet. Please wait a moment, then try again.';
+    errEl.style.display = 'block';
+    await attachStripeCard();
+    return;
   }
-  const totalCAD = Math.round((subtotalCAD - discount + shippingInfo.cadAmount) * 100) / 100;
-  const totalNGN = Math.round(totalCAD * (fxRates.NGN || 1020));
-  return { subtotalCAD, shippingInfo, totalCAD, totalNGN };
-}
 
-async function psOrderSuccess(reference) {
-  const btn = document.getElementById('ph-co-pay-btn-ps');
-  btn.disabled = true; btn.textContent = 'Saving order...';
-  const o = psPendingOrder;
+  const shipping = await getShipping();
+  const requiredFields = ['firstName','lastName','email','address','city','province'];
+  if (shipping.country !== 'NG') requiredFields.push('postal');
+  if (requiredFields.some(f => !shipping[f])) {
+    errEl.textContent = 'Please fill in all delivery fields above.';
+    errEl.style.display = 'block';
+    document.getElementById('ph-co-right').scrollTop = 0;
+    return;
+  }
+  if (!validatePhone(errEl)) {
+    document.getElementById('ph-co-right').scrollTop = 0;
+    return;
+  }
+
+  payBtn.disabled = true;
+  payBtn.textContent = 'Processing...';
+
+  const shippingCost = getShippingCost().cadAmount;
+  const promoCode = appliedPromo ? appliedPromo.code : null;
+
   try {
-    const res = await fetch(PS_VERIFY_URL, {
+    const piRes = await fetch(SB_URL + '/functions/v1/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({
-        reference, cart,
-        shipping: o.shipping, shippingCost: o.shippingInfo.cadAmount,
-        subtotalCAD: o.subtotalCAD, totalCAD: o.totalCAD, totalNGN: o.totalNGN,
-        promoCode: appliedPromo ? appliedPromo.code : null
-      })
+      body: JSON.stringify({ cart, shipping, shippingCost, promoCode })
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Order save failed. Contact us with ref: ' + reference);
+    const piData = await piRes.json();
+    if (!piData.clientSecret) throw new Error(piData.error || 'Could not start payment. Please try again.');
+
+    const result = await stripe.confirmCardPayment(piData.clientSecret, {
+      payment_method: {
+        card: stripeCard,
+        billing_details: {
+          name: shipping.firstName + ' ' + shipping.lastName,
+          email: shipping.email,
+          phone: shipping.phone,
+          address: {
+            line1: shipping.address,
+            city: shipping.city,
+            state: shipping.province,
+            postal_code: shipping.postal,
+            country: shipping.country,
+          }
+        }
+      }
+    });
+    if (result.error) throw new Error(result.error.message);
+
+    const confirmRes = await fetch(SB_URL + '/functions/v1/confirm-stripe-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
+      body: JSON.stringify({ paymentIntentId: piData.paymentIntentId, cart, shipping, shippingCost, promoCode })
+    });
+    const confirmData = await confirmRes.json();
+    if (!confirmData.success) throw new Error(confirmData.error || 'Order could not be saved. Contact us with ref: ' + piData.paymentIntentId);
+
     try { cart.forEach(item => trackEvent({ event_type:'purchase', page:'shop', product_id:String(item.id), product_name:item.name, amount:Math.round(item.price*item.qty*100) })); } catch(e) {}
     cart = []; saveCart(); updateCartUI();
     document.getElementById('ph-cart-panel').classList.remove('open');
     document.getElementById('ph-cart-overlay').style.display = 'none';
-    btn.style.display = 'none';
-    if (data.orderRef) document.getElementById('ph-co-order-ref').textContent = 'Order #' + data.orderRef;
+    payBtn.style.display = 'none';
+    if (confirmData.orderRef) document.getElementById('ph-co-order-ref').textContent = 'Order #' + confirmData.orderRef;
     document.getElementById('ph-co-success').style.display = 'flex';
   } catch(e) {
-    const errEl = document.getElementById('ph-co-error');
-    errEl.textContent = e.message;
-    errEl.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Pay with Paystack';
-  }
-}
-
-window.psOpenPopup = function() {
-  const errEl = document.getElementById('ph-co-error');
-  errEl.style.display = 'none';
-  const shipping = {
-    firstName: document.getElementById('co-first').value.trim(),
-    lastName:  document.getElementById('co-last').value.trim(),
-    email:     document.getElementById('co-email').value.trim(),
-    phone:     getPhoneNumber(),
-    address:   document.getElementById('co-address').value.trim(),
-    city:      document.getElementById('co-city').value.trim(),
-    province:  document.getElementById('co-province').value.trim(),
-    postal:    document.getElementById('co-postal').value.trim(),
-    country:   'NG',
-  };
-  if (!shipping.firstName || !shipping.lastName || !shipping.email || !shipping.address || !shipping.city || !shipping.province) {
-    errEl.textContent = 'Please fill in all delivery fields above.';
-    errEl.style.display = 'block';
-    document.getElementById('ph-co-right').scrollTop = 0;
-    return;
-  }
-  if (!validatePhone(errEl)) {
-    document.getElementById('ph-co-right').scrollTop = 0;
-    return;
-  }
-  const totals = psNgnTotals();
-  psPendingOrder = { shipping, ...totals };
-  const handler = PaystackPop.setup({
-    key: PS_PUBLIC_KEY,
-    email: shipping.email,
-    amount: totals.totalNGN * 100,
-    currency: 'NGN',
-    ref: 'PH-' + Date.now(),
-    metadata: {
-      custom_fields: [
-        { display_name: 'Customer', variable_name: 'customer', value: shipping.firstName + ' ' + shipping.lastName },
-        { display_name: 'Shipping Address', variable_name: 'address', value: shipping.address + ', ' + shipping.city }
-      ]
-    },
-    callback: function(response) {
-      psOrderSuccess(response.reference);
-    },
-    onClose: function() {}
-  });
-  handler.openIframe();
-};
-
-async function processPayment(token) {
-  const errEl = document.getElementById('ph-co-error');
-  const payBtn = document.getElementById('ph-co-pay-btn');
-  errEl.style.display = 'none';
-  payBtn.disabled = true;
-  payBtn.textContent = 'Processing...';
-
-  const shipping = await getShipping();
-  if (Object.values(shipping).some(v => !v)) {
-    errEl.textContent = 'Please fill in all delivery fields above.';
-    errEl.style.display = 'block';
-    payBtn.disabled = false;
-    payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
-    document.getElementById('ph-co-right').scrollTop = 0;
-    return;
-  }
-  if (!validatePhone(errEl)) {
-    payBtn.disabled = false;
-    payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
-    document.getElementById('ph-co-right').scrollTop = 0;
-    return;
-  }
-
-  const shippingCost = getShippingCost().cadAmount;
-
-  try {
-    const res = await fetch('https://plfcipgceshrozsdcgjq.supabase.co/functions/v1/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ cart, sourceId: token, shipping, shippingCost, promoCode: appliedPromo ? appliedPromo.code : null })
-    });
-    const data = await res.json();
-    if (data.success) {
-      // Track purchase event for each item before clearing cart
-      try {
-        cart.forEach(item => {
-          trackEvent({ event_type: 'purchase', page: 'shop', product_id: String(item.id), product_name: item.name, amount: Math.round(item.price * item.qty * 100) });
-        });
-      } catch(e) {}
-      cart = []; saveCart(); updateCartUI();
-      document.getElementById('ph-cart-panel').classList.remove('open');
-      document.getElementById('ph-cart-overlay').style.display = 'none';
-      payBtn.style.display = 'none';
-      if (data.orderRef) {
-        document.getElementById('ph-co-order-ref').textContent = 'Order #' + data.orderRef;
-      }
-      document.getElementById('ph-co-success').style.display = 'flex';
-    } else {
-      // Parse Square error codes into friendly messages
-      const SQUARE_ERRORS = {
-        'INSUFFICIENT_FUNDS': 'Your card has insufficient funds. Please use a different card.',
-        'CARD_DECLINED': 'Your card was declined. Please try a different payment method.',
-        'VERIFY_CVV_FAILURE': 'The security code (CVV) is incorrect. Please check and try again.',
-        'VERIFY_AVS_FAILURE': 'Your billing address did not match. Please check your card details.',
-        'INVALID_EXPIRATION': 'Your card expiration date is invalid.',
-        'CARD_EXPIRED': 'Your card has expired. Please use a different card.',
-        'INVALID_CARD': 'The card number is invalid. Please check and try again.',
-        'CARD_NOT_SUPPORTED': 'This card type is not supported. Please try a different card.',
-        'CVV_FAILURE': 'The security code (CVV) is incorrect.',
-        'ADDRESS_VERIFICATION_FAILURE': 'Address verification failed. Please check your billing address.',
-        'PAYMENT_LIMIT_EXCEEDED': 'This payment exceeds the allowed limit.',
-        'PAN_FAILURE': 'Your card could not be processed. Nigerian Verve cards and local-only cards are not supported — please use a Visa or Mastercard that is enabled for international payments.',
-      };
-      let errorMsg = 'Payment failed. Please try again.';
-      try {
-        const errs = JSON.parse(data.error);
-        if (Array.isArray(errs) && errs.length > 0) {
-          errorMsg = SQUARE_ERRORS[errs[0].code] || errs[0].detail || errorMsg;
-        }
-      } catch(e) {
-        if (data.error) errorMsg = data.error;
-      }
-      throw new Error(errorMsg);
-    }
-  } catch(e) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';
     payBtn.disabled = false;
-    payBtn.textContent = 'Pay ' + sqTotalStr + ' CAD';
-  }
-}
-
-window.submitPayment = async (method) => {
-  const errEl = document.getElementById('ph-co-error');
-  errEl.style.display = 'none';
-  if (!sqCard || !sqCardAttached) {
-    errEl.textContent = 'Card payment form is not ready yet. Please wait a moment, then try again.';
-    errEl.style.display = 'block';
-    // Try to attach again
-    await attachSquareCard();
-    return;
-  }
-  try {
-    const result = await sqCard.tokenize();
-    if (result.status !== 'OK') {
-      const msg = result.errors ? result.errors.map(e => e.message).join(', ') : 'Card error. Please check your details.';
-      throw new Error(msg);
-    }
-    await processPayment(result.token);
-  } catch(e) {
-    errEl.textContent = e.message;
-    errEl.style.display = 'block';
+    payBtn.textContent = 'Pay ' + payTotalStr + ' CAD';
+    document.getElementById('ph-co-right').scrollTop = 0;
   }
 };
 
