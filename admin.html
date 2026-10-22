@@ -119,6 +119,11 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-sbadge-confirmed{background:rgba(76,175,80,.15);color:#4caf50;}
 .ph-sbadge-cancelled{background:rgba(224,85,85,.15);color:#e05555;}
 .ph-sbadge-completed{background:rgba(100,160,255,.15);color:#6aa0ff;}
+.ph-sbadge-paid{background:rgba(76,175,80,.15);color:#4caf50;}
+.ph-sbadge-open{background:rgba(212,175,55,.15);color:#d4af37;}
+.ph-sbadge-draft{background:rgba(150,150,150,.15);color:#999;}
+.ph-sbadge-payment_failed,.ph-sbadge-uncollectible{background:rgba(224,85,85,.15);color:#e05555;}
+.ph-sbadge-void{background:rgba(150,150,150,.15);color:#888;}
 
 /* ---- ORDERS / APPTS OVERFLOW ---- */
 .ph-scroll-table{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -1123,6 +1128,28 @@ tr:hover td{background:rgba(212,175,55,.04);}
         <input type="checkbox" id="am-notify" checked>
         Send notification email to client
       </label>
+
+      <div style="border-top:1px solid #222;margin:22px 0 18px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <label style="margin:0;">Invoice</label>
+        <span id="am-invoice-badge"></span>
+      </div>
+      <div id="am-invoice-existing" style="display:none;font-size:13px;color:#888;margin-bottom:14px;">
+        Last sent: <span id="am-invoice-amount"></span> CAD —
+        <a id="am-invoice-link" href="#" target="_blank" style="color:#d4af37;text-decoration:none;">View hosted invoice</a>
+      </div>
+      <div class="ph-form-row">
+        <div class="ph-form-group">
+          <label>Amount (CAD)</label>
+          <input type="number" id="am-invoice-amount-input" min="0" step="0.01" placeholder="e.g. 150.00">
+        </div>
+        <div class="ph-form-group">
+          <label>Due in (days)</label>
+          <input type="number" id="am-invoice-due-days" min="1" step="1" value="7">
+        </div>
+      </div>
+      <button class="ph-btn ph-btn-outline" id="am-send-invoice-btn" onclick="sendInvoice()" style="width:100%;margin-top:4px;">Send Invoice</button>
+      <span class="ph-save-status" id="am-invoice-status"></span>
     </div>
     <div class="ph-modal-foot">
       <span class="ph-save-status" id="ph-appt-save-status"></span>
@@ -2095,7 +2122,36 @@ function openManageAppt(id) {
   document.getElementById('am-reason').value = '';
   document.getElementById('am-notify').checked = true;
   document.getElementById('ph-appt-save-status').textContent = '';
+
+  // Invoice section
+  const badgeEl = document.getElementById('am-invoice-badge');
+  const existingEl = document.getElementById('am-invoice-existing');
+  if (a.stripe_invoice_id) {
+    const st = a.invoice_status || 'open';
+    badgeEl.innerHTML = '<span class="ph-sbadge ph-sbadge-' + escHtml(st) + '">' + escHtml(st.replace('_',' ')) + '</span>';
+    existingEl.style.display = 'block';
+    document.getElementById('am-invoice-amount').textContent = (parseFloat(a.invoice_amount) || 0).toFixed(2);
+    const linkEl = document.getElementById('am-invoice-link');
+    if (a.invoice_url) { linkEl.href = a.invoice_url; linkEl.style.display = ''; } else { linkEl.style.display = 'none'; }
+  } else {
+    badgeEl.innerHTML = '';
+    existingEl.style.display = 'none';
+  }
+  // Prefill suggested amount from the matching service's price, if we can find one
+  if (!servicesLoaded) { loadServices().then(() => prefillInvoiceAmount(a)); }
+  else { prefillInvoiceAmount(a); }
+  document.getElementById('am-invoice-due-days').value = 7;
+  document.getElementById('am-invoice-status').textContent = '';
+  document.getElementById('am-send-invoice-btn').disabled = false;
+  document.getElementById('am-send-invoice-btn').textContent = a.stripe_invoice_id ? 'Send New Invoice' : 'Send Invoice';
+
   document.getElementById('ph-appt-modal').classList.add('open');
+}
+
+function prefillInvoiceAmount(a) {
+  const match = allServices.find(s => (s.booking_value || s.name) === a.service);
+  const input = document.getElementById('am-invoice-amount-input');
+  input.value = a.invoice_amount || (match ? match.price_from : '');
 }
 
 function closeApptModal() {
@@ -2146,6 +2202,60 @@ async function saveApptChanges() {
     statusEl.textContent = 'Error: ' + (e.message || 'Unknown');
     statusEl.className = 'ph-save-status error';
     console.error(e);
+  }
+}
+
+async function sendInvoice() {
+  const a = allAppointments.find(x => x.id === currentApptId);
+  if (!a) return;
+  const amount = parseFloat(document.getElementById('am-invoice-amount-input').value);
+  const dueDays = parseInt(document.getElementById('am-invoice-due-days').value, 10) || 7;
+  const statusEl = document.getElementById('am-invoice-status');
+  const btn = document.getElementById('am-send-invoice-btn');
+  if (!amount || amount <= 0) {
+    statusEl.textContent = 'Enter a valid amount.';
+    statusEl.className = 'ph-save-status error';
+    return;
+  }
+  btn.disabled = true;
+  statusEl.textContent = 'Sending invoice...';
+  statusEl.className = 'ph-save-status saving';
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/create-invoice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authToken,
+      },
+      body: JSON.stringify({
+        booking_id: currentApptId,
+        amount,
+        due_days: dueDays,
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Could not send invoice');
+    statusEl.textContent = 'Invoice sent!';
+    statusEl.className = 'ph-save-status saved';
+    // Patch local state + badge/link in place, without re-rendering the modal (would wipe this message)
+    a.stripe_invoice_id = data.invoiceId;
+    a.invoice_status = data.status;
+    a.invoice_amount = amount;
+    a.invoice_url = data.invoiceUrl;
+    const badgeEl = document.getElementById('am-invoice-badge');
+    badgeEl.innerHTML = '<span class="ph-sbadge ph-sbadge-' + escHtml(data.status) + '">' + escHtml(data.status.replace('_',' ')) + '</span>';
+    document.getElementById('am-invoice-existing').style.display = 'block';
+    document.getElementById('am-invoice-amount').textContent = amount.toFixed(2);
+    const linkEl = document.getElementById('am-invoice-link');
+    linkEl.href = data.invoiceUrl; linkEl.style.display = '';
+    btn.textContent = 'Send New Invoice';
+    apptsLoaded = false; // force a background reload next time the tab is viewed
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + (e.message || 'Unknown');
+    statusEl.className = 'ph-save-status error';
+    console.error(e);
+  } finally {
+    btn.disabled = false;
   }
 }
 
