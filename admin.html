@@ -1361,6 +1361,7 @@ async function adminLogin() {
     document.getElementById('ph-admin').style.display = 'block';
     loadProducts();
     prefetchCounts();
+    loadNgnRate();
   } catch(e) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';
@@ -2987,7 +2988,6 @@ async function saveNgnRate() {
   }
 }
 window.saveNgnRate = saveNgnRate;
-loadNgnRate();
 
 // ---- ANALYTICS ----
 let analyticsDays = 7;
@@ -3769,6 +3769,7 @@ function calcFeeNet() {
     document.getElementById('ph-admin').style.display = 'block';
     loadProducts();
     prefetchCounts();
+    loadNgnRate();
   }
   // else: login screen is already visible
 })();
