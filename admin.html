@@ -124,6 +124,12 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-sbadge-draft{background:rgba(150,150,150,.15);color:#999;}
 .ph-sbadge-payment_failed,.ph-sbadge-uncollectible{background:rgba(224,85,85,.15);color:#e05555;}
 .ph-sbadge-void{background:rgba(150,150,150,.15);color:#888;}
+.ph-date-chip{background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:20px;color:#999;padding:6px 14px;font-size:12px;font-family:'Lato',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.ph-date-chip:hover{border-color:rgba(212,175,55,0.4);color:#ccc;}
+.ph-date-chip.active{background:rgba(212,175,55,0.12);border-color:#d4af37;color:#d4af37;font-weight:600;}
+.ph-sort-th{cursor:pointer;user-select:none;}
+.ph-sort-th:hover{color:#d4af37;}
+.ph-sort-arrow{font-size:10px;margin-left:4px;opacity:0.6;}
 
 /* ---- ORDERS / APPTS OVERFLOW ---- */
 .ph-scroll-table{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -472,6 +478,18 @@ tr:hover td{background:rgba(212,175,55,.04);}
             <input id="ord-search" type="text" placeholder="Search orders — customer, email, item, reference, city..." oninput="filterOrders()"
               style="width:100%;box-sizing:border-box;background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;padding:10px 14px;font-size:14px;font-family:'Lato',sans-serif;outline:none;">
           </div>
+          <div style="padding:12px 20px;border-bottom:1px solid #1a1a1a;background:#0d0d0d;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button class="ph-date-chip active" data-range="all" onclick="setOrdersDateRange('all')">All Time</button>
+            <button class="ph-date-chip" data-range="today" onclick="setOrdersDateRange('today')">Today</button>
+            <button class="ph-date-chip" data-range="7d" onclick="setOrdersDateRange('7d')">Last 7 Days</button>
+            <button class="ph-date-chip" data-range="30d" onclick="setOrdersDateRange('30d')">Last 30 Days</button>
+            <button class="ph-date-chip" data-range="custom" onclick="setOrdersDateRange('custom')">Custom Range</button>
+            <span id="ord-custom-range-inputs" style="display:none;gap:6px;align-items:center;">
+              <input type="date" id="ord-date-from" onchange="applyCustomDateRange()" style="background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;padding:6px 8px;font-size:12px;font-family:'Lato',sans-serif;">
+              <span style="color:#555;font-size:12px;">to</span>
+              <input type="date" id="ord-date-to" onchange="applyCustomDateRange()" style="background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;padding:6px 8px;font-size:12px;font-family:'Lato',sans-serif;">
+            </span>
+          </div>
           <div id="ph-orders-summary" style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #1a1a1a;background:#0d0d0d;">
             <div style="flex:1;min-width:120px;text-align:center;">
               <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#d4af37;" id="ord-sum-revenue">—</div>
@@ -494,7 +512,7 @@ tr:hover td{background:rgba(212,175,55,.04);}
             <table>
               <thead>
                 <tr>
-                  <th>Date</th>
+                  <th class="ph-sort-th" onclick="toggleOrdersSort()">Date<span class="ph-sort-arrow" id="ord-sort-arrow">▼</span></th>
                   <th>Order Ref</th>
                   <th>Customer</th>
                   <th>Items</th>
@@ -2320,10 +2338,60 @@ function calcOrderProfit(order) {
 }
 
 let ordersQuery = '';
+let ordersDateFilter = 'all'; // 'all' | 'today' | '7d' | '30d' | 'custom'
+let ordersDateFrom = null;    // Date, start of day (custom range only)
+let ordersDateTo = null;      // Date, end of day (custom range only)
+let ordersSortDir = 'desc';   // 'asc' | 'desc' — by created_at
 
 function filterOrders() {
   ordersQuery = (document.getElementById('ord-search').value || '').toLowerCase().trim();
   renderOrders();
+}
+
+window.setOrdersDateRange = function(range) {
+  ordersDateFilter = range;
+  document.querySelectorAll('.ph-date-chip').forEach(btn => btn.classList.toggle('active', btn.dataset.range === range));
+  const customInputs = document.getElementById('ord-custom-range-inputs');
+  customInputs.style.display = range === 'custom' ? 'inline-flex' : 'none';
+  if (range !== 'custom') { renderOrders(); }
+  else if (document.getElementById('ord-date-from').value) { applyCustomDateRange(); }
+};
+
+window.applyCustomDateRange = function() {
+  const fromVal = document.getElementById('ord-date-from').value;
+  const toVal = document.getElementById('ord-date-to').value;
+  ordersDateFrom = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+  ordersDateTo = toVal ? new Date(toVal + 'T23:59:59') : null;
+  renderOrders();
+};
+
+window.toggleOrdersSort = function() {
+  ordersSortDir = ordersSortDir === 'desc' ? 'asc' : 'desc';
+  document.getElementById('ord-sort-arrow').textContent = ordersSortDir === 'desc' ? '▼' : '▲';
+  renderOrders();
+};
+
+function orderMatchesDateRange(o) {
+  if (ordersDateFilter === 'all') return true;
+  const created = new Date(o.created_at);
+  const now = new Date();
+  if (ordersDateFilter === 'today') {
+    return created.toDateString() === now.toDateString();
+  }
+  if (ordersDateFilter === '7d') {
+    const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 7);
+    return created >= cutoff;
+  }
+  if (ordersDateFilter === '30d') {
+    const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 30);
+    return created >= cutoff;
+  }
+  if (ordersDateFilter === 'custom') {
+    if (ordersDateFrom && created < ordersDateFrom) return false;
+    if (ordersDateTo && created > ordersDateTo) return false;
+    return true;
+  }
+  return true;
 }
 
 function renderOrders() {
@@ -2333,17 +2401,24 @@ function renderOrders() {
   tbody.innerHTML = '';
   mobList.innerHTML = '';
 
-  const filtered = ordersQuery ? allOrders.filter(o => {
-    const addr = o.shipping_address || {};
-    const items = Array.isArray(o.items) ? o.items.map(i => (i.name||'') + ' ' + (i.specs||'')).join(' ') : '';
-    const ref = o.square_order_id || o.paystack_reference || '';
-    const haystack = [
-      o.customer_name, o.customer_email, o.customer_phone,
-      addr.address1, addr.city, addr.province, addr.country, addr.postal,
-      items, ref, o.status, String(o.total || '')
-    ].join(' ').toLowerCase();
-    return haystack.includes(ordersQuery);
-  }) : allOrders;
+  let filtered = allOrders.filter(orderMatchesDateRange);
+  if (ordersQuery) {
+    filtered = filtered.filter(o => {
+      const addr = o.shipping_address || {};
+      const items = Array.isArray(o.items) ? o.items.map(i => (i.name||'') + ' ' + (i.specs||'')).join(' ') : '';
+      const ref = o.square_order_id || o.paystack_reference || '';
+      const haystack = [
+        o.customer_name, o.customer_email, o.customer_phone,
+        addr.address1, addr.city, addr.province, addr.country, addr.postal,
+        items, ref, o.status, String(o.total || '')
+      ].join(' ').toLowerCase();
+      return haystack.includes(ordersQuery);
+    });
+  }
+  filtered = filtered.slice().sort((a, b) => {
+    const diff = new Date(a.created_at) - new Date(b.created_at);
+    return ordersSortDir === 'asc' ? diff : -diff;
+  });
 
   empty.style.display = filtered.length ? 'none' : 'block';
 
@@ -2351,7 +2426,8 @@ function renderOrders() {
   const totalRev = filtered.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
   const avgOrder = filtered.length ? totalRev / filtered.length : 0;
   document.getElementById('ord-sum-revenue').textContent = '$' + totalRev.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-  document.getElementById('ord-sum-count').textContent = filtered.length + (ordersQuery ? ' of ' + allOrders.length : '');
+  const anyFilterActive = !!ordersQuery || ordersDateFilter !== 'all';
+  document.getElementById('ord-sum-count').textContent = filtered.length + (anyFilterActive ? ' of ' + allOrders.length : '');
   document.getElementById('ord-sum-avg').textContent = filtered.length ? '$' + avgOrder.toFixed(2) : '—';
 
   let totalProfit = 0, profitCount = 0;
