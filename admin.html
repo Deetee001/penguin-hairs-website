@@ -130,6 +130,26 @@ tr:hover td{background:rgba(212,175,55,.04);}
 .ph-sort-th{cursor:pointer;user-select:none;}
 .ph-sort-th:hover{color:#d4af37;}
 .ph-sort-arrow{font-size:10px;margin-left:4px;opacity:0.6;}
+.ph-cal-panel{position:absolute;top:calc(100% + 8px);left:0;z-index:50;background:#0d0d0d;border:1px solid rgba(212,175,55,0.3);border-radius:10px;padding:16px;box-shadow:0 10px 36px rgba(0,0,0,0.65);width:280px;}
+.ph-cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ph-cal-month{font-family:'Cormorant Garamond',serif;font-size:16px;color:#e0e0e0;letter-spacing:0.03em;}
+.ph-cal-nav{background:none;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#d4af37;cursor:pointer;font-size:12px;padding:4px 9px;line-height:1;}
+.ph-cal-nav:hover{border-color:rgba(212,175,55,0.5);}
+.ph-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.ph-cal-dow{font-size:10px;color:#555;text-align:center;padding:4px 0 8px;text-transform:uppercase;letter-spacing:0.04em;}
+.ph-cal-day{background:none;border:none;color:#ccc;font-size:12px;padding:8px 0;cursor:pointer;border-radius:5px;text-align:center;font-family:'Lato',sans-serif;}
+.ph-cal-day:hover:not(:disabled){background:rgba(212,175,55,0.15);color:#fff;}
+.ph-cal-day.ph-cal-muted{color:#333;cursor:default;}
+.ph-cal-day.ph-cal-selected{background:#d4af37;color:#000;font-weight:700;}
+.ph-cal-day.ph-cal-in-range{background:rgba(212,175,55,0.16);color:#d4af37;border-radius:0;}
+.ph-cal-day.ph-cal-today:not(.ph-cal-selected){box-shadow:inset 0 0 0 1px rgba(212,175,55,0.5);}
+.ph-cal-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);flex-wrap:wrap;}
+.ph-cal-range-label{font-size:11px;color:#888;}
+@media(max-width:700px){
+  .ph-cal-panel{position:static;width:100%;box-sizing:border-box;margin-top:10px;box-shadow:none;}
+  #ord-custom-range-inputs{display:flex !important;flex-direction:column;align-items:stretch;width:100%;}
+  #ord-range-trigger{width:100%;justify-content:center;}
+}
 
 /* ---- ORDERS / APPTS OVERFLOW ---- */
 .ph-scroll-table{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -484,10 +504,25 @@ tr:hover td{background:rgba(212,175,55,.04);}
             <button class="ph-date-chip" data-range="7d" onclick="setOrdersDateRange('7d')">Last 7 Days</button>
             <button class="ph-date-chip" data-range="30d" onclick="setOrdersDateRange('30d')">Last 30 Days</button>
             <button class="ph-date-chip" data-range="custom" onclick="setOrdersDateRange('custom')">Custom Range</button>
-            <span id="ord-custom-range-inputs" style="display:none;gap:6px;align-items:center;">
-              <input type="date" id="ord-date-from" onchange="applyCustomDateRange()" style="background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;padding:6px 8px;font-size:12px;font-family:'Lato',sans-serif;">
-              <span style="color:#555;font-size:12px;">to</span>
-              <input type="date" id="ord-date-to" onchange="applyCustomDateRange()" style="background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;padding:6px 8px;font-size:12px;font-family:'Lato',sans-serif;">
+            <span id="ord-custom-range-inputs" style="display:none;position:relative;">
+              <button class="ph-date-chip" id="ord-range-trigger" onclick="toggleCalendarPanel()" style="display:inline-flex;align-items:center;gap:6px;">
+                <i class="fas fa-calendar-alt" style="font-size:11px;"></i> Select dates
+              </button>
+              <div id="ord-cal-panel" class="ph-cal-panel" style="display:none;">
+                <div class="ph-cal-header">
+                  <button type="button" class="ph-cal-nav" onclick="calNavMonth(-1)">&larr;</button>
+                  <span class="ph-cal-month" id="ord-cal-month-label"></span>
+                  <button type="button" class="ph-cal-nav" onclick="calNavMonth(1)">&rarr;</button>
+                </div>
+                <div class="ph-cal-grid" id="ord-cal-grid"></div>
+                <div class="ph-cal-footer">
+                  <span class="ph-cal-range-label" id="ord-cal-range-label">Select a start date</span>
+                  <span style="display:flex;gap:8px;">
+                    <button type="button" class="ph-btn ph-btn-outline" style="padding:5px 12px;font-size:11px;" onclick="clearCalendarRange()">Clear</button>
+                    <button type="button" class="ph-btn ph-btn-gold" style="padding:5px 12px;font-size:11px;" onclick="applyCalendarRange()">Apply</button>
+                  </span>
+                </div>
+              </div>
             </span>
           </div>
           <div id="ph-orders-summary" style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #1a1a1a;background:#0d0d0d;">
@@ -2350,20 +2385,121 @@ function filterOrders() {
 
 window.setOrdersDateRange = function(range) {
   ordersDateFilter = range;
-  document.querySelectorAll('.ph-date-chip').forEach(btn => btn.classList.toggle('active', btn.dataset.range === range));
-  const customInputs = document.getElementById('ord-custom-range-inputs');
-  customInputs.style.display = range === 'custom' ? 'inline-flex' : 'none';
-  if (range !== 'custom') { renderOrders(); }
-  else if (document.getElementById('ord-date-from').value) { applyCustomDateRange(); }
+  document.querySelectorAll('.ph-date-chip[data-range]').forEach(btn => btn.classList.toggle('active', btn.dataset.range === range));
+  const customWrap = document.getElementById('ord-custom-range-inputs');
+  customWrap.style.display = range === 'custom' ? 'inline-flex' : 'none';
+  if (range === 'custom') { openCalendarPanel(); }
+  else { document.getElementById('ord-cal-panel').style.display = 'none'; renderOrders(); }
 };
 
-window.applyCustomDateRange = function() {
-  const fromVal = document.getElementById('ord-date-from').value;
-  const toVal = document.getElementById('ord-date-to').value;
-  ordersDateFrom = fromVal ? new Date(fromVal + 'T00:00:00') : null;
-  ordersDateTo = toVal ? new Date(toVal + 'T23:59:59') : null;
+// ---- CUSTOM RANGE CALENDAR ----
+let calViewMonth = new Date().getMonth();
+let calViewYear = new Date().getFullYear();
+let calSelectingFrom = true; // true = next click sets the start date, false = sets the end date
+let calTempFrom = null, calTempTo = null;
+
+function fmtCalDate(d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+
+function openCalendarPanel() {
+  calTempFrom = ordersDateFrom; calTempTo = ordersDateTo;
+  calSelectingFrom = !calTempFrom || !!calTempTo;
+  if (calTempFrom) { calViewMonth = calTempFrom.getMonth(); calViewYear = calTempFrom.getFullYear(); }
+  document.getElementById('ord-cal-panel').style.display = 'block';
+  renderCalendar();
+}
+
+window.toggleCalendarPanel = function() {
+  const panel = document.getElementById('ord-cal-panel');
+  if (panel.style.display === 'none') openCalendarPanel();
+  else panel.style.display = 'none';
+};
+
+window.calNavMonth = function(delta) {
+  calViewMonth += delta;
+  if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+  if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+  renderCalendar();
+};
+
+window.pickCalendarDay = function(year, month, day) {
+  const picked = new Date(year, month, day);
+  if (calSelectingFrom) {
+    calTempFrom = picked;
+    calTempTo = null;
+    calSelectingFrom = false;
+  } else if (picked < calTempFrom) {
+    calTempTo = calTempFrom;
+    calTempFrom = picked;
+    calSelectingFrom = true;
+  } else {
+    calTempTo = picked;
+    calSelectingFrom = true;
+  }
+  renderCalendar();
+};
+
+function renderCalendar() {
+  const monthLabel = document.getElementById('ord-cal-month-label');
+  monthLabel.textContent = new Date(calViewYear, calViewMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const firstDay = new Date(calViewYear, calViewMonth, 1);
+  const startOffset = firstDay.getDay();
+  const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(calViewYear, calViewMonth, 0).getDate();
+  const todayStr = new Date().toDateString();
+
+  let html = '';
+  ['S','M','T','W','T','F','S'].forEach(d => html += `<div class="ph-cal-dow">${d}</div>`);
+
+  for (let i = startOffset - 1; i >= 0; i--) {
+    html += `<button type="button" class="ph-cal-day ph-cal-muted" disabled>${daysInPrevMonth - i}</button>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(calViewYear, calViewMonth, d);
+    const classes = ['ph-cal-day'];
+    if (date.toDateString() === todayStr) classes.push('ph-cal-today');
+    if (calTempFrom && date.toDateString() === calTempFrom.toDateString()) classes.push('ph-cal-selected');
+    if (calTempTo && date.toDateString() === calTempTo.toDateString()) classes.push('ph-cal-selected');
+    if (calTempFrom && calTempTo && date > calTempFrom && date < calTempTo) classes.push('ph-cal-in-range');
+    html += `<button type="button" class="${classes.join(' ')}" onclick="pickCalendarDay(${calViewYear},${calViewMonth},${d})">${d}</button>`;
+  }
+  const trailing = (7 - ((startOffset + daysInMonth) % 7)) % 7;
+  for (let d = 1; d <= trailing; d++) {
+    html += `<button type="button" class="ph-cal-day ph-cal-muted" disabled>${d}</button>`;
+  }
+  document.getElementById('ord-cal-grid').innerHTML = html;
+
+  const rangeLabel = document.getElementById('ord-cal-range-label');
+  rangeLabel.textContent = calTempFrom && calTempTo
+    ? fmtCalDate(calTempFrom) + ' – ' + fmtCalDate(calTempTo)
+    : calTempFrom ? fmtCalDate(calTempFrom) + ' – …' : 'Select a start date';
+}
+
+window.applyCalendarRange = function() {
+  if (!calTempFrom) return;
+  ordersDateFrom = new Date(calTempFrom.getFullYear(), calTempFrom.getMonth(), calTempFrom.getDate(), 0, 0, 0);
+  const toSrc = calTempTo || calTempFrom;
+  ordersDateTo = new Date(toSrc.getFullYear(), toSrc.getMonth(), toSrc.getDate(), 23, 59, 59);
+  document.getElementById('ord-cal-panel').style.display = 'none';
+  document.getElementById('ord-range-trigger').innerHTML = `<i class="fas fa-calendar-alt" style="font-size:11px;"></i> ${fmtCalDate(ordersDateFrom)} – ${fmtCalDate(ordersDateTo)}`;
   renderOrders();
 };
+
+window.clearCalendarRange = function() {
+  calTempFrom = null; calTempTo = null;
+  ordersDateFrom = null; ordersDateTo = null;
+  document.getElementById('ord-range-trigger').innerHTML = '<i class="fas fa-calendar-alt" style="font-size:11px;"></i> Select dates';
+  setOrdersDateRange('all');
+};
+
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('ord-cal-panel');
+  const wrap = document.getElementById('ord-custom-range-inputs');
+  const isCustomChip = e.target.closest && e.target.closest('.ph-date-chip[data-range="custom"]');
+  if (panel && panel.style.display !== 'none' && wrap && !wrap.contains(e.target) && !isCustomChip) {
+    panel.style.display = 'none';
+  }
+});
 
 window.toggleOrdersSort = function() {
   ordersSortDir = ordersSortDir === 'desc' ? 'asc' : 'desc';
