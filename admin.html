@@ -2496,8 +2496,15 @@ window.clearCalendarRange = function() {
 document.addEventListener('click', function(e) {
   const panel = document.getElementById('ord-cal-panel');
   const wrap = document.getElementById('ord-custom-range-inputs');
-  const isCustomChip = e.target.closest && e.target.closest('.ph-date-chip[data-range="custom"]');
-  if (panel && panel.style.display !== 'none' && wrap && !wrap.contains(e.target) && !isCustomChip) {
+  if (!panel || panel.style.display === 'none' || !wrap) return;
+  // Use composedPath (captured at dispatch time) instead of e.target/contains():
+  // picking a day replaces the calendar grid's innerHTML, which detaches the
+  // clicked button from the DOM mid-bubble — wrap.contains(e.target) would then
+  // wrongly report "outside" for every single day click and close the panel.
+  const path = e.composedPath ? e.composedPath() : [e.target];
+  const clickedInsideWrap = path.includes(wrap);
+  const clickedCustomChip = path.some(el => el.classList && el.classList.contains('ph-date-chip') && el.dataset && el.dataset.range === 'custom');
+  if (!clickedInsideWrap && !clickedCustomChip) {
     panel.style.display = 'none';
   }
 });
