@@ -13,11 +13,18 @@ const cors = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
 };
 
+const SUPPORTED_CHARGE_CURRENCIES = new Set(["CAD", "USD", "GBP"]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
   try {
-    const { cart, shipping, shippingCost, promoCode } = await req.json();
+    const { cart, shipping, shippingCost, promoCode, currency } = await req.json();
+    // Never trust a client-supplied rate or an unlisted currency — NGN in particular
+    // always charges in CAD (no native NGN settlement on this Stripe account).
+    const chargeCurrency = SUPPORTED_CHARGE_CURRENCIES.has(String(currency).toUpperCase())
+      ? String(currency).toUpperCase()
+      : "CAD";
 
     if (!cart || cart.length === 0) {
       return new Response(JSON.stringify({ error: "Cart is empty" }), {
@@ -87,8 +94,23 @@ serve(async (req) => {
       }
     }
 
-    const total = Math.max(0, subtotal - discount + shippingCostNum);
-    const amountCents = Math.round(total * 100);
+    const totalCad = Math.max(0, subtotal - discount + shippingCostNum);
+
+    // Convert to the charge currency using a rate fetched fresh, server-side —
+    // never trust a rate the client sends, since it directly sets the charge amount.
+    let fxRate = 1;
+    if (chargeCurrency !== "CAD") {
+      const fxRes = await fetch("https://open.er-api.com/v6/latest/CAD");
+      const fxData = await fxRes.json();
+      fxRate = fxData?.rates?.[chargeCurrency];
+      if (!fxRate) {
+        return new Response(JSON.stringify({ error: "Could not fetch exchange rate. Please try again." }), {
+          status: 503, headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+    }
+    const chargeAmount = Math.round(totalCad * fxRate * 100) / 100;
+    const amountCents = Math.round(chargeAmount * 100);
 
     if (amountCents < 50) {
       return new Response(JSON.stringify({ error: "Order total is too low to process." }), {
@@ -98,7 +120,7 @@ serve(async (req) => {
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
-      currency: "cad",
+      currency: chargeCurrency.toLowerCase(),
       payment_method_types: ["card"],
       receipt_email: shipping.email,
       shipping: {
@@ -114,13 +136,15 @@ serve(async (req) => {
       metadata: {
         customer_email: shipping.email,
         promo_code: validPromoCode || "",
+        total_cad: String(totalCad),
       },
     });
 
     return new Response(JSON.stringify({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
-      amount: total,
+      amount: chargeAmount,
+      currency: chargeCurrency,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
 
   } catch (err: any) {

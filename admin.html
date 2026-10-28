@@ -2359,6 +2359,13 @@ async function loadOrders() {
   }
 }
 
+// Orders can now be charged in CAD, USD, or GBP (see Stripe multi-currency checkout).
+// For any aggregate math (revenue, profit, averages), always use the CAD-equivalent —
+// total_cad on newer orders, falling back to total itself for older CAD-only orders.
+const ADMIN_CUR_SYMBOLS = { CAD: '$', USD: 'US$', GBP: '£' };
+function orderCad(o) { return parseFloat(o.total_cad != null ? o.total_cad : o.total) || 0; }
+function orderCurSymbol(o) { return ADMIN_CUR_SYMBOLS[o.currency] || '$'; }
+
 function calcOrderProfit(order) {
   if (!Array.isArray(order.items) || order.items.length === 0) return null;
   let totalCost = 0;
@@ -2370,7 +2377,7 @@ function calcOrderProfit(order) {
     totalCost += productCostMap[pid] * qty;
   }
   if (anyMissing && totalCost === 0) return null; // no cost data at all
-  return (parseFloat(order.total) || 0) - totalCost;
+  return orderCad(order) - totalCost;
 }
 
 let ordersQuery = '';
@@ -2567,7 +2574,7 @@ function renderOrders() {
   empty.style.display = filtered.length ? 'none' : 'block';
 
   // Summary reflects filtered set
-  const totalRev = filtered.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+  const totalRev = filtered.reduce((s, o) => s + orderCad(o), 0);
   const avgOrder = filtered.length ? totalRev / filtered.length : 0;
   document.getElementById('ord-sum-revenue').textContent = '$' + totalRev.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   const anyFilterActive = !!ordersQuery || ordersDateFilter !== 'all';
@@ -2608,9 +2615,9 @@ function renderOrders() {
         ${o.customer_phone ? `<div style="font-size:11px;color:#888">${escHtml(o.customer_phone)}</div>` : ''}
       </td>
       <td style="font-size:12px;color:#aaa;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(items)}">${escHtml(items)}</td>
-      <td>$${o.subtotal || 0}</td>
-      <td>$${o.shipping_cost || 0}${ship ? ' <span style="font-size:10px;color:#555">('+escHtml(ship)+')</span>' : ''}</td>
-      <td style="font-weight:700;color:#d4af37">$${o.total || 0}</td>
+      <td>${orderCurSymbol(o)}${o.subtotal || 0}</td>
+      <td>${orderCurSymbol(o)}${o.shipping_cost || 0}${ship ? ' <span style="font-size:10px;color:#555">('+escHtml(ship)+')</span>' : ''}</td>
+      <td style="font-weight:700;color:#d4af37">${orderCurSymbol(o)}${o.total || 0}</td>
       <td>${profitStr}</td>
       <td><span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span></td>
     `;
@@ -2636,8 +2643,8 @@ function renderOrders() {
         <span class="ph-sbadge ph-sbadge-${escHtml(status)}">${escHtml(status)}</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a;">
-        <span style="font-size:12px;color:#666;">Shipping${ship ? ' ('+escHtml(ship)+')' : ''}: $${o.shipping_cost || 0}</span>
-        <span style="font-weight:700;color:#d4af37;font-size:15px;">$${o.total || 0}</span>
+        <span style="font-size:12px;color:#666;">Shipping${ship ? ' ('+escHtml(ship)+')' : ''}: ${orderCurSymbol(o)}${o.shipping_cost || 0}</span>
+        <span style="font-weight:700;color:#d4af37;font-size:15px;">${orderCurSymbol(o)}${o.total || 0}</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
         <span style="font-size:12px;color:#666;">Profit</span>
@@ -3036,7 +3043,7 @@ async function loadAnalytics() {
     document.getElementById('an-pv-total').textContent    = pageViews.length;
 
     // Sales summary — from actual orders table
-    const totalRevenue = periodOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    const totalRevenue = periodOrders.reduce((s, o) => s + orderCad(o), 0);
     const avgOrderVal = periodOrders.length ? totalRevenue / periodOrders.length : 0;
     document.getElementById('an-rev-total').textContent = '$' + totalRevenue.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
     document.getElementById('an-rev-orders').textContent = periodOrders.length;
@@ -3053,7 +3060,7 @@ async function loadAnalytics() {
         if (pid == null || anCostMap[pid] == null) { missing = true; return; }
         cost += anCostMap[pid] * (item.quantity || item.qty || 1);
       });
-      if (!missing || cost > 0) { anTotalProfit += (parseFloat(o.total) || 0) - cost; anProfitCount++; }
+      if (!missing || cost > 0) { anTotalProfit += orderCad(o) - cost; anProfitCount++; }
     });
     document.getElementById('an-rev-profit').textContent = anProfitCount > 0
       ? '$' + anTotalProfit.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
@@ -3517,11 +3524,13 @@ function openOrderModal(o) {
     itemsEl.innerHTML = '<div style="color:#555;font-size:13px;">No item details available.</div>';
   }
 
-  document.getElementById('om-subtotal').textContent = (parseFloat(o.subtotal)||0).toFixed(2) + ' CAD';
+  const omCur = o.currency || 'CAD';
+  document.getElementById('om-subtotal').textContent = (parseFloat(o.subtotal)||0).toFixed(2) + ' ' + omCur;
   const shipLabel = addr.country ? 'Shipping (' + addr.country + ')' : 'Shipping';
   document.getElementById('om-ship-label').textContent = shipLabel;
-  document.getElementById('om-shipping').textContent = (parseFloat(o.shipping_cost)||0).toFixed(2) + ' CAD';
-  document.getElementById('om-total').textContent = (parseFloat(o.total)||0).toFixed(2) + ' CAD';
+  document.getElementById('om-shipping').textContent = (parseFloat(o.shipping_cost)||0).toFixed(2) + ' ' + omCur;
+  document.getElementById('om-total').textContent = (parseFloat(o.total)||0).toFixed(2) + ' ' + omCur
+    + (omCur !== 'CAD' && o.total_cad != null ? '  (≈ $' + parseFloat(o.total_cad).toFixed(2) + ' CAD)' : '');
 
   const discRow = document.getElementById('om-discount-row');
   if (o.discount_amount && parseFloat(o.discount_amount) > 0) {
@@ -3537,7 +3546,7 @@ function openOrderModal(o) {
   } else { profitRow.style.display = 'none'; }
 
   const method = o.payment_method || 'unknown';
-  document.getElementById('om-payment-method').textContent = method === 'stripe' ? 'Stripe (CAD)' : method === 'paystack' ? 'Paystack (NGN)' : method === 'square' ? 'Square (CAD)' : method;
+  document.getElementById('om-payment-method').textContent = method === 'stripe' ? 'Stripe (' + (o.currency || 'CAD') + ')' : method === 'paystack' ? 'Paystack (NGN)' : method === 'square' ? 'Square (CAD)' : method;
   const fullRef = o.square_order_id || o.paystack_reference || o.square_payment_id || '—';
   document.getElementById('om-payment-ref').textContent = fullRef;
   const ngnRow = document.getElementById('om-ngn-row');

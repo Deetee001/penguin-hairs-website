@@ -650,6 +650,9 @@ html{scroll-behavior:smooth;}
     <div class="ph-cart-empty"><i class="fas fa-shopping-bag" style="font-size:2rem;margin-bottom:1rem;display:block;color:rgba(255,255,255,0.2)"></i><p>Your bag is empty</p></div>
   </div>
   <div class="ph-cart-footer">
+    <div id="ph-cart-cad-notice" style="display:none;margin-bottom:0.75rem;font-size:0.72rem;color:rgba(255,255,255,0.5);line-height:1.4;">
+      <i class="fas fa-circle-info" style="color:#d4af37;margin-right:0.25rem;"></i>Naira price shown is an estimate — you'll be charged in CAD.
+    </div>
     <div class="ph-cart-total"><span>Total</span><span id="ph-cart-total">$0.00</span></div>
     <button class="ph-checkout-btn" id="ph-checkout-btn" onclick="startCheckout()">Proceed to Checkout</button>
   </div>
@@ -702,6 +705,10 @@ html{scroll-behavior:smooth;}
       <div class="ph-co-total">
         <span>Total</span>
         <span id="ph-co-total-amt"></span>
+      </div>
+      <div id="ph-co-cad-notice" style="display:none;margin-top:0.85rem;padding:0.75rem 0.9rem;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:6px;font-size:0.78rem;color:rgba(255,255,255,0.75);line-height:1.5;">
+        <i class="fas fa-circle-info" style="color:#d4af37;margin-right:0.3rem;"></i>
+        Naira prices are an estimate. Your card will be <strong style="color:#d4af37;">charged in Canadian Dollars (CAD)</strong> — the amount above is what's actually taken from your card.
       </div>
     </div>
 
@@ -985,6 +992,8 @@ function updateCartUI(){
   const ce=document.getElementById('ph-cart-count');
   ce.style.display=count>0?'flex':'none'; ce.textContent=count;
   document.getElementById('ph-cart-total').textContent=formatPrice(total);
+  const cartCadNotice=document.getElementById('ph-cart-cad-notice');
+  if(cartCadNotice) cartCadNotice.style.display = currentCurrency==='NGN' ? 'block' : 'none';
   const items=document.getElementById('ph-cart-items');
   if(cart.length===0){items.innerHTML='<div class="ph-cart-empty"><i class="fas fa-shopping-bag" style="font-size:2rem;margin-bottom:1rem;display:block;color:rgba(255,255,255,0.2)"></i><p>Your bag is empty</p></div>';}
   else{items.innerHTML=cart.map((item,idx)=>`
@@ -1362,6 +1371,11 @@ window.applyPromo=function(){
   .catch(function(){ msg.style.color='#e05555'; msg.textContent='Could not check code. Try again.'; });
 };
 
+// Currencies we actually charge natively — everyone else (NGN included) is charged in CAD.
+function getChargeCurrency() {
+  return (currentCurrency === 'USD' || currentCurrency === 'GBP') ? currentCurrency : 'CAD';
+}
+
 function updateCheckoutTotals() {
   const subtotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
   const shipping = getShippingCost();
@@ -1372,18 +1386,35 @@ function updateCheckoutTotals() {
       : Math.min(appliedPromo.discount_value,subtotal);
     discount=Math.round(discount*100)/100;
   }
-  const total = subtotal - discount + shipping.cadAmount;
-  payTotalStr = 'CA$' + total.toFixed(2);
+  const totalCad = subtotal - discount + shipping.cadAmount;
+  const chargeCurrency = getChargeCurrency();
+  const chargeAmount = chargeCurrency === 'CAD' ? totalCad : totalCad * (fxRates[chargeCurrency] || 1);
+  payTotalStr = CURRENCIES[chargeCurrency].symbol + chargeAmount.toFixed(2);
+
   document.getElementById('ph-co-subtotal-amt').textContent = formatPrice(subtotal);
   document.getElementById('ph-co-shipping-amt').textContent = shipping.display;
-  document.getElementById('ph-co-total-amt').textContent = formatPrice(total) + (currentCurrency !== 'CAD' ? ' ≈ ' + payTotalStr : '');
+
+  const totalEl = document.getElementById('ph-co-total-amt');
+  if (currentCurrency === 'NGN') {
+    // Naira is only ever an estimate here — lead with what's actually charged (CAD),
+    // not the Naira figure, so there's no last-second "why did the number change" moment.
+    totalEl.innerHTML = payTotalStr + ' CAD <span style="opacity:0.55;font-size:0.72em;display:block;margin-top:3px;font-weight:400;">&asymp; ' + formatPrice(totalCad) + ' (estimate only)</span>';
+  } else if (chargeCurrency === currentCurrency) {
+    totalEl.textContent = formatPrice(totalCad); // what you see IS what you're charged
+  } else {
+    totalEl.textContent = formatPrice(totalCad); // CAD viewer — no conversion involved
+  }
+
+  const cadNotice = document.getElementById('ph-co-cad-notice');
+  if (cadNotice) cadNotice.style.display = currentCurrency === 'NGN' ? 'block' : 'none';
+
   var discRow=document.getElementById('ph-co-discount-row');
   var discAmt=document.getElementById('ph-co-discount-amt');
   if(discRow){ discRow.style.display=discount>0?'flex':'none'; }
   if(discAmt && discount>0){ discAmt.textContent='-'+formatPrice(discount); }
   const payBtn = document.getElementById('ph-co-pay-btn');
   if (payBtn && !payBtn.disabled) {
-    payBtn.textContent = 'Pay ' + payTotalStr + ' CAD';
+    payBtn.textContent = 'Pay ' + payTotalStr + (chargeCurrency === 'CAD' ? ' CAD' : '');
   }
 }
 
@@ -1414,7 +1445,7 @@ window.startCheckout = () => {
   const payBtn = document.getElementById('ph-co-pay-btn');
   payBtn.style.display = 'block';
   payBtn.disabled = false;
-  payBtn.textContent = 'Pay ' + payTotalStr + ' CAD';
+  payBtn.textContent = 'Pay ' + payTotalStr + (getChargeCurrency() === 'CAD' ? ' CAD' : '');
   document.getElementById('ph-co-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
   document.getElementById('ph-co-right').scrollTop = 0;
@@ -1486,7 +1517,7 @@ window.submitPayment = async () => {
     const piRes = await fetch(SB_URL + '/functions/v1/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ cart, shipping, shippingCost, promoCode })
+      body: JSON.stringify({ cart, shipping, shippingCost, promoCode, currency: getChargeCurrency() })
     });
     const piData = await piRes.json();
     if (!piData.clientSecret) throw new Error(piData.error || 'Could not start payment. Please try again.');
@@ -1529,7 +1560,7 @@ window.submitPayment = async () => {
     errEl.textContent = e.message;
     errEl.style.display = 'block';
     payBtn.disabled = false;
-    payBtn.textContent = 'Pay ' + payTotalStr + ' CAD';
+    payBtn.textContent = 'Pay ' + payTotalStr + (getChargeCurrency() === 'CAD' ? ' CAD' : '');
     document.getElementById('ph-co-right').scrollTop = 0;
   }
 };

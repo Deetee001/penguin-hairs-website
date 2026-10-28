@@ -19,6 +19,12 @@ function esc(s: string): string {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = { CAD: "CA$", USD: "US$", GBP: "£" };
+function fmtMoney(amount: number, currency: string): string {
+  const symbol = CURRENCY_SYMBOLS[currency] || currency + " ";
+  return symbol + amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
@@ -32,6 +38,9 @@ serve(async (req) => {
     }
 
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    // The PaymentIntent's own currency is authoritative — it's what Stripe actually
+    // charged, set server-side at creation time, not something the client can spoof here.
+    const chargeCurrency = (paymentIntent.currency || "cad").toUpperCase();
     if (paymentIntent.status !== "succeeded") {
       return new Response(JSON.stringify({ success: false, error: "Payment not confirmed. Please contact us with reference: " + paymentIntentId }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
@@ -70,10 +79,25 @@ serve(async (req) => {
       }
     }
 
-    const total = Math.max(0, subtotal - discount + shippingCostNum);
-    const expectedCents = Math.round(total * 100);
+    const totalCad = Math.max(0, subtotal - discount + shippingCostNum);
 
-    if (paymentIntent.amount_received < expectedCents * 0.99) {
+    // Re-derive the charge-currency amount the same way create-payment-intent did,
+    // with a fresh server-side rate — never trust a client-supplied rate.
+    let fxRate = 1;
+    if (chargeCurrency !== "CAD") {
+      const fxRes = await fetch("https://open.er-api.com/v6/latest/CAD");
+      const fxData = await fxRes.json();
+      fxRate = fxData?.rates?.[chargeCurrency] || 0;
+    }
+    const subtotalCharge = Math.round(subtotal * fxRate * 100) / 100;
+    const shippingCharge = Math.round(shippingCostNum * fxRate * 100) / 100;
+    const totalCharge = Math.round(totalCad * fxRate * 100) / 100;
+    const expectedCents = Math.round(totalCharge * 100);
+
+    // Allow more slack for foreign-currency charges — the rate can drift slightly
+    // between create-payment-intent and this call if the customer took time at checkout.
+    const tolerance = chargeCurrency === "CAD" ? 0.99 : 0.95;
+    if (!fxRate || paymentIntent.amount_received < expectedCents * tolerance) {
       return new Response(JSON.stringify({ success: false, error: "Payment amount mismatch. Please contact support. Ref: " + paymentIntentId }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
@@ -99,15 +123,16 @@ serve(async (req) => {
       square_order_id: orderRef,
       square_payment_id: paymentIntentId,
       payment_method: "stripe",
-      currency: "CAD",
+      currency: chargeCurrency,
       customer_name: `${shipping.firstName} ${shipping.lastName}`.trim(),
       customer_email: shipping.email,
       customer_phone: shipping.phone || "",
       shipping_address: shipping,
       items,
-      subtotal,
-      shipping_cost: shippingCostNum,
-      total,
+      subtotal: subtotalCharge,
+      shipping_cost: shippingCharge,
+      total: totalCharge,
+      total_cad: totalCad,
       status: "paid",
     };
 
@@ -137,10 +162,11 @@ serve(async (req) => {
             <tr>
               <td><p style="margin:0;font-size:14px;color:#1a1a1a;">${esc(item.name)} <span style="color:#999">&times;${item.qty}</span></p>
                   <p style="margin:3px 0 0;font-size:11px;color:#aaa;">${esc(item.specs)}</p></td>
-              <td align="right"><p style="margin:0;font-size:14px;color:#b8932a;font-weight:500;">$${(item.price * item.qty).toFixed(2)}</p></td>
+              <td align="right"><p style="margin:0;font-size:14px;color:#b8932a;font-weight:500;">${fmtMoney(item.price * item.qty * fxRate, chargeCurrency)}</p></td>
             </tr>
           </table>
         </td></tr>`).join("");
+      const cadNote = chargeCurrency !== "CAD" ? ` <span style="color:#555;font-weight:400;">(${fmtMoney(totalCad, "CAD")})</span>` : "";
 
       const customerHtml = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -160,9 +186,9 @@ serve(async (req) => {
           <p style="margin:0 0 14px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Order Summary</p>
           <table width="100%" cellpadding="0" cellspacing="0">${itemRows}</table>
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
-            <tr><td style="padding:6px 0;"><span style="font-size:13px;color:#888;">Subtotal</span></td><td align="right"><span style="font-size:13px;color:#888;">$${subtotal.toFixed(2)}</span></td></tr>
-            <tr><td style="padding:6px 0;"><span style="font-size:13px;color:#888;">Shipping</span></td><td align="right"><span style="font-size:13px;color:#888;">$${shippingCostNum.toFixed(2)}</span></td></tr>
-            <tr><td style="padding:10px 0 0;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#1a1a1a;font-weight:600;">Total</span></td><td align="right" style="border-top:1px solid #ede8df;padding-top:10px;"><span style="font-size:15px;color:#b8932a;font-weight:600;">$${total.toFixed(2)} CAD</span></td></tr>
+            <tr><td style="padding:6px 0;"><span style="font-size:13px;color:#888;">Subtotal</span></td><td align="right"><span style="font-size:13px;color:#888;">${fmtMoney(subtotalCharge, chargeCurrency)}</span></td></tr>
+            <tr><td style="padding:6px 0;"><span style="font-size:13px;color:#888;">Shipping</span></td><td align="right"><span style="font-size:13px;color:#888;">${fmtMoney(shippingCharge, chargeCurrency)}</span></td></tr>
+            <tr><td style="padding:10px 0 0;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#1a1a1a;font-weight:600;">Total</span></td><td align="right" style="border-top:1px solid #ede8df;padding-top:10px;"><span style="font-size:15px;color:#b8932a;font-weight:600;">${fmtMoney(totalCharge, chargeCurrency)} ${chargeCurrency}</span></td></tr>
           </table>
           <div style="border-top:1px solid #ede8df;margin:24px 0;"></div>
           <p style="margin:0 0 10px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Shipping To</p>
@@ -189,7 +215,7 @@ serve(async (req) => {
           <p style="margin:0;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#b8932a;font-weight:600;">NEW ORDER #${orderRef}</p>
         </td></tr>
         <tr><td style="background:#ffffff;border-top:3px solid #c9a048;padding:36px 40px;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
-          <h2 style="margin:0 0 8px;font-size:20px;font-weight:400;color:#1a1a1a;">New Stripe Order &mdash; $${total.toFixed(2)} CAD</h2>
+          <h2 style="margin:0 0 8px;font-size:20px;font-weight:400;color:#1a1a1a;">New Stripe Order &mdash; ${fmtMoney(totalCharge, chargeCurrency)} ${chargeCurrency}${cadNote}</h2>
           <p style="margin:0 0 24px;font-size:13px;color:#999;">Stripe PaymentIntent: ${esc(paymentIntentId)}</p>
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr><td style="padding:10px 0;border-bottom:1px solid #f0ebe2;"><span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Customer</span><p style="margin:5px 0 0;font-size:15px;color:#1a1a1a;font-weight:500;">${esc(shipping.firstName)} ${esc(shipping.lastName)}</p></td></tr>
@@ -199,9 +225,9 @@ serve(async (req) => {
             <tr><td style="padding:10px 0;"><span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#b8932a;">Items</span>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">${itemRows}</table>
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
-                <tr><td><span style="font-size:13px;color:#888;">Subtotal</span></td><td align="right"><span style="font-size:13px;color:#888;">$${subtotal.toFixed(2)}</span></td></tr>
-                <tr><td><span style="font-size:13px;color:#888;">Shipping</span></td><td align="right"><span style="font-size:13px;color:#888;">$${shippingCostNum.toFixed(2)}</span></td></tr>
-                <tr><td style="padding-top:8px;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#1a1a1a;font-weight:600;">Total</span></td><td align="right" style="padding-top:8px;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#b8932a;font-weight:600;">$${total.toFixed(2)} CAD</span></td></tr>
+                <tr><td><span style="font-size:13px;color:#888;">Subtotal</span></td><td align="right"><span style="font-size:13px;color:#888;">${fmtMoney(subtotalCharge, chargeCurrency)}</span></td></tr>
+                <tr><td><span style="font-size:13px;color:#888;">Shipping</span></td><td align="right"><span style="font-size:13px;color:#888;">${fmtMoney(shippingCharge, chargeCurrency)}</span></td></tr>
+                <tr><td style="padding-top:8px;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#1a1a1a;font-weight:600;">Total</span></td><td align="right" style="padding-top:8px;border-top:1px solid #ede8df;"><span style="font-size:15px;color:#b8932a;font-weight:600;">${fmtMoney(totalCharge, chargeCurrency)} ${chargeCurrency}${cadNote}</span></td></tr>
               </table>
             </td></tr>
           </table>
@@ -220,7 +246,7 @@ serve(async (req) => {
         fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: "Penguin Hairs Orders <orders@penguinhairs.com>", to: [OWNER_EMAIL], subject: `New Order #${orderRef} — ${shipping.firstName} ${shipping.lastName} ($${total.toFixed(2)} CAD)`, html: ownerHtml }),
+          body: JSON.stringify({ from: "Penguin Hairs Orders <orders@penguinhairs.com>", to: [OWNER_EMAIL], subject: `New Order #${orderRef} — ${shipping.firstName} ${shipping.lastName} (${fmtMoney(totalCharge, chargeCurrency)} ${chargeCurrency})`, html: ownerHtml }),
         }),
       ]);
     } catch (emailErr) {
